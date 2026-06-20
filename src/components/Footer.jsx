@@ -21,14 +21,15 @@ import {
     Heart,
     Sparkles,
     ChevronRight,
-    ArrowUpRight
 } from 'lucide-react';
 
 const Footer = () => {
     const [currentYear, setCurrentYear] = useState(null);
+    const [isMounted, setIsMounted] = useState(false);
     const pathname = usePathname();
 
     useEffect(() => {
+        setIsMounted(true);
         setCurrentYear(new Date().getFullYear());
     }, []);
 
@@ -134,9 +135,7 @@ const Footer = () => {
                                     key={label}
                                     href={href}
                                     aria-label={label}
-                                    className={`w-10 h-10 rounded-full bg-white dark:bg-gray-800 border border-slate-200/50 dark:border-gray-700/50 
-                                             text-slate-600 dark:text-slate-400 transition-all duration-300 flex items-center justify-center
-                                             hover:shadow-lg hover:border-transparent hover:scale-110 group ${color}`}
+                                    className={`w-10 h-10 rounded-full bg-white dark:bg-gray-800 border border-slate-200/50 dark:border-gray-700/50 text-slate-600 dark:text-slate-400 transition-all duration-300 flex items-center justify-center hover:shadow-lg hover:border-transparent hover:scale-110 group ${color}`}
                                     whileHover={{ y: -3 }}
                                     whileTap={{ scale: 0.95 }}
                                 >
@@ -159,16 +158,9 @@ const Footer = () => {
                                 <li key={href}>
                                     <Link
                                         href={href}
-                                        className={`group inline-flex items-center gap-2 text-sm transition-all duration-200
-                                            ${isActive(href)
-                                                ? "text-blue-600 dark:text-blue-400 font-medium"
-                                                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                                            }`}
+                                        className={`group inline-flex items-center gap-2 text-sm transition-all duration-200 ${isActive(href) ? "text-blue-600 dark:text-blue-400 font-medium" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                                     >
-                                        <ChevronRight className={`w-3.5 h-3.5 transition-all duration-200 ${isActive(href)
-                                                ? "opacity-100 translate-x-0 text-blue-600"
-                                                : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"
-                                            }`} />
+                                        <ChevronRight className={`w-3.5 h-3.5 transition-all duration-200 ${isActive(href) ? "opacity-100 translate-x-0 text-blue-600" : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"}`} />
                                         {label}
                                     </Link>
                                 </li>
@@ -189,16 +181,9 @@ const Footer = () => {
                                 <li key={href}>
                                     <Link
                                         href={href}
-                                        className={`group inline-flex items-center gap-2 text-sm transition-all duration-200
-                                            ${isActive(href)
-                                                ? "text-blue-600 dark:text-blue-400 font-medium"
-                                                : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                                            }`}
+                                        className={`group inline-flex items-center gap-2 text-sm transition-all duration-200 ${isActive(href) ? "text-blue-600 dark:text-blue-400 font-medium" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                                     >
-                                        <ChevronRight className={`w-3.5 h-3.5 transition-all duration-200 ${isActive(href)
-                                                ? "opacity-100 translate-x-0 text-blue-600"
-                                                : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"
-                                            }`} />
+                                        <ChevronRight className={`w-3.5 h-3.5 transition-all duration-200 ${isActive(href) ? "opacity-100 translate-x-0 text-blue-600" : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"}`} />
                                         {label}
                                     </Link>
                                 </li>
@@ -218,8 +203,7 @@ const Footer = () => {
                             <motion.li whileHover={{ x: 5 }} transition={{ type: "spring", stiffness: 300 }}>
                                 <a
                                     href="mailto:info@rentnest.com"
-                                    className="group flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400 
-                                             hover:text-slate-900 dark:hover:text-white transition-all duration-200"
+                                    className="group flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200"
                                 >
                                     <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 flex items-center justify-center group-hover:from-blue-500/20 group-hover:to-blue-600/20 dark:group-hover:from-blue-500/30 dark:group-hover:to-blue-600/30 transition-all duration-200 group-hover:scale-105">
                                         <Mail className="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
@@ -230,8 +214,7 @@ const Footer = () => {
                             <motion.li whileHover={{ x: 5 }} transition={{ type: "spring", stiffness: 300 }}>
                                 <a
                                     href="tel:+1234567890"
-                                    className="group flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400 
-                                             hover:text-slate-900 dark:hover:text-white transition-all duration-200"
+                                    className="group flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200"
                                 >
                                     <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-600/10 dark:from-green-500/20 dark:to-emerald-600/20 flex items-center justify-center group-hover:from-green-500/20 group-hover:to-emerald-600/20 dark:group-hover:from-green-500/30 dark:group-hover:to-emerald-600/30 transition-all duration-200 group-hover:scale-105">
                                         <Phone className="w-4.5 h-4.5 text-green-600 dark:text-green-400" />
@@ -291,7 +274,7 @@ const Footer = () => {
                     transition={{ delay: 0.4 }}
                 >
                     <p className="text-slate-500 dark:text-slate-400 font-light" suppressHydrationWarning>
-                        &copy; {currentYear || '2025'} RentNest. All rights reserved.
+                        &copy; {isMounted ? currentYear : '2025'} RentNest. All rights reserved.
                     </p>
                     <div className="flex items-center gap-6 text-slate-500 dark:text-slate-400">
                         <Link href="/privacy" className="hover:text-slate-900 dark:hover:text-white transition-colors duration-200 font-light text-xs uppercase tracking-wider">

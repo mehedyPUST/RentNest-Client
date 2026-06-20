@@ -2,13 +2,39 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Home, Building2, LogIn, UserPlus, LayoutDashboard, LogOut } from 'lucide-react';
+import { authClient } from '@/lib/auth-client';
+import toast from 'react-hot-toast';
 
-const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
+const Navbar = () => {
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const pathname = usePathname();
+
+    const { data: session } = authClient.useSession();
+    const user = session?.user;
+    console.log(user, 'user from nav')
+    const isLoggedIn = !!user;
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
+
+    const handleLogout = async () => {
+        try {
+            await authClient.signOut();
+            toast.success('Logged out successfully');
+            window.location.href = '/';
+        } catch (error) {
+            toast.error('Failed to logout');
+        }
+    };
+
+    const handleLogin = () => {
+        window.location.href = '/login';
+    };
+
+    // Check if a link is active
+    const isActive = (path) => pathname === path;
 
     // Animation variants
     const logoVariants = {
@@ -96,7 +122,7 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
 
     return (
         <motion.nav
-            className="bg-white border-b border-gray-200 sticky top-0 z-50 shadow-sm"
+            className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm"
             initial={{ y: -100 }}
             animate={{ y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
@@ -112,7 +138,7 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                         animate="animate"
                     >
                         <motion.div
-                            className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center cursor-pointer"
+                            className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center cursor-pointer shadow-md shadow-blue-200"
                             variants={logoIconVariants}
                             initial="initial"
                             animate="animate"
@@ -123,7 +149,7 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                         </motion.div>
                         <div className='flex flex-col'>
                             <Link href="/" className="text-2xl font-bold tracking-tight text-gray-900">
-                                RentNest
+                                Rent<span className="text-blue-600">Nest</span>
                             </Link>
                             <motion.p
                                 className="text-xs text-gray-500 -mt-0.5"
@@ -157,7 +183,10 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                             >
                                 <Link
                                     href={item.href}
-                                    className="flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                                    className={`flex items-center gap-2 transition-colors ${isActive(item.href)
+                                        ? "text-blue-600 font-semibold"
+                                        : "text-gray-700 hover:text-gray-900 font-medium"
+                                        }`}
                                 >
                                     <item.icon className="w-4 h-4" /> {item.label}
                                 </Link>
@@ -175,7 +204,10 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                                 >
                                     <Link
                                         href="/dashboard"
-                                        className="flex items-center gap-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
+                                        className={`flex items-center gap-2 transition-colors ${isActive('/dashboard')
+                                            ? "text-blue-600 font-semibold"
+                                            : "text-gray-700 hover:text-gray-900 font-medium"
+                                            }`}
                                     >
                                         <LayoutDashboard className="w-4 h-4" /> Dashboard
                                     </Link>
@@ -187,7 +219,7 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                                     animate="animate"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={onLogoutClick}
+                                    onClick={handleLogout}
                                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-red-600 font-medium transition-colors"
                                 >
                                     <LogOut className="w-4 h-4" /> Logout
@@ -202,7 +234,7 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                                     animate="animate"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={onLoginClick}
+                                    onClick={handleLogin}
                                     className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:text-gray-900 font-medium transition-colors"
                                 >
                                     <LogIn className="w-4 h-4" /> Login
@@ -218,7 +250,7 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                                 >
                                     <Link
                                         href="/register"
-                                        className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl transition-all active:scale-[0.97]"
+                                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-2xl transition-all active:scale-[0.97] shadow-md shadow-blue-200"
                                     >
                                         <UserPlus className="w-4 h-4" /> Register
                                     </Link>
@@ -230,7 +262,7 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                     {/* Mobile Menu Button */}
                     <motion.button
                         onClick={toggleMenu}
-                        className="md:hidden p-2 text-gray-700 hover:text-gray-900"
+                        className="md:hidden p-2 text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
                         variants={menuButtonVariants}
                         initial="initial"
                         animate="animate"
@@ -256,7 +288,7 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
             <AnimatePresence>
                 {isMenuOpen && (
                     <motion.div
-                        className="md:hidden border-t bg-white overflow-hidden"
+                        className="md:hidden border-t bg-white/95 backdrop-blur-md overflow-hidden shadow-lg"
                         variants={mobileMenuVariants}
                         initial="hidden"
                         animate="visible"
@@ -266,7 +298,10 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                             <motion.div variants={mobileItemVariants}>
                                 <Link
                                     href="/"
-                                    className="flex items-center gap-3 text-gray-700 hover:text-gray-900"
+                                    className={`flex items-center gap-3 transition-colors ${isActive('/')
+                                        ? "text-blue-600 font-semibold"
+                                        : "text-gray-700 hover:text-gray-900"
+                                        }`}
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     <Home className="w-5 h-5" /> Home
@@ -276,7 +311,10 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                             <motion.div variants={mobileItemVariants}>
                                 <Link
                                     href="/properties"
-                                    className="flex items-center gap-3 text-gray-700 hover:text-gray-900"
+                                    className={`flex items-center gap-3 transition-colors ${isActive('/properties')
+                                        ? "text-blue-600 font-semibold"
+                                        : "text-gray-700 hover:text-gray-900"
+                                        }`}
                                     onClick={() => setIsMenuOpen(false)}
                                 >
                                     <Building2 className="w-5 h-5" /> All Properties
@@ -288,7 +326,10 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                                     <motion.div variants={mobileItemVariants}>
                                         <Link
                                             href="/dashboard"
-                                            className="flex items-center gap-3 text-gray-700 hover:text-gray-900"
+                                            className={`flex items-center gap-3 transition-colors ${isActive('/dashboard')
+                                                ? "text-blue-600 font-semibold"
+                                                : "text-gray-700 hover:text-gray-900"
+                                                }`}
                                             onClick={() => setIsMenuOpen(false)}
                                         >
                                             <LayoutDashboard className="w-5 h-5" /> Dashboard
@@ -296,8 +337,8 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                                     </motion.div>
                                     <motion.div variants={mobileItemVariants}>
                                         <button
-                                            onClick={() => { onLogoutClick(); setIsMenuOpen(false); }}
-                                            className="flex items-center gap-3 text-gray-700 hover:text-red-600 w-full text-left"
+                                            onClick={() => { handleLogout(); setIsMenuOpen(false); }}
+                                            className="flex items-center gap-3 text-gray-700 hover:text-red-600 w-full text-left transition-colors"
                                         >
                                             <LogOut className="w-5 h-5" /> Logout
                                         </button>
@@ -307,8 +348,8 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                                 <>
                                     <motion.div variants={mobileItemVariants}>
                                         <button
-                                            onClick={() => { onLoginClick(); setIsMenuOpen(false); }}
-                                            className="flex items-center gap-3 text-gray-700 hover:text-gray-900 w-full text-left"
+                                            onClick={() => { handleLogin(); setIsMenuOpen(false); }}
+                                            className="flex items-center gap-3 text-gray-700 hover:text-gray-900 w-full text-left transition-colors"
                                         >
                                             <LogIn className="w-5 h-5" /> Login
                                         </button>
@@ -320,7 +361,7 @@ const Navbar = ({ isLoggedIn = false, onLoginClick, onLogoutClick }) => {
                                     >
                                         <Link
                                             href="/register"
-                                            className="block w-full text-center py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-2xl"
+                                            className="block w-full text-center py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-2xl transition-all shadow-md shadow-blue-200"
                                             onClick={() => setIsMenuOpen(false)}
                                         >
                                             Register
