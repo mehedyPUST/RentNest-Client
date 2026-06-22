@@ -5,6 +5,7 @@ import React from 'react';
 
 import { Building2, CalendarCheck, DollarSign } from 'lucide-react';
 import { OwnerDashboardStats } from '@/components/dashboard/OwnerDashboardStats';
+import Link from 'next/link';
 
 export default function OwnerDashboardHomePage() {
     return (
@@ -72,10 +73,10 @@ export default function OwnerDashboardHomePage() {
                         Quick Actions
                     </h3>
                     <div className="space-y-3">
-                        <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors text-blue-700 dark:text-blue-400 font-medium">
+                        <Link href={"/dashboard/owner/property/add-property"} className="w-full flex items-center gap-3 p-3 rounded-lg bg-blue-50 dark:bg-blue-950/30 hover:bg-blue-100 dark:hover:bg-blue-950/50 transition-colors text-blue-700 dark:text-blue-400 font-medium">
                             <Building2 className="size-5" />
                             Add New Property
-                        </button>
+                        </Link>
                         <button className="w-full flex items-center gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-950/30 hover:bg-green-100 dark:hover:bg-green-950/50 transition-colors text-green-700 dark:text-green-400 font-medium">
                             <CalendarCheck className="size-5" />
                             View All Bookings

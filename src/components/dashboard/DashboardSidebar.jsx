@@ -9,8 +9,8 @@ import { Briefcase } from "lucide-react";
 export function DashboardSidebar() {
     const navItems = [
         { icon: House, href: '/dashboard/recruiter', label: "Home" },
-        { icon: Magnifier, href: '/dashboard/recruiter/jobs', label: "Jobs" },
-        { icon: Bell, href: '/dashboard/recruiter/jobs/new', label: "Create a Job" },
+        { icon: Magnifier, href: '/dashboard/owner/property', label: "Properties" },
+        { icon: Bell, href: '/dashboard/owner/property/add-property', label: "Add a New Property" },
         { icon: Briefcase, href: '/dashboard/recruiter/company', label: "Company Profile" },
         { icon: Envelope, href: '#', label: "Messages" },
         { icon: Person, href: '#', label: "Profile" },
