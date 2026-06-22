@@ -9,8 +9,14 @@ import { authClient } from '@/lib/auth-client';
 import toast from 'react-hot-toast';
 
 const Navbar = () => {
-    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
     const pathname = usePathname();
+    if (pathname.includes("dashboard")) {
+        return null
+    }
+
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+
 
     const { data: session } = authClient.useSession();
     const user = session?.user;

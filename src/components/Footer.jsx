@@ -24,9 +24,19 @@ import {
 } from 'lucide-react';
 
 const Footer = () => {
+
+
     const [currentYear, setCurrentYear] = useState(null);
     const [isMounted, setIsMounted] = useState(false);
     const pathname = usePathname();
+
+
+    // if (pathname.includes("dashboard")) {
+    //     return null
+    // }
+
+
+
 
     useEffect(() => {
         setIsMounted(true);

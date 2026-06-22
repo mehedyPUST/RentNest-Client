@@ -24,6 +24,13 @@ import { GrGoogle } from "react-icons/gr";
 import { MdEmail, MdLock, MdPerson, MdImage, MdHome, MdBusiness } from "react-icons/md";
 
 export default function SignUpPage() {
+
+    // const uploadImage = async (imageFile)=> {
+    //     const formData = new FormData()
+    //     formData.append('image,imageFile')
+    // }
+
+
     const router = useRouter();
     const [selectedRole, setSelectedRole] = useState("tenant");
     const [isLoading, setIsLoading] = useState(false);
