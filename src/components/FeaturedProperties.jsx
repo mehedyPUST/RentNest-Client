@@ -1,105 +1,92 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaBed, FaBath, FaRulerCombined, FaHeart, FaMapMarkerAlt } from 'react-icons/fa';
-import { Building2, Sparkles, Eye, Home } from 'lucide-react';
+import { Building2, Sparkles, Eye, Home, Loader2 } from 'lucide-react';
 
 const FeaturedProperties = () => {
-    // Static data - replace with MongoDB data later
-    const properties = [
-        {
-            id: 1,
-            title: "Luxury Villa with Ocean View",
-            location: "Malibu, California",
-            price: 1250000,
-            bedrooms: 5,
-            bathrooms: 4,
-            sqft: 3500,
-            image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            type: "Villa",
-            status: "For Sale",
-            featured: true,
-            yearBuilt: 2020
-        },
-        {
-            id: 2,
-            title: "Modern Downtown Apartment",
-            location: "New York, NY",
-            price: 850000,
-            bedrooms: 3,
-            bathrooms: 2,
-            sqft: 1800,
-            image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            type: "Apartment",
-            status: "For Rent",
-            featured: true,
-            yearBuilt: 2018
-        },
-        {
-            id: 3,
-            title: "Spacious Family House",
-            location: "Austin, Texas",
-            price: 620000,
-            bedrooms: 4,
-            bathrooms: 3,
-            sqft: 2800,
-            image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            type: "House",
-            status: "For Sale",
-            featured: true,
-            yearBuilt: 2022
-        },
-        {
-            id: 4,
-            title: "Penthouse with City Views",
-            location: "Chicago, Illinois",
-            price: 2100000,
-            bedrooms: 4,
-            bathrooms: 3.5,
-            sqft: 4200,
-            image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            type: "Penthouse",
-            status: "For Sale",
-            featured: true,
-            yearBuilt: 2019
-        },
-        {
-            id: 5,
-            title: "Cozy Suburban Home",
-            location: "Portland, Oregon",
-            price: 450000,
-            bedrooms: 3,
-            bathrooms: 2,
-            sqft: 1600,
-            image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            type: "House",
-            status: "For Sale",
-            featured: true,
-            yearBuilt: 2015
-        },
-        {
-            id: 6,
-            title: "Waterfront Condo",
-            location: "Miami, Florida",
-            price: 950000,
-            bedrooms: 2,
-            bathrooms: 2,
-            sqft: 1500,
-            image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            type: "Condo",
-            status: "For Rent",
-            featured: true,
-            yearBuilt: 2021
-        }
-    ];
+    const router = useRouter();
+    const [properties, setProperties] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    useEffect(() => {
+        const fetchProperties = async () => {
+            try {
+                setLoading(true);
+                const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties`
+                );
+
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch properties: ${res.status}`);
+                }
+
+                const data = await res.json();
+
+                // Handle different response structures
+                let propertiesData = [];
+                if (Array.isArray(data)) {
+                    propertiesData = data;
+                } else if (data?.properties && Array.isArray(data.properties)) {
+                    propertiesData = data.properties;
+                } else if (data?.data && Array.isArray(data.data)) {
+                    propertiesData = data.data;
+                } else {
+                    propertiesData = [];
+                }
+
+                // Filter only featured properties
+                const featuredProperties = propertiesData.filter(
+                    (p) => p.status === 'approved' || p.status === 'featured'
+                );
+
+                setProperties(featuredProperties.length > 0 ? featuredProperties : propertiesData);
+                setError(null);
+            } catch (err) {
+                console.error('Error fetching properties:', err);
+                setError(err.message);
+                setProperties([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProperties();
+    }, []);
+
+    // Function to handle view details click with loading state
+    const handleViewDetails = (propertyId) => {
+        // You can add analytics tracking here
+        console.log('Viewing property:', propertyId);
+
+        // Navigate to property details page
+        router.push(`/all-properties/${propertyId}`);
+    };
 
     const formatPrice = (price) => {
+        if (!price) return 'N/A';
         if (price >= 1000000) {
             return `$${(price / 1000000).toFixed(1)}M`;
         }
         return `$${price.toLocaleString()}`;
+    };
+
+    const getStatusColor = (status) => {
+        switch (status?.toLowerCase()) {
+            case 'approved':
+            case 'featured':
+                return 'bg-blue-600 text-white';
+            case 'pending':
+                return 'bg-yellow-500 text-white';
+            case 'rejected':
+                return 'bg-red-600 text-white';
+            default:
+                return 'bg-gray-600 text-white';
+        }
     };
 
     // Animation Variants
@@ -212,6 +199,70 @@ const FeaturedProperties = () => {
         }
     };
 
+    // Loading State
+    if (loading) {
+        return (
+            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center">
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="inline-block"
+                        >
+                            <Loader2 className="w-12 h-12 text-blue-600" />
+                        </motion.div>
+                        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading properties...</p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    // Error State
+    if (error) {
+        return (
+            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center">
+                        <div className="text-6xl mb-4">🏠</div>
+                        <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
+                            Unable to load properties
+                        </h3>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2">
+                            {error}
+                        </p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    // Empty State
+    if (properties.length === 0) {
+        return (
+            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="text-center">
+                        <div className="text-6xl mb-4">🔍</div>
+                        <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
+                            No properties found
+                        </h3>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2">
+                            Check back later for new listings
+                        </p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
     return (
         <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -279,152 +330,169 @@ const FeaturedProperties = () => {
                     whileInView="visible"
                     viewport={{ once: true, amount: 0.1 }}
                 >
-                    {properties.map((property) => (
-                        <motion.div
-                            key={property.id}
-                            variants={cardVariants}
-                            initial="hidden"
-                            whileInView="visible"
-                            whileHover="hover"
-                            viewport={{ once: true }}
-                            className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-300 border border-gray-200/50 dark:border-gray-800/50"
-                        >
-                            {/* Image Container */}
+                    {properties.map((property) => {
+                        // Get the first image from the images array
+                        const imageUrl = property.images && property.images.length > 0
+                            ? property.images[0]
+                            : 'https://via.placeholder.com/800x600/CCCCCC/FFFFFF?text=No+Image';
+
+                        // Get property specifications
+                        const bedrooms = property.specifications?.bedrooms || 0;
+                        const bathrooms = property.specifications?.bathrooms || 0;
+                        const sqft = property.specifications?.size || 'N/A';
+
+                        // Get ID (handle both MongoDB _id and regular id)
+                        const propertyId = property._id?.$oid || property._id || property.id;
+
+                        return (
                             <motion.div
-                                className="relative overflow-hidden aspect-[4/3]"
-                                variants={imageVariants}
-                                initial="initial"
+                                key={propertyId}
+                                variants={cardVariants}
+                                initial="hidden"
+                                whileInView="visible"
                                 whileHover="hover"
+                                viewport={{ once: true }}
+                                className="group bg-white dark:bg-gray-900 rounded-2xl overflow-hidden shadow-md hover:shadow-2xl transition-shadow duration-300 border border-gray-200/50 dark:border-gray-800/50"
                             >
-                                <img
-                                    src={property.image}
-                                    alt={property.title}
-                                    className="w-full h-full object-cover"
-                                />
-
-                                {/* Status Badge */}
-                                <motion.span
-                                    className={`absolute top-4 left-4 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider shadow-lg ${property.status === 'For Sale'
-                                            ? 'bg-blue-600 text-white'
-                                            : 'bg-green-600 text-white'
-                                        }`}
-                                    variants={badgeVariants}
-                                    initial="hidden"
-                                    whileInView="visible"
-                                    viewport={{ once: true }}
-                                >
-                                    {property.status}
-                                </motion.span>
-
-                                {/* Property Type Badge */}
-                                <motion.span
-                                    className="absolute top-4 right-4 px-4 py-1.5 rounded-full bg-black/70 backdrop-blur-sm text-white text-xs font-medium shadow-lg"
-                                    initial={{ x: 50, opacity: 0 }}
-                                    whileInView={{ x: 0, opacity: 1 }}
-                                    transition={{ delay: 0.4, duration: 0.4 }}
-                                    viewport={{ once: true }}
-                                >
-                                    {property.type}
-                                </motion.span>
-
-                                {/* Favorite Button */}
-                                <motion.button
-                                    className="absolute bottom-4 right-4 p-2.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-all duration-200 shadow-lg"
-                                    variants={favoriteButtonVariants}
-                                    initial="initial"
-                                    whileHover="hover"
-                                    whileTap="tap"
-                                    onClick={() => console.log('Favorite clicked')}
-                                >
-                                    <FaHeart className="w-4 h-4 text-gray-600 hover:text-red-500 transition-colors" />
-                                </motion.button>
-                            </motion.div>
-
-                            {/* Content */}
-                            <div className="p-6">
-                                {/* Price */}
-                                <div className="flex items-center justify-between mb-3">
-                                    <motion.div
-                                        className="text-2xl font-bold text-gray-900 dark:text-white"
-                                        whileHover={{ scale: 1.05 }}
-                                        transition={{ type: "spring", stiffness: 300 }}
-                                    >
-                                        {formatPrice(property.price)}
-                                    </motion.div>
-                                    <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
-                                        <Eye className="w-4 h-4" />
-                                        <span>254 views</span>
-                                    </div>
-                                </div>
-
-                                {/* Title */}
-                                <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-1">
-                                    {property.title}
-                                </h3>
-
-                                {/* Location */}
-                                <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mb-4">
-                                    <FaMapMarkerAlt className="w-3.5 h-3.5" />
-                                    <span>{property.location}</span>
-                                </div>
-
-                                {/* Features */}
-                                <div className="flex items-center gap-4 pt-4 border-t border-gray-100 dark:border-gray-800">
-                                    <motion.div
-                                        className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300"
-                                        whileHover={{ scale: 1.1 }}
-                                        transition={{ type: "spring", stiffness: 300 }}
-                                    >
-                                        <FaBed className="w-4 h-4" />
-                                        <span>{property.bedrooms}</span>
-                                    </motion.div>
-                                    <motion.div
-                                        className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300"
-                                        whileHover={{ scale: 1.1 }}
-                                        transition={{ type: "spring", stiffness: 300 }}
-                                    >
-                                        <FaBath className="w-4 h-4" />
-                                        <span>{property.bathrooms}</span>
-                                    </motion.div>
-                                    <motion.div
-                                        className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300"
-                                        whileHover={{ scale: 1.1 }}
-                                        transition={{ type: "spring", stiffness: 300 }}
-                                    >
-                                        <FaRulerCombined className="w-4 h-4" />
-                                        <span>{property.sqft.toLocaleString()} sqft</span>
-                                    </motion.div>
-                                </div>
-
-                                {/* View Details Button */}
+                                {/* Image Container */}
                                 <motion.div
-                                    variants={buttonVariants}
+                                    className="relative overflow-hidden aspect-[4/3] cursor-pointer"
+                                    variants={imageVariants}
                                     initial="initial"
                                     whileHover="hover"
-                                    whileTap="tap"
+                                    onClick={() => handleViewDetails(propertyId)}
                                 >
-                                    <Link
-                                        href={`/properties/${property.id}`}
-                                        className="mt-4 w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40"
+                                    <img
+                                        src={imageUrl}
+                                        alt={property.title || 'Property'}
+                                        className="w-full h-full object-cover"
+                                    />
+
+                                    {/* Status Badge */}
+                                    <motion.span
+                                        className={`absolute top-4 left-4 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider shadow-lg ${getStatusColor(property.status)}`}
+                                        variants={badgeVariants}
+                                        initial="hidden"
+                                        whileInView="visible"
+                                        viewport={{ once: true }}
                                     >
-                                        <Home className="w-4 h-4" />
-                                        View Details
-                                        <motion.svg
-                                            className="w-4 h-4"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            viewBox="0 0 24 24"
-                                            animate={{ x: 0 }}
-                                            whileHover={{ x: 5 }}
-                                            transition={{ duration: 0.2 }}
-                                        >
-                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                                        </motion.svg>
-                                    </Link>
+                                        {property.status || 'Available'}
+                                    </motion.span>
+
+                                    {/* Property Type Badge */}
+                                    <motion.span
+                                        className="absolute top-4 right-4 px-4 py-1.5 rounded-full bg-black/70 backdrop-blur-sm text-white text-xs font-medium shadow-lg capitalize"
+                                        initial={{ x: 50, opacity: 0 }}
+                                        whileInView={{ x: 0, opacity: 1 }}
+                                        transition={{ delay: 0.4, duration: 0.4 }}
+                                        viewport={{ once: true }}
+                                    >
+                                        {property.propertyType || 'Property'}
+                                    </motion.span>
+
+                                    {/* Favorite Button */}
+                                    <motion.button
+                                        className="absolute bottom-4 right-4 p-2.5 rounded-full bg-white/90 backdrop-blur-sm hover:bg-white transition-all duration-200 shadow-lg"
+                                        variants={favoriteButtonVariants}
+                                        initial="initial"
+                                        whileHover="hover"
+                                        whileTap="tap"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            console.log('Favorite clicked', propertyId);
+                                        }}
+                                    >
+                                        <FaHeart className="w-4 h-4 text-gray-600 hover:text-red-500 transition-colors" />
+                                    </motion.button>
                                 </motion.div>
-                            </div>
-                        </motion.div>
-                    ))}
+
+                                {/* Content */}
+                                <div className="p-6">
+                                    {/* Price */}
+                                    <div className="flex items-center justify-between mb-3">
+                                        <motion.div
+                                            className="text-2xl font-bold text-gray-900 dark:text-white"
+                                            whileHover={{ scale: 1.05 }}
+                                            transition={{ type: "spring", stiffness: 300 }}
+                                        >
+                                            {formatPrice(property.price)}
+                                        </motion.div>
+                                        <div className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
+                                            <Eye className="w-4 h-4" />
+                                            <span>{property.rentType || 'N/A'}</span>
+                                        </div>
+                                    </div>
+
+                                    {/* Title */}
+                                    <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2 line-clamp-1">
+                                        {property.title || 'Untitled Property'}
+                                    </h3>
+
+                                    {/* Location */}
+                                    <div className="flex items-center gap-1.5 text-sm text-gray-500 dark:text-gray-400 mb-4">
+                                        <FaMapMarkerAlt className="w-3.5 h-3.5" />
+                                        <span>{property.location || 'Location not specified'}</span>
+                                    </div>
+
+                                    {/* Features */}
+                                    <div className="flex items-center gap-4 pt-4 border-t border-gray-100 dark:border-gray-800">
+                                        <motion.div
+                                            className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300"
+                                            whileHover={{ scale: 1.1 }}
+                                            transition={{ type: "spring", stiffness: 300 }}
+                                        >
+                                            <FaBed className="w-4 h-4" />
+                                            <span>{bedrooms}</span>
+                                        </motion.div>
+                                        <motion.div
+                                            className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300"
+                                            whileHover={{ scale: 1.1 }}
+                                            transition={{ type: "spring", stiffness: 300 }}
+                                        >
+                                            <FaBath className="w-4 h-4" />
+                                            <span>{bathrooms}</span>
+                                        </motion.div>
+                                        <motion.div
+                                            className="flex items-center gap-1.5 text-sm text-gray-600 dark:text-gray-300"
+                                            whileHover={{ scale: 1.1 }}
+                                            transition={{ type: "spring", stiffness: 300 }}
+                                        >
+                                            <FaRulerCombined className="w-4 h-4" />
+                                            <span>{typeof sqft === 'number' ? sqft.toLocaleString() : sqft} sqft</span>
+                                        </motion.div>
+                                    </div>
+
+                                    {/* View Details Button */}
+                                    <motion.div
+                                        variants={buttonVariants}
+                                        initial="initial"
+                                        whileHover="hover"
+                                        whileTap="tap"
+                                        className="mt-4"
+                                    >
+                                        <button
+                                            onClick={() => handleViewDetails(propertyId)}
+                                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40"
+                                        >
+                                            <Home className="w-4 h-4" />
+                                            View Details
+                                            <motion.svg
+                                                className="w-4 h-4"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                viewBox="0 0 24 24"
+                                                animate={{ x: 0 }}
+                                                whileHover={{ x: 5 }}
+                                                transition={{ duration: 0.2 }}
+                                            >
+                                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                                            </motion.svg>
+                                        </button>
+                                    </motion.div>
+                                </div>
+                            </motion.div>
+                        );
+                    })}
                 </motion.div>
 
                 {/* View All Properties Button */}
@@ -442,7 +510,7 @@ const FeaturedProperties = () => {
                         whileTap="tap"
                     >
                         <Link
-                            href="/properties"
+                            href="/all-properties"
                             className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-gray-900 border-2 border-blue-600 hover:bg-blue-600 text-blue-600 hover:text-white dark:text-blue-400 dark:hover:text-white font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
                         >
                             <Building2 className="w-5 h-5" />

@@ -177,7 +177,7 @@ const Navbar = () => {
                     <div className="hidden md:flex items-center gap-8">
                         {[
                             { href: "/", icon: Home, label: "Home" },
-                            { href: "/properties", icon: Building2, label: "All Properties" },
+                            { href: "/all-properties", icon: Building2, label: "All Properties" },
                         ].map((item, index) => (
                             <motion.div
                                 key={item.href}
