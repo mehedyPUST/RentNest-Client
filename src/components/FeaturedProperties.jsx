@@ -17,8 +17,10 @@ const FeaturedProperties = () => {
         const fetchProperties = async () => {
             try {
                 setLoading(true);
+
                 const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties`
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties/featured`,
+                    { cache: 'no-store' }
                 );
 
                 if (!res.ok) {
@@ -27,24 +29,12 @@ const FeaturedProperties = () => {
 
                 const data = await res.json();
 
-                // Handle different response structures
-                let propertiesData = [];
-                if (Array.isArray(data)) {
-                    propertiesData = data;
-                } else if (data?.properties && Array.isArray(data.properties)) {
-                    propertiesData = data.properties;
-                } else if (data?.data && Array.isArray(data.data)) {
-                    propertiesData = data.data;
+                if (data.success && data.properties) {
+                    setProperties(data.properties);
                 } else {
-                    propertiesData = [];
+                    setProperties([]);
                 }
 
-                // Filter only featured properties
-                const featuredProperties = propertiesData.filter(
-                    (p) => p.status === 'approved' || p.status === 'featured'
-                );
-
-                setProperties(featuredProperties.length > 0 ? featuredProperties : propertiesData);
                 setError(null);
             } catch (err) {
                 console.error('Error fetching properties:', err);
@@ -58,12 +48,8 @@ const FeaturedProperties = () => {
         fetchProperties();
     }, []);
 
-    // Function to handle view details click with loading state
     const handleViewDetails = (propertyId) => {
-        // You can add analytics tracking here
         console.log('Viewing property:', propertyId);
-
-        // Navigate to property details page
         router.push(`/all-properties/${propertyId}`);
     };
 
@@ -75,18 +61,10 @@ const FeaturedProperties = () => {
         return `$${price.toLocaleString()}`;
     };
 
-    const getStatusColor = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'approved':
-            case 'featured':
-                return 'bg-blue-600 text-white';
-            case 'pending':
-                return 'bg-yellow-500 text-white';
-            case 'rejected':
-                return 'bg-red-600 text-white';
-            default:
-                return 'bg-gray-600 text-white';
-        }
+    // Capitalize first letter
+    const capitalizeFirst = (str) => {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1);
     };
 
     // Animation Variants
@@ -168,19 +146,6 @@ const FeaturedProperties = () => {
         }
     };
 
-    const badgeVariants = {
-        hidden: { x: -50, opacity: 0 },
-        visible: {
-            x: 0,
-            opacity: 1,
-            transition: {
-                delay: 0.3,
-                duration: 0.4,
-                ease: "easeOut"
-            }
-        }
-    };
-
     const favoriteButtonVariants = {
         initial: { scale: 1 },
         hover: {
@@ -252,10 +217,10 @@ const FeaturedProperties = () => {
                     <div className="text-center">
                         <div className="text-6xl mb-4">🔍</div>
                         <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
-                            No properties found
+                            No Featured Properties
                         </h3>
                         <p className="text-gray-500 dark:text-gray-400 mt-2">
-                            Check back later for new listings
+                            Check back later for new approved listings
                         </p>
                     </div>
                 </div>
@@ -322,7 +287,7 @@ const FeaturedProperties = () => {
                     </p>
                 </motion.div>
 
-                {/* Properties Grid */}
+                {/* Properties Grid - 3 Columns */}
                 <motion.div
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8"
                     variants={containerVariants}
@@ -331,17 +296,13 @@ const FeaturedProperties = () => {
                     viewport={{ once: true, amount: 0.1 }}
                 >
                     {properties.map((property) => {
-                        // Get the first image from the images array
                         const imageUrl = property.images && property.images.length > 0
                             ? property.images[0]
                             : 'https://via.placeholder.com/800x600/CCCCCC/FFFFFF?text=No+Image';
 
-                        // Get property specifications
                         const bedrooms = property.specifications?.bedrooms || 0;
                         const bathrooms = property.specifications?.bathrooms || 0;
                         const sqft = property.specifications?.size || 'N/A';
-
-                        // Get ID (handle both MongoDB _id and regular id)
                         const propertyId = property._id?.$oid || property._id || property.id;
 
                         return (
@@ -368,18 +329,7 @@ const FeaturedProperties = () => {
                                         className="w-full h-full object-cover"
                                     />
 
-                                    {/* Status Badge */}
-                                    <motion.span
-                                        className={`absolute top-4 left-4 px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider shadow-lg ${getStatusColor(property.status)}`}
-                                        variants={badgeVariants}
-                                        initial="hidden"
-                                        whileInView="visible"
-                                        viewport={{ once: true }}
-                                    >
-                                        {property.status || 'Available'}
-                                    </motion.span>
-
-                                    {/* Property Type Badge */}
+                                    {/* Property Type Badge - Capitalized */}
                                     <motion.span
                                         className="absolute top-4 right-4 px-4 py-1.5 rounded-full bg-black/70 backdrop-blur-sm text-white text-xs font-medium shadow-lg capitalize"
                                         initial={{ x: 50, opacity: 0 }}
@@ -387,7 +337,7 @@ const FeaturedProperties = () => {
                                         transition={{ delay: 0.4, duration: 0.4 }}
                                         viewport={{ once: true }}
                                     >
-                                        {property.propertyType || 'Property'}
+                                        {capitalizeFirst(property.propertyType)}
                                     </motion.span>
 
                                     {/* Favorite Button */}
@@ -514,7 +464,7 @@ const FeaturedProperties = () => {
                             className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-gray-900 border-2 border-blue-600 hover:bg-blue-600 text-blue-600 hover:text-white dark:text-blue-400 dark:hover:text-white font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
                         >
                             <Building2 className="w-5 h-5" />
-                            View All Properties
+                            View All  Properties
                             <motion.svg
                                 className="w-5 h-5"
                                 fill="none"

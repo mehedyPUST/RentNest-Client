@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaBed, FaBath, FaMapMarkerAlt } from 'react-icons/fa';
-import { Home, Loader2, Eye, AlertCircle } from 'lucide-react';
+import { Home, Loader2, Eye, AlertCircle, Building2, Sparkles } from 'lucide-react';
 
 const AllPropertiesPage = () => {
     const router = useRouter();
@@ -85,12 +85,60 @@ const AllPropertiesPage = () => {
 
                 {/* Header */}
                 <div className="text-center mb-12">
-                    <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                        All Properties
+                    <motion.div
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm mb-6"
+                        whileHover={{ scale: 1.05 }}
+                        transition={{ type: "spring", stiffness: 300 }}
+                    >
+                        <motion.span
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
+                        >
+                            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        </motion.span>
+                        <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Premium Properties</span>
+                    </motion.div>
+
+                    <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4">
+                        Explore <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Verified</span> Properties
                     </h1>
-                    <p className="text-gray-500 mt-2">
-                        Showing {properties.length} approved properties
+
+                    <div className="flex items-center justify-center gap-3 mb-6">
+                        <motion.div
+                            className="w-16 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                            initial={{ width: 0 }}
+                            whileInView={{ width: 64 }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                            viewport={{ once: true }}
+                        ></motion.div>
+                        <motion.div
+                            className="w-2 h-2 bg-blue-600 rounded-full"
+                            initial={{ scale: 0 }}
+                            whileInView={{ scale: 1 }}
+                            transition={{ duration: 0.4, delay: 0.4 }}
+                            viewport={{ once: true }}
+                        ></motion.div>
+                        <motion.div
+                            className="w-16 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"
+                            initial={{ width: 0 }}
+                            whileInView={{ width: 64 }}
+                            transition={{ duration: 0.8, delay: 0.2 }}
+                            viewport={{ once: true }}
+                        ></motion.div>
+                    </div>
+
+                    <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
+                        Discover our curated collection of premium verified properties. Each listing is carefully selected for quality, location, and value.
                     </p>
+
+                    {properties.length > 0 && (
+                        <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full">
+                            <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                                {properties.length} Verified Properties Available
+                            </span>
+                        </div>
+                    )}
                 </div>
 
                 {/* No Properties Found */}
@@ -100,10 +148,10 @@ const AllPropertiesPage = () => {
                             <AlertCircle className="w-16 h-16 text-gray-400" />
                         </div>
                         <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-300">
-                            No Approved Properties
+                            No Verified Properties Yet
                         </h2>
                         <p className="text-gray-500 mt-2">
-                            There are no approved properties available at the moment.
+                            We're adding new properties daily. Check back soon!
                         </p>
                     </div>
                 )}
@@ -139,6 +187,14 @@ const AllPropertiesPage = () => {
                                         alt={property.title}
                                         className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                                     />
+
+                                    {/* Verified Badge */}
+                                    <span className="absolute top-3 left-3 px-3 py-1 text-xs bg-green-600 text-white rounded-full flex items-center gap-1">
+                                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                                        </svg>
+                                        Verified
+                                    </span>
 
                                     {/* Type - Capitalized first letter */}
                                     <span className="absolute top-3 right-3 px-3 py-1 text-xs bg-black/70 text-white rounded-full capitalize">
