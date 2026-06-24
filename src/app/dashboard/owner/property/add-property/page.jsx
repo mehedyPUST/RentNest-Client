@@ -178,9 +178,22 @@ export default function AddPropertyForm() {
         }
     };
 
+    // Check if user has permission to add property (Admin or Owner)
+    const hasPermission = () => {
+        if (!user) return false;
+        const role = user.role?.toLowerCase();
+        return role === 'admin' || role === 'owner';
+    };
+
     // FORM SUBMIT HANDLER
     const handleSubmit = async (e) => {
         e.preventDefault();
+
+        // Check permission again before submission
+        if (!hasPermission()) {
+            alert('You do not have permission to add properties. Only Admin and Owner roles can add properties.');
+            return;
+        }
 
         if (!title || !description || !location || !propertyType || !price || !bedrooms || !bathrooms || !size) {
             alert('Please fill in all required fields');
@@ -225,7 +238,8 @@ export default function AddPropertyForm() {
                 owner: {  // Keep this for display/denormalization
                     name: user.name || user.fullName || 'User',
                     email: user.email,
-                    phone: user.phone || ''
+                    phone: user.phone || '',
+                    role: user.role || 'owner'  // Include role in owner data
                 },
                 createdAt: new Date().toISOString()
             };
@@ -282,6 +296,36 @@ export default function AddPropertyForm() {
         );
     }
 
+    // Check if user has permission (Admin or Owner)
+    if (!hasPermission()) {
+        return (
+            <div className="max-w-4xl mx-auto p-8 text-center">
+                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-8">
+                    <div className="flex justify-center mb-4">
+                        <svg className="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                    </div>
+                    <h2 className="text-2xl font-bold text-red-800 dark:text-red-400 mb-4">
+                        Access Denied
+                    </h2>
+                    <p className="text-gray-600 dark:text-gray-400 mb-4">
+                        You do not have permission to add properties. Only users with <strong>Admin</strong> or <strong>Owner</strong> roles can add properties.
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-500">
+                        Your current role: <span className="font-semibold capitalize">{user?.role || 'User'}</span>
+                    </p>
+                    <a
+                        href="/dashboard"
+                        className="inline-block mt-4 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                    >
+                        Go to Dashboard
+                    </a>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="max-w-4xl mx-auto space-y-6 p-4 md:p-6 bg-gray-100 dark:bg-gray-900 rounded-2xl min-h-screen">
 
@@ -289,6 +333,11 @@ export default function AddPropertyForm() {
             <div className="border-b border-gray-300 dark:border-gray-800 pb-5">
                 <h1 className="text-2xl font-bold tracking-tight text-gray-950 dark:text-white">Add New Property</h1>
                 <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Fill out the details below to list your property on RentNest.</p>
+                <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                    <span className="text-xs font-medium text-emerald-800 dark:text-emerald-400">
+                        Role: {user?.role || 'Owner'} • You have permission to add properties
+                    </span>
+                </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -594,8 +643,17 @@ export default function AddPropertyForm() {
                             />
                         </div>
                     </div>
-                    {user?.phone && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="flex flex-col gap-1.5">
+                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Role</label>
+                            <input
+                                disabled
+                                type="text"
+                                value={user?.role || 'Owner'}
+                                className="w-full px-3.5 py-2 rounded-lg bg-gray-300/60 dark:bg-gray-800/60 text-gray-900 dark:text-white text-sm border border-transparent cursor-not-allowed font-medium capitalize"
+                            />
+                        </div>
+                        {user?.phone && (
                             <div className="flex flex-col gap-1.5">
                                 <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Phone Number</label>
                                 <input
@@ -605,8 +663,8 @@ export default function AddPropertyForm() {
                                     className="w-full px-3.5 py-2 rounded-lg bg-gray-300/60 dark:bg-gray-800/60 text-gray-900 dark:text-white text-sm border border-transparent cursor-not-allowed font-medium"
                                 />
                             </div>
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
 
                 {/* ACTION BUTTONS */}

@@ -42,6 +42,27 @@ const Navbar = () => {
     // Check if a link is active
     const isActive = (path) => pathname === path;
 
+    // Get dashboard path based on user role
+    const getDashboardPath = () => {
+        if (!user) return '/dashboard';
+        const role = user?.role?.toLowerCase();
+        if (role === 'admin') return '/dashboard/admin';
+        if (role === 'owner') return '/dashboard/owner';
+        if (role === 'tenant') return '/dashboard/tenant';
+        // if (role === 'tenant') return '/dashboard';
+        return '/dashboard';
+    };
+
+    // Get dashboard label based on user role
+    const getDashboardLabel = () => {
+        if (!user) return 'Dashboard';
+        const role = user?.role?.toLowerCase();
+        if (role === 'admin') return 'Admin Panel';
+        if (role === 'owner') return 'Dashboard';
+        if (role === 'tenant') return 'Dashboard';
+        return 'Dashboard';
+    };
+
     // Animation variants
     const logoVariants = {
         initial: { opacity: 0, x: -20 },
@@ -126,6 +147,9 @@ const Navbar = () => {
         }
     };
 
+    const dashboardPath = getDashboardPath();
+    const dashboardLabel = getDashboardLabel();
+
     return (
         <motion.nav
             className="bg-white/95 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm"
@@ -209,13 +233,13 @@ const Navbar = () => {
                                     whileHover="hover"
                                 >
                                     <Link
-                                        href="/dashboard"
-                                        className={`flex items-center gap-2 transition-colors ${isActive('/dashboard')
+                                        href={dashboardPath}
+                                        className={`flex items-center gap-2 transition-colors ${isActive(dashboardPath)
                                             ? "text-blue-600 font-semibold"
                                             : "text-gray-700 hover:text-gray-900 font-medium"
                                             }`}
                                     >
-                                        <LayoutDashboard className="w-4 h-4" /> Dashboard
+                                        <LayoutDashboard className="w-4 h-4" /> {dashboardLabel}
                                     </Link>
                                 </motion.div>
                                 <motion.button
@@ -316,8 +340,8 @@ const Navbar = () => {
 
                             <motion.div variants={mobileItemVariants}>
                                 <Link
-                                    href="/properties"
-                                    className={`flex items-center gap-3 transition-colors ${isActive('/properties')
+                                    href="/all-properties"
+                                    className={`flex items-center gap-3 transition-colors ${isActive('/all-properties')
                                         ? "text-blue-600 font-semibold"
                                         : "text-gray-700 hover:text-gray-900"
                                         }`}
@@ -331,14 +355,14 @@ const Navbar = () => {
                                 <>
                                     <motion.div variants={mobileItemVariants}>
                                         <Link
-                                            href="/dashboard"
-                                            className={`flex items-center gap-3 transition-colors ${isActive('/dashboard')
+                                            href={dashboardPath}
+                                            className={`flex items-center gap-3 transition-colors ${isActive(dashboardPath)
                                                 ? "text-blue-600 font-semibold"
                                                 : "text-gray-700 hover:text-gray-900"
                                                 }`}
                                             onClick={() => setIsMenuOpen(false)}
                                         >
-                                            <LayoutDashboard className="w-5 h-5" /> Dashboard
+                                            <LayoutDashboard className="w-5 h-5" /> {dashboardLabel}
                                         </Link>
                                     </motion.div>
                                     <motion.div variants={mobileItemVariants}>
