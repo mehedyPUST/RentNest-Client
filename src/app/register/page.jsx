@@ -18,23 +18,24 @@ import {
 } from "@heroui/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useRef } from "react";
 import toast from "react-hot-toast";
 import { GrGoogle } from "react-icons/gr";
-import { MdEmail, MdLock, MdPerson, MdImage, MdHome, MdBusiness } from "react-icons/md";
+import { MdEmail, MdLock, MdPerson, MdImage, MdHome, MdBusiness, MdCloudUpload, MdClose } from "react-icons/md";
 
 export default function SignUpPage() {
-
-    // const uploadImage = async (imageFile)=> {
-    //     const formData = new FormData()
-    //     formData.append('image,imageFile')
-    // }
-
-
     const router = useRouter();
     const [selectedRole, setSelectedRole] = useState("tenant");
     const [isLoading, setIsLoading] = useState(false);
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+    // 📸 ইমেজ আপলোড স্টেট
+    const [selectedImage, setSelectedImage] = useState(null);
+    const [imagePreview, setImagePreview] = useState(null);
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const [imageUrl, setImageUrl] = useState("");
+    const fileInputRef = useRef(null);
 
     const roles = [
         { id: "tenant", label: "Tenant", description: "Looking for a home", icon: MdHome, colorClass: "text-blue-600", bgClass: "bg-blue-100" },
@@ -53,6 +54,85 @@ export default function SignUpPage() {
         return <Icon className={selectedRole === "tenant" ? "text-blue-500" : "text-purple-500"} size={18} />;
     };
 
+    // 📸 ইমেজ আপলোড ফাংশন (AddPropertyForm থেকে নেওয়া)
+    const uploadImageToImgBB = async (file) => {
+        const API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
+
+        if (!API_KEY) {
+            throw new Error('ImgBB API key is not configured');
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                return data.data.url;
+            } else {
+                throw new Error(data.error?.message || 'Image upload failed');
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            throw new Error(`Failed to upload image: ${error.message}`);
+        }
+    };
+
+    // 📸 ইমেজ সিলেক্ট
+    const handleImageSelect = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // ভ্যালিডেশন
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        const isValidType = validTypes.includes(file.type);
+        const isValidSize = file.size <= 5 * 1024 * 1024;
+
+        if (!isValidType) {
+            toast.error('Only JPEG, JPG, PNG, WEBP, and GIF are allowed.');
+            return;
+        }
+        if (!isValidSize) {
+            toast.error('Image size must be less than 5MB.');
+            return;
+        }
+
+        // প্রিভিউ তৈরি
+        const preview = URL.createObjectURL(file);
+        setImagePreview(preview);
+        setSelectedImage(file);
+        setImageUrl(""); // Reset URL if any
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    const handleRemoveImage = () => {
+        if (imagePreview) {
+            URL.revokeObjectURL(imagePreview);
+        }
+        setImagePreview(null);
+        setSelectedImage(null);
+        setImageUrl("");
+    };
+
+    // Image URL input change
+    const handleImageUrlChange = (e) => {
+        const url = e.target.value;
+        setImageUrl(url);
+        if (url) {
+            setImagePreview(null);
+            setSelectedImage(null);
+        }
+    };
+
     const onSubmit = async (e) => {
         e.preventDefault();
 
@@ -63,10 +143,10 @@ export default function SignUpPage() {
         const formEntries = Object.fromEntries(formData.entries());
 
         const name = formEntries.name;
-        const image = formEntries.image;
         const email = formEntries.email;
         const password = formEntries.password;
         const role = selectedRole;
+        const imageUrlFromInput = formEntries.imageUrl || "";
 
         if (!name || !email || !password || !role) {
             toast.error("Please fill in all required fields");
@@ -77,11 +157,30 @@ export default function SignUpPage() {
         const loadingToast = toast.loading("Creating your account...");
 
         try {
+            let finalImageUrl = imageUrlFromInput;
+
+            // 📸 ইমেজ আপলোড (যদি ফাইল সিলেক্ট করা থাকে)
+            if (selectedImage) {
+                setUploading(true);
+                setUploadProgress(0);
+                try {
+                    finalImageUrl = await uploadImageToImgBB(selectedImage);
+                    setUploadProgress(100);
+                } catch (uploadError) {
+                    toast.dismiss(loadingToast);
+                    toast.error(`Image upload failed: ${uploadError.message}`);
+                    setIsLoading(false);
+                    setUploading(false);
+                    return;
+                }
+                setUploading(false);
+            }
+
             const result = await authClient.signUp.email({
                 name,
                 email,
                 password,
-                image: image || undefined,
+                image: finalImageUrl || undefined,
                 role: role,
             });
 
@@ -172,19 +271,117 @@ export default function SignUpPage() {
                                     <FieldError />
                                 </TextField>
 
-                                {/* Image URL Field */}
-                                <TextField name="image" type="text">
-                                    <Label className="text-gray-700 font-semibold">Profile Image URL (Optional)</Label>
+                                {/* 📸 Profile Image Upload - Updated */}
+                                <div className="flex flex-col gap-2">
+                                    <Label className="text-gray-700 font-semibold">Profile Image</Label>
+
+                                    {/* Drag & Drop / Click to Upload */}
+                                    <div
+                                        onClick={() => fileInputRef.current?.click()}
+                                        onDragOver={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                        }}
+                                        onDrop={(e) => {
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            const files = Array.from(e.dataTransfer.files);
+                                            if (files.length > 0) {
+                                                const mockEvent = { target: { files: [files[0]] } };
+                                                handleImageSelect(mockEvent);
+                                            }
+                                        }}
+                                        className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer ${imagePreview
+                                            ? 'border-emerald-500 bg-emerald-50/30'
+                                            : 'border-amber-200 hover:border-amber-400 hover:bg-amber-50/30'
+                                            } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                                    >
+                                        {uploading ? (
+                                            <div className="flex flex-col items-center gap-2 py-4">
+                                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-600"></div>
+                                                <p className="text-sm text-gray-500">Uploading... {Math.round(uploadProgress)}%</p>
+                                                <div className="w-full max-w-xs bg-gray-200 rounded-full h-2">
+                                                    <div
+                                                        className="bg-amber-600 h-2 rounded-full transition-all duration-300"
+                                                        style={{ width: `${uploadProgress}%` }}
+                                                    ></div>
+                                                </div>
+                                            </div>
+                                        ) : imagePreview ? (
+                                            <div className="relative inline-block">
+                                                <img
+                                                    src={imagePreview}
+                                                    alt="Profile preview"
+                                                    className="w-24 h-24 rounded-full object-cover mx-auto border-4 border-amber-400 shadow-lg"
+                                                />
+                                                <button
+                                                    type="button"
+                                                    onClick={(e) => {
+                                                        e.stopPropagation();
+                                                        handleRemoveImage();
+                                                    }}
+                                                    className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-7 h-7 flex items-center justify-center text-sm hover:bg-red-600 transition-colors shadow-md"
+                                                >
+                                                    <MdClose size={16} />
+                                                </button>
+                                                <p className="text-xs text-gray-400 mt-2">Click to change image</p>
+                                            </div>
+                                        ) : (
+                                            <div className="flex flex-col items-center gap-2 py-4">
+                                                <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
+                                                    <MdCloudUpload className="w-8 h-8 text-amber-500" />
+                                                </div>
+                                                <p className="text-sm font-medium text-gray-700">Click to upload or drag & drop</p>
+                                                <p className="text-xs text-gray-400">PNG, JPG, WEBP, GIF (Max 5MB)</p>
+                                            </div>
+                                        )}
+                                        <input
+                                            ref={fileInputRef}
+                                            type="file"
+                                            accept="image/*"
+                                            onChange={handleImageSelect}
+                                            className="hidden"
+                                            disabled={uploading || isLoading}
+                                        />
+                                    </div>
+
+                                    {/* OR Divider */}
+                                    <div className="flex items-center gap-3 my-1">
+                                        <div className="flex-1 border-t border-gray-200"></div>
+                                        <span className="text-xs text-gray-400 uppercase">Or enter URL</span>
+                                        <div className="flex-1 border-t border-gray-200"></div>
+                                    </div>
+
+                                    {/* Image URL Input */}
                                     <div className="relative">
                                         <MdImage className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <Input
-                                            placeholder="https://example.com/avatar.jpg"
+                                            name="imageUrl"
+                                            type="url"
+                                            placeholder="imgbb only"
                                             className="pl-10 border-amber-100 focus:border-amber-400 w-full"
-                                            disabled={isLoading}
+                                            disabled={isLoading || uploading}
+                                            value={imageUrl}
+                                            onChange={handleImageUrlChange}
                                         />
+                                        {imageUrl && (
+                                            <button
+                                                type="button"
+                                                onClick={() => {
+                                                    setImageUrl("");
+                                                    setImagePreview(null);
+                                                    setSelectedImage(null);
+                                                }}
+                                                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-red-500"
+                                            >
+                                                <MdClose size={16} />
+                                            </button>
+                                        )}
                                     </div>
-                                    <FieldError />
-                                </TextField>
+                                    <Description className="text-gray-400">
+                                        Upload an image or provide a URL for your profile picture
+                                    </Description>
+                                </div>
 
                                 {/* Email Field */}
                                 <TextField
@@ -279,14 +476,13 @@ export default function SignUpPage() {
                                                         <Radio
                                                             key={role.id}
                                                             value={role.id}
-                                                            aria-label={role.label} // FIX 1: স্ক্রিন রিডারের জন্য স্পষ্ট লেবেল যুক্ত করা হলো
+                                                            aria-label={role.label}
                                                             className={`w-full max-w-full m-0 p-3 border rounded-xl transition-all cursor-pointer flex items-start gap-3
                                                                 ${isSelected
                                                                     ? "border-amber-500 bg-amber-50/50 shadow-sm"
                                                                     : "border-gray-200 bg-white hover:border-amber-200"
                                                                 }`}
                                                         >
-                                                            {/* FIX 2: onClick এবং pointer-events হ্যান্ডেল করে ১০০% ক্লিকেবল করা হলো */}
                                                             <div
                                                                 onClick={() => {
                                                                     setSelectedRole(role.id);
@@ -319,17 +515,21 @@ export default function SignUpPage() {
                                     <Button
                                         type="submit"
                                         className="flex-1 bg-gradient-to-r from-amber-600 to-orange-500 text-white font-semibold hover:from-amber-700 hover:to-orange-600 transition-all hover:scale-105 shadow-md h-12"
-                                        disabled={isLoading}
+                                        disabled={isLoading || uploading}
                                     >
                                         <Check size={18} />
-                                        {isLoading ? "Creating..." : "Create Account"}
+                                        {isLoading ? "Creating..." : uploading ? "Uploading..." : "Create Account"}
                                     </Button>
                                     <Button
                                         type="reset"
                                         variant="flat"
                                         className="border border-amber-200 text-gray-600 hover:bg-amber-50 h-12"
-                                        disabled={isLoading}
-                                        onClick={() => setSelectedRole("tenant")}
+                                        disabled={isLoading || uploading}
+                                        onClick={() => {
+                                            setSelectedRole("tenant");
+                                            handleRemoveImage();
+                                            setImageUrl("");
+                                        }}
                                     >
                                         Reset
                                     </Button>

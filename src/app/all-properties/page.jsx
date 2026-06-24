@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { FaBed, FaBath, FaMapMarkerAlt } from 'react-icons/fa';
-import { Home, Loader2, Eye } from 'lucide-react';
+import { Home, Loader2, Eye, AlertCircle } from 'lucide-react';
 
 const AllPropertiesPage = () => {
     const router = useRouter();
@@ -30,7 +30,12 @@ const AllPropertiesPage = () => {
                     ? data
                     : data?.properties || [];
 
-                setProperties(props);
+                // Filter only approved properties
+                const approvedProps = props.filter(
+                    (property) => property.status?.toLowerCase() === 'approved'
+                );
+
+                setProperties(approvedProps);
             } catch (err) {
                 setError(err.message);
                 setProperties([]);
@@ -52,16 +57,10 @@ const AllPropertiesPage = () => {
         return `$${price.toLocaleString()}`;
     };
 
-    const getStatusColor = (status) => {
-        switch (status?.toLowerCase()) {
-            case 'approved':
-            case 'featured':
-                return 'bg-blue-600 text-white';
-            case 'pending':
-                return 'bg-yellow-500 text-white';
-            default:
-                return 'bg-gray-600 text-white';
-        }
+    // Capitalize first letter
+    const capitalizeFirst = (str) => {
+        if (!str) return '';
+        return str.charAt(0).toUpperCase() + str.slice(1);
     };
 
     if (loading) {
@@ -90,15 +89,30 @@ const AllPropertiesPage = () => {
                         All Properties
                     </h1>
                     <p className="text-gray-500 mt-2">
-                        Total: {properties.length} properties
+                        Showing {properties.length} approved properties
                     </p>
                 </div>
+
+                {/* No Properties Found */}
+                {properties.length === 0 && (
+                    <div className="text-center py-20">
+                        <div className="flex justify-center mb-4">
+                            <AlertCircle className="w-16 h-16 text-gray-400" />
+                        </div>
+                        <h2 className="text-2xl font-semibold text-gray-700 dark:text-gray-300">
+                            No Approved Properties
+                        </h2>
+                        <p className="text-gray-500 mt-2">
+                            There are no approved properties available at the moment.
+                        </p>
+                    </div>
+                )}
 
                 {/* Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
                     {properties.map((property) => {
-                        const id = property._id || property.id;
+                        const id = property._id?.$oid || property._id || property.id;
 
                         const image =
                             property.images?.[0] ||
@@ -126,14 +140,9 @@ const AllPropertiesPage = () => {
                                         className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
                                     />
 
-                                    {/* Status */}
-                                    <span className={`absolute top-3 left-3 px-3 py-1 text-xs rounded-full ${getStatusColor(property.status)}`}>
-                                        {property.status || 'Available'}
-                                    </span>
-
-                                    {/* Type */}
+                                    {/* Type - Capitalized first letter */}
                                     <span className="absolute top-3 right-3 px-3 py-1 text-xs bg-black/70 text-white rounded-full capitalize">
-                                        {property.propertyType}
+                                        {capitalizeFirst(property.propertyType)}
                                     </span>
                                 </div>
 

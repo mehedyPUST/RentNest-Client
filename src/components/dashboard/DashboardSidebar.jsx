@@ -46,13 +46,10 @@ export default function DashboardSidebar() {
 
     if (userRole === 'tenant') {
         navItems = [
-            { icon: House, href: '/dashboard/tenant', label: "Dashboard" },
+            { icon: House, href: '/dashboard/tenant', label: "Home" },
             { icon: CalendarCheck, href: '/dashboard/tenant/my-bookings', label: "My Bookings" },
             { icon: Heart, href: '/dashboard/tenant/favorites', label: "Favorites" },
             { icon: User, href: '/dashboard/tenant/profile', label: "Profile" },
-            { icon: Search, href: '/all-properties', label: "Browse Properties" },
-            { icon: Bell, href: '#', label: "Notifications" },
-            { icon: Settings, href: '#', label: "Settings" },
         ];
     } else if (userRole === 'owner') {
         navItems = [
@@ -60,19 +57,15 @@ export default function DashboardSidebar() {
             { icon: Search, href: '/dashboard/owner/my-properties', label: "My Properties" },
             { icon: PlusCircle, href: '/dashboard/owner/add-property', label: "Add a New Property" },
             { icon: FileText, href: '/dashboard/owner/booking-requests', label: "Booking Requests" },
-            { icon: Mail, href: '#', label: "Messages" },
-            { icon: User, href: '#', label: "Profile" },
-            { icon: Settings, href: '#', label: "Settings" },
+            { icon: User, href: '/dashboard/owner/profile', label: "Profile" },
         ];
     } else if (userRole === 'admin') {
         navItems = [
-            { icon: LayoutDashboard, href: '/dashboard/admin', label: "Dashboard" },
-            { icon: Users, href: '/dashboard/admin/users', label: "All Users" },
-            { icon: Building, href: '/dashboard/admin/properties', label: "All Properties" },
-            { icon: BookOpen, href: '/dashboard/admin/bookings', label: "All Bookings" },
+            { icon: LayoutDashboard, href: '/dashboard/admin', label: "Dashboard Home" },
+            { icon: Users, href: '/dashboard/admin/all-users', label: "All Users" },
+            { icon: Building, href: '/dashboard/admin/all-properties', label: "All Properties" },
+            { icon: BookOpen, href: '/dashboard/admin/all-bookings', label: "All Bookings" },
             { icon: CreditCard, href: '/dashboard/admin/transactions', label: "Transactions" },
-            { icon: Bell, href: '#', label: "Notifications" },
-            { icon: UserCog, href: '#', label: "Settings" },
         ];
     }
 
@@ -86,8 +79,8 @@ export default function DashboardSidebar() {
                         key={item.label}
                         onClick={() => setIsOpen(false)}
                         className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${isActive
-                                ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                                : "text-foreground hover:bg-default"
+                            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+                            : "text-foreground hover:bg-default"
                             }`}
                     >
                         <item.icon className="size-5 shrink-0" />
@@ -101,7 +94,7 @@ export default function DashboardSidebar() {
     return (
         <>
             {/* Desktop Sidebar */}
-            <aside className="hidden w-64 shrink-0 border-r border-default p-4 lg:block">
+            <aside className="hidden w-64 shrink-0 border-r border-default p-4 lg:block h-screen sticky top-0">
                 <div className="mb-6 px-3">
                     <h2 className="text-lg font-semibold capitalize">{userRole} Dashboard</h2>
                     {session?.user?.name && (
@@ -113,44 +106,43 @@ export default function DashboardSidebar() {
                 {navContent}
             </aside>
 
-            {/* Mobile Drawer */}
-            <div className="lg:hidden">
-                {/* Trigger Button */}
+            {/* Mobile Drawer Trigger - এখন আর সাইডবারের সাথে ওভারল্যাপ করবে না */}
+            <div className="lg:hidden fixed top-4 left-4 z-50">
                 <Button
                     variant="light"
-                    className="flex items-center gap-2"
+                    className="flex items-center gap-2 bg-white shadow-md"
                     onPress={() => setIsOpen(true)}
                 >
                     <Menu className="size-5" />
                     <span className="text-sm">Menu</span>
                 </Button>
-
-                {/* Drawer */}
-                <Drawer isOpen={isOpen} onOpenChange={setIsOpen} placement="left" size="xs">
-                    <Drawer.Content>
-                        <div className="p-4 min-w-[280px]">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h2 className="text-lg font-semibold capitalize">{userRole} Dashboard</h2>
-                                    {session?.user?.name && (
-                                        <p className="text-sm text-muted-foreground mt-1">
-                                            Welcome, {session.user.name}
-                                        </p>
-                                    )}
-                                </div>
-                                <Button
-                                    isIconOnly
-                                    variant="light"
-                                    onPress={() => setIsOpen(false)}
-                                >
-                                    <X className="size-5" />
-                                </Button>
-                            </div>
-                            {navContent}
-                        </div>
-                    </Drawer.Content>
-                </Drawer>
             </div>
+
+            {/* Mobile Drawer */}
+            <Drawer isOpen={isOpen} onOpenChange={setIsOpen} placement="left" size="xs">
+                <Drawer.Content>
+                    <div className="p-4 min-w-[280px]">
+                        <div className="flex items-center justify-between mb-6">
+                            <div>
+                                <h2 className="text-lg font-semibold capitalize">{userRole} Dashboard</h2>
+                                {session?.user?.name && (
+                                    <p className="text-sm text-muted-foreground mt-1">
+                                        Welcome, {session.user.name}
+                                    </p>
+                                )}
+                            </div>
+                            <Button
+                                isIconOnly
+                                variant="light"
+                                onPress={() => setIsOpen(false)}
+                            >
+                                <X className="size-5" />
+                            </Button>
+                        </div>
+                        {navContent}
+                    </div>
+                </Drawer.Content>
+            </Drawer>
         </>
     );
 }

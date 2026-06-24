@@ -4,7 +4,6 @@ import { createProperty } from '@/lib/actions/properties';
 import { useSession } from '@/lib/auth-client';
 import React, { useState, useRef, useEffect } from 'react';
 
-
 export default function AddPropertyForm() {
     const propertyTypes = ["Apartment", "House", "Villa", "Commercial Space"];
     const rentTypes = ["Monthly", "Weekly", "Daily"];
@@ -15,7 +14,9 @@ export default function AddPropertyForm() {
 
     // Get user session
     const { data: session, status } = useSession();
-    const user = session?.user;
+
+    // FIX: user কে সঠিকভাবে ডিফাইন করুন
+    const user = session?.user ?? null;
 
     // States for Form Fields
     const [title, setTitle] = useState("");
@@ -234,12 +235,12 @@ export default function AddPropertyForm() {
                 extraFeatures: extraFeatures,
                 images: imageUrls,
                 status: "pending",
-                ownerId: user.id || user._id || '',  // Store user ID at root level
-                owner: {  // Keep this for display/denormalization
+                ownerId: user.id || user._id || '',
+                owner: {
                     name: user.name || user.fullName || 'User',
                     email: user.email,
                     phone: user.phone || '',
-                    role: user.role || 'owner'  // Include role in owner data
+                    role: user.role || 'owner'
                 },
                 createdAt: new Date().toISOString()
             };
@@ -327,59 +328,57 @@ export default function AddPropertyForm() {
     }
 
     return (
-        <div className="max-w-4xl mx-auto space-y-6 p-4 md:p-6 bg-gray-100 dark:bg-gray-900 rounded-2xl min-h-screen">
-
+        <div className="w-full space-y-3">
             {/* Header */}
-            <div className="border-b border-gray-300 dark:border-gray-800 pb-5">
-                <h1 className="text-2xl font-bold tracking-tight text-gray-950 dark:text-white">Add New Property</h1>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Fill out the details below to list your property on RentNest.</p>
-                <div className="mt-2 inline-flex items-center gap-2 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
-                    <span className="text-xs font-medium text-emerald-800 dark:text-emerald-400">
+            <div className="border-b border-gray-300 dark:border-gray-800 pb-2">
+                <h1 className="text-lg font-bold tracking-tight text-gray-950 dark:text-white">Add New Property</h1>
+                <p className="text-xs text-gray-600 dark:text-gray-400">Fill out the details below to list your property on RentNest.</p>
+                <div className="mt-1 inline-flex items-center gap-2 px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
+                    <span className="text-[10px] font-medium text-emerald-800 dark:text-emerald-400">
                         Role: {user?.role || 'Owner'} • You have permission to add properties
                     </span>
                 </div>
             </div>
 
-            <form onSubmit={handleSubmit} className="space-y-6">
-
+            <form onSubmit={handleSubmit} className="space-y-3">
                 {/* SECTION 1: Basic Information */}
-                <div className="bg-white dark:bg-gray-950 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800 space-y-4">
-                    <h2 className="text-sm font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">Basic Information</h2>
+                <div className="bg-white dark:bg-gray-950 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-800 space-y-2.5">
+                    <h2 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Basic Information</h2>
 
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Property Title *</label>
+                    <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-semibold text-gray-800 dark:text-gray-200">Property Title *</label>
                         <input
                             required
                             type="text"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
                             placeholder="e.g., Luxury 3BHK Apartment with Lake View"
-                            className="w-full px-3.5 py-2 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
                             disabled={isSubmitting}
                         />
                     </div>
 
-                    <div className="flex flex-col gap-1.5">
-                        <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Description *</label>
+                    <div className="flex flex-col gap-0.5">
+                        <label className="text-xs font-semibold text-gray-800 dark:text-gray-200">Description *</label>
                         <textarea
                             required
-                            rows={4}
+                            rows={2}
                             value={description}
                             onChange={(e) => setDescription(e.target.value)}
                             placeholder="Describe your property's best features..."
-                            className="w-full px-3.5 py-2 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
+                            className="w-full px-2.5 py-1.5 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
                             disabled={isSubmitting}
                         />
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Property Type *</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        <div className="flex flex-col gap-0.5">
+                            <label className="text-xs font-semibold text-gray-800 dark:text-gray-200">Property Type *</label>
                             <select
                                 required
                                 value={propertyType}
                                 onChange={(e) => setPropertyType(e.target.value)}
-                                className="w-full px-3.5 py-2 rounded-lg border border-gray-400 dark:border-gray-700 bg-white dark:bg-gray-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-gray-400 dark:border-gray-700 bg-white dark:bg-gray-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
                                 disabled={isSubmitting}
                             >
                                 <option value="">Select type</option>
@@ -389,15 +388,15 @@ export default function AddPropertyForm() {
                             </select>
                         </div>
 
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Location / Address *</label>
+                        <div className="flex flex-col gap-0.5">
+                            <label className="text-xs font-semibold text-gray-800 dark:text-gray-200">Location / Address *</label>
                             <input
                                 required
                                 type="text"
                                 value={location}
                                 onChange={(e) => setLocation(e.target.value)}
                                 placeholder="e.g., Sector 11, Uttara, Dhaka"
-                                className="w-full px-3.5 py-2 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
                                 disabled={isSubmitting}
                             />
                         </div>
@@ -405,30 +404,30 @@ export default function AddPropertyForm() {
                 </div>
 
                 {/* SECTION 2: Pricing & Specifications */}
-                <div className="bg-white dark:bg-gray-950 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800 space-y-4">
-                    <h2 className="text-sm font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider mb-2">Pricing & Specifications</h2>
+                <div className="bg-white dark:bg-gray-950 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-800 space-y-2.5">
+                    <h2 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Pricing & Specifications</h2>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Rent Price (BDT) *</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        <div className="flex flex-col gap-0.5">
+                            <label className="text-xs font-semibold text-gray-800 dark:text-gray-200">Rent Price (BDT) *</label>
                             <input
                                 required
                                 type="number"
                                 value={price}
                                 onChange={(e) => setPrice(e.target.value)}
                                 placeholder="0"
-                                className="w-full px-3.5 py-2 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
                                 disabled={isSubmitting}
                             />
                         </div>
 
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Rent Type *</label>
+                        <div className="flex flex-col gap-0.5">
+                            <label className="text-xs font-semibold text-gray-800 dark:text-gray-200">Rent Type *</label>
                             <select
                                 required
                                 value={rentType}
                                 onChange={(e) => setRentType(e.target.value)}
-                                className="w-full px-3.5 py-2 rounded-lg border border-gray-400 dark:border-gray-700 bg-white dark:bg-gray-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-gray-400 dark:border-gray-700 bg-white dark:bg-gray-950 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
                                 disabled={isSubmitting}
                             >
                                 {rentTypes.map((rent) => (
@@ -438,42 +437,42 @@ export default function AddPropertyForm() {
                         </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Bedrooms *</label>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                        <div className="flex flex-col gap-0.5">
+                            <label className="text-xs font-semibold text-gray-800 dark:text-gray-200">Bedrooms *</label>
                             <input
                                 required
                                 type="number"
                                 value={bedrooms}
                                 onChange={(e) => setBedrooms(e.target.value)}
                                 placeholder="e.g., 3"
-                                className="w-full px-3.5 py-2 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
                                 disabled={isSubmitting}
                             />
                         </div>
 
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Bathrooms *</label>
+                        <div className="flex flex-col gap-0.5">
+                            <label className="text-xs font-semibold text-gray-800 dark:text-gray-200">Bathrooms *</label>
                             <input
                                 required
                                 type="number"
                                 value={bathrooms}
                                 onChange={(e) => setBathrooms(e.target.value)}
                                 placeholder="e.g., 2"
-                                className="w-full px-3.5 py-2 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
                                 disabled={isSubmitting}
                             />
                         </div>
 
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-sm font-semibold text-gray-800 dark:text-gray-200">Property Size *</label>
+                        <div className="flex flex-col gap-0.5">
+                            <label className="text-xs font-semibold text-gray-800 dark:text-gray-200">Property Size *</label>
                             <input
                                 required
                                 type="text"
                                 value={size}
                                 onChange={(e) => setSize(e.target.value)}
                                 placeholder="e.g., 1450 sqft"
-                                className="w-full px-3.5 py-2 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
+                                className="w-full px-2.5 py-1.5 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
                                 disabled={isSubmitting}
                             />
                         </div>
@@ -481,19 +480,18 @@ export default function AddPropertyForm() {
                 </div>
 
                 {/* SECTION 3: Amenities & Media */}
-                <div className="bg-white dark:bg-gray-950 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-800 space-y-5">
-
+                <div className="bg-white dark:bg-gray-950 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-800 space-y-2.5">
                     {/* Amenities */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-800 dark:text-gray-200 block">Amenities</label>
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-800 dark:text-gray-200 block">Amenities</label>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
                             {amenitiesList.map((amenity) => (
-                                <label key={amenity} className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 cursor-pointer select-none">
+                                <label key={amenity} className="flex items-center gap-1 text-xs text-gray-700 dark:text-gray-300 cursor-pointer select-none">
                                     <input
                                         type="checkbox"
                                         checked={selectedAmenities.includes(amenity)}
                                         onChange={() => handleAmenityChange(amenity)}
-                                        className="rounded border-gray-400 dark:border-gray-600 text-emerald-600 focus:ring-emerald-500 size-4 cursor-pointer"
+                                        className="rounded border-gray-400 dark:border-gray-600 text-emerald-600 focus:ring-emerald-500 size-3.5 cursor-pointer"
                                         disabled={isSubmitting}
                                     />
                                     <span>{amenity}</span>
@@ -503,9 +501,9 @@ export default function AddPropertyForm() {
                     </div>
 
                     {/* Extra Features */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-800 dark:text-gray-200 block">Extra Features</label>
-                        <div className="flex gap-2 max-w-md">
+                    <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-800 dark:text-gray-200 block">Extra Features</label>
+                        <div className="flex gap-1.5 max-w-md">
                             <input
                                 type="text"
                                 placeholder="Add feature (e.g., Gas Connection)"
@@ -517,29 +515,29 @@ export default function AddPropertyForm() {
                                         handleAddFeature();
                                     }
                                 }}
-                                className="w-full px-3 py-2 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
+                                className="w-full px-2.5 py-1 rounded-lg border border-gray-400 dark:border-gray-700 bg-transparent text-sm focus:outline-none focus:ring-2 focus:ring-emerald-600/20 focus:border-emerald-600 text-gray-900 dark:text-white"
                                 disabled={isSubmitting}
                             />
                             <button
                                 type="button"
                                 onClick={handleAddFeature}
-                                className="px-5 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold rounded-lg border-2 border-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95 transition-all text-sm"
+                                className="px-3 bg-white dark:bg-gray-800 text-gray-900 dark:text-white font-bold rounded-lg border-2 border-gray-400 dark:border-gray-600 hover:bg-gray-100 dark:hover:bg-gray-700 active:scale-95 transition-all text-xs"
                                 disabled={isSubmitting}
                             >
                                 Add
                             </button>
                         </div>
-                        <div className="flex flex-wrap gap-2 pt-1">
+                        <div className="flex flex-wrap gap-1">
                             {extraFeatures.map((feature) => (
                                 <span
                                     key={feature}
-                                    className="inline-flex items-center gap-1.5 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white text-xs font-medium px-2.5 py-1 rounded-md border border-gray-300 dark:border-gray-700"
+                                    className="inline-flex items-center gap-0.5 bg-gray-200 dark:bg-gray-800 text-gray-900 dark:text-white text-[10px] font-medium px-1.5 py-0.5 rounded border border-gray-300 dark:border-gray-700"
                                 >
                                     {feature}
                                     <button
                                         type="button"
                                         onClick={() => handleRemoveFeature(feature)}
-                                        className="text-gray-500 hover:text-red-500 font-bold ml-1"
+                                        className="text-gray-500 hover:text-red-500 font-bold ml-0.5"
                                         disabled={isSubmitting}
                                     >
                                         &times;
@@ -550,26 +548,26 @@ export default function AddPropertyForm() {
                     </div>
 
                     {/* Image Upload Area */}
-                    <div className="space-y-2">
-                        <label className="text-sm font-semibold text-gray-800 dark:text-gray-200 block">Property Images</label>
+                    <div className="space-y-1">
+                        <label className="text-xs font-semibold text-gray-800 dark:text-gray-200 block">Property Images</label>
 
                         <div
                             onDragOver={handleDragOver}
                             onDrop={handleDrop}
                             onClick={() => fileInputRef.current?.click()}
-                            className={`border-2 border-dashed border-gray-400 dark:border-gray-700 rounded-xl p-6 text-center hover:border-emerald-600/50 dark:hover:border-emerald-400/30 transition-colors cursor-pointer bg-gray-50/50 dark:bg-gray-950/40 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                            className={`border-2 border-dashed border-gray-400 dark:border-gray-700 rounded-lg p-3 text-center hover:border-emerald-600/50 dark:hover:border-emerald-400/30 transition-colors cursor-pointer bg-gray-50/50 dark:bg-gray-950/40 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                         >
-                            <div className="flex flex-col items-center gap-1">
-                                <svg className="w-10 h-10 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <div className="flex flex-col items-center gap-0.5">
+                                <svg className="w-6 h-6 text-gray-400 dark:text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
                                 </svg>
-                                <span className="text-sm font-bold text-gray-800 dark:text-gray-200">
+                                <span className="text-xs font-bold text-gray-800 dark:text-gray-200">
                                     {uploading ? 'Uploading...' : 'Click to upload or drag and drop'}
                                 </span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400">
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400">
                                     PNG, JPG, WEBP or GIF (Max 10 images, 5MB each)
                                 </span>
-                                <span className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <span className="text-[10px] text-gray-500 dark:text-gray-400">
                                     {selectedImages.length}/10 images selected
                                 </span>
                             </div>
@@ -585,30 +583,30 @@ export default function AddPropertyForm() {
                         </div>
 
                         {uploading && uploadProgress > 0 && (
-                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
                                 <div
-                                    className="bg-emerald-600 h-2.5 rounded-full transition-all duration-300"
+                                    className="bg-emerald-600 h-1.5 rounded-full transition-all duration-300"
                                     style={{ width: `${uploadProgress}%` }}
                                 ></div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                                <p className="text-[10px] text-gray-500 dark:text-gray-400 mt-0.5">
                                     Uploading... {Math.round(uploadProgress)}%
                                 </p>
                             </div>
                         )}
 
                         {imagePreviews.length > 0 && (
-                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mt-3">
+                            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5 mt-1.5">
                                 {imagePreviews.map((preview, index) => (
                                     <div key={index} className="relative group">
                                         <img
                                             src={preview}
                                             alt={`Preview ${index + 1}`}
-                                            className="w-full h-24 object-cover rounded-lg border border-gray-200 dark:border-gray-700"
+                                            className="w-full h-16 object-cover rounded border border-gray-200 dark:border-gray-700"
                                         />
                                         <button
                                             type="button"
                                             onClick={() => handleRemoveImage(index)}
-                                            className="absolute top-1 right-1 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
+                                            className="absolute top-0.5 right-0.5 bg-red-500 text-white rounded-full w-4 h-4 flex items-center justify-center text-[10px] hover:bg-red-600 transition-colors opacity-0 group-hover:opacity-100"
                                             disabled={isSubmitting}
                                         >
                                             ×
@@ -620,47 +618,47 @@ export default function AddPropertyForm() {
                     </div>
                 </div>
 
-                {/* SECTION 4: Owner Information - NOW DYNAMIC */}
-                <div className="bg-gray-200/40 dark:bg-gray-900/40 border border-gray-300 dark:border-gray-800 rounded-xl p-6 space-y-4">
-                    <h2 className="text-sm font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider mb-1">Owner Information</h2>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Owner Name</label>
+                {/* SECTION 4: Owner Information */}
+                <div className="bg-gray-200/40 dark:bg-gray-900/40 border border-gray-300 dark:border-gray-800 rounded-lg p-3 space-y-2.5">
+                    <h2 className="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">Owner Information</h2>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        <div className="flex flex-col gap-0.5">
+                            <label className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Owner Name</label>
                             <input
                                 disabled
                                 type="text"
                                 value={user?.name || user?.fullName || 'User'}
-                                className="w-full px-3.5 py-2 rounded-lg bg-gray-300/60 dark:bg-gray-800/60 text-gray-900 dark:text-white text-sm border border-transparent cursor-not-allowed font-medium"
+                                className="w-full px-2.5 py-1 rounded-lg bg-gray-300/60 dark:bg-gray-800/60 text-gray-900 dark:text-white text-sm border border-transparent cursor-not-allowed font-medium"
                             />
                         </div>
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Owner Email</label>
+                        <div className="flex flex-col gap-0.5">
+                            <label className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Owner Email</label>
                             <input
                                 disabled
                                 type="email"
                                 value={user?.email || ''}
-                                className="w-full px-3.5 py-2 rounded-lg bg-gray-300/60 dark:bg-gray-800/60 text-gray-900 dark:text-white text-sm border border-transparent cursor-not-allowed font-medium"
+                                className="w-full px-2.5 py-1 rounded-lg bg-gray-300/60 dark:bg-gray-800/60 text-gray-900 dark:text-white text-sm border border-transparent cursor-not-allowed font-medium"
                             />
                         </div>
                     </div>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="flex flex-col gap-1.5">
-                            <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Role</label>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                        <div className="flex flex-col gap-0.5">
+                            <label className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Role</label>
                             <input
                                 disabled
                                 type="text"
                                 value={user?.role || 'Owner'}
-                                className="w-full px-3.5 py-2 rounded-lg bg-gray-300/60 dark:bg-gray-800/60 text-gray-900 dark:text-white text-sm border border-transparent cursor-not-allowed font-medium capitalize"
+                                className="w-full px-2.5 py-1 rounded-lg bg-gray-300/60 dark:bg-gray-800/60 text-gray-900 dark:text-white text-sm border border-transparent cursor-not-allowed font-medium capitalize"
                             />
                         </div>
                         {user?.phone && (
-                            <div className="flex flex-col gap-1.5">
-                                <label className="text-xs font-semibold text-gray-600 dark:text-gray-400">Phone Number</label>
+                            <div className="flex flex-col gap-0.5">
+                                <label className="text-[10px] font-semibold text-gray-600 dark:text-gray-400">Phone Number</label>
                                 <input
                                     disabled
                                     type="text"
                                     value={user?.phone || ''}
-                                    className="w-full px-3.5 py-2 rounded-lg bg-gray-300/60 dark:bg-gray-800/60 text-gray-900 dark:text-white text-sm border border-transparent cursor-not-allowed font-medium"
+                                    className="w-full px-2.5 py-1 rounded-lg bg-gray-300/60 dark:bg-gray-800/60 text-gray-900 dark:text-white text-sm border border-transparent cursor-not-allowed font-medium"
                                 />
                             </div>
                         )}
@@ -668,11 +666,11 @@ export default function AddPropertyForm() {
                 </div>
 
                 {/* ACTION BUTTONS */}
-                <div className="flex items-center justify-end gap-4 pt-4 border-t border-gray-200 dark:border-gray-800">
+                <div className="flex items-center justify-end gap-2.5 pt-2.5 border-t border-gray-200 dark:border-gray-800">
                     <button
                         type="button"
                         onClick={resetForm}
-                        className="px-5 py-2.5 text-sm font-bold text-gray-800 dark:text-gray-200 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 rounded-lg shadow-sm transition-all active:scale-95 border border-gray-400 dark:border-gray-600"
+                        className="px-3 py-1.5 text-xs font-bold text-gray-800 dark:text-gray-200 bg-gray-200 dark:bg-gray-800 hover:bg-gray-300 dark:hover:bg-gray-700 rounded-lg shadow-sm transition-all active:scale-95 border border-gray-400 dark:border-gray-600"
                         disabled={isSubmitting}
                     >
                         Discard Draft
@@ -680,20 +678,19 @@ export default function AddPropertyForm() {
                     <button
                         type="submit"
                         disabled={isSubmitting}
-                        className={`px-6 py-2.5 text-sm font-bold text-white bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95 border border-emerald-800 dark:border-emerald-500 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        className={`px-4 py-1.5 text-xs font-bold text-white bg-emerald-700 hover:bg-emerald-800 dark:bg-emerald-600 dark:hover:bg-emerald-500 rounded-lg shadow-md hover:shadow-lg transition-all active:scale-95 border border-emerald-800 dark:border-emerald-500 ${isSubmitting ? 'opacity-50 cursor-not-allowed' : ''}`}
                     >
                         {isSubmitting ? (
-                            <span className="flex items-center gap-2">
-                                <svg className="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <span className="flex items-center gap-1.5">
+                                <svg className="animate-spin h-3 w-3 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                                 </svg>
-                                {uploading ? 'Uploading Images...' : 'Submitting...'}
+                                {uploading ? 'Uploading...' : 'Submitting...'}
                             </span>
                         ) : 'Submit Property'}
                     </button>
                 </div>
-
             </form>
         </div>
     );
