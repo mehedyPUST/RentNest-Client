@@ -221,11 +221,11 @@ export default function AddPropertyForm() {
                 extraFeatures: extraFeatures,
                 images: imageUrls,
                 status: "pending",
-                owner: {
+                ownerId: user.id || user._id || '',  // Store user ID at root level
+                owner: {  // Keep this for display/denormalization
                     name: user.name || user.fullName || 'User',
                     email: user.email,
-                    phone: user.phone || '',
-                    userId: user.id || user._id || ''
+                    phone: user.phone || ''
                 },
                 createdAt: new Date().toISOString()
             };
@@ -640,4 +640,3 @@ export default function AddPropertyForm() {
         </div>
     );
 }
-

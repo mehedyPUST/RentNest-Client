@@ -11,9 +11,9 @@ import toast from 'react-hot-toast';
 const Navbar = () => {
 
     const pathname = usePathname();
-    if (pathname.includes("dashboard")) {
-        return null
-    }
+    // if (pathname.includes("dashboard")) {
+    //     return null
+    // }
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
