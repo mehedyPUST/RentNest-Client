@@ -1,38 +1,38 @@
 // app/payment/cancelled/page.jsx
-import Link from 'next/link';
-import { FaTimesCircle } from 'react-icons/fa';
+'use client';
 
-const PaymentCancelledPage = () => {
+import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
+import toast from 'react-hot-toast';
+
+export default function PaymentCancelled() {
+    const router = useRouter();
+
+    useEffect(() => {
+        toast.error('Payment was cancelled. Please try again.');
+    }, []);
+
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-            <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-                <div className="flex justify-center mb-4">
-                    <FaTimesCircle className="w-20 h-20 text-red-500" />
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    Payment Cancelled
-                </h1>
-                <p className="text-gray-600 mb-6">
-                    You cancelled the payment. Your booking is still pending.
-                    You can try again later.
-                </p>
-                <div className="space-y-3">
-                    <Link
-                        href="/my-bookings"
-                        className="block w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
+                <div className="text-red-500 text-6xl mb-4">✕</div>
+                <h1 className="text-2xl font-bold text-gray-900">Payment Cancelled</h1>
+                <p className="text-gray-600 mt-2">You cancelled the payment process.</p>
+                <div className="mt-6 space-x-3">
+                    <button
+                        onClick={() => router.push('/')}
+                        className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
                     >
-                        View My Bookings
-                    </Link>
-                    <Link
-                        href="/all-properties"
-                        className="block w-full py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
+                        Browse Properties
+                    </button>
+                    <button
+                        onClick={() => router.back()}
+                        className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition"
                     >
-                        Browse More Properties
-                    </Link>
+                        Go Back
+                    </button>
                 </div>
             </div>
         </div>
     );
-};
-
-export default PaymentCancelledPage;
+}

@@ -1,4 +1,4 @@
-// app/api/verify-payment/route.js
+// app/api/stripe/verify-session/route.js
 import { NextResponse } from 'next/server';
 import Stripe from 'stripe';
 
@@ -47,7 +47,7 @@ export async function POST(request) {
         });
 
     } catch (error) {
-        console.error('❌ Error verifying payment:', error);
+        console.error('❌ Error verifying session:', error);
         return NextResponse.json(
             { error: error.message || 'Failed to verify payment' },
             { status: 500 }

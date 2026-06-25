@@ -1,95 +1,67 @@
 // app/api/checkout_sessions/route.js
 import { NextResponse } from 'next/server';
-import { headers } from 'next/headers';
-import { stripe } from '@/lib/stripe';
+import Stripe from 'stripe';
+
+const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
+    apiVersion: '2025-02-24.acacia',
+});
 
 export async function POST(request) {
     try {
-        const headersList = await headers();
-        const origin = headersList.get('origin') || 'http://localhost:3000';
-
         const body = await request.json();
-        const { propertyId, propertyTitle, propertyPrice, bookingId } = body;
+        const { propertyId, propertyTitle, propertyPrice, bookingData } = body;
 
-        console.log('📥 1. Checkout Request:', { propertyId, propertyTitle, propertyPrice, bookingId });
-
-        if (!propertyId || !propertyPrice) {
+        if (!propertyId || !propertyTitle || !propertyPrice || !bookingData) {
             return NextResponse.json(
-                { error: 'Property details are required' },
+                { error: 'Missing required fields' },
                 { status: 400 }
             );
         }
 
-        if (!process.env.STRIPE_SECRET_KEY) {
-            console.error('❌ 2. STRIPE_SECRET_KEY is missing!');
-            return NextResponse.json(
-                { error: 'Stripe secret key is not configured' },
-                { status: 500 }
-            );
-        }
-
-        console.log('✅ 3. Stripe Key found');
-
-        const amountInCents = Math.round(Number(propertyPrice) * 100);
-        console.log('💰 4. Amount in cents:', amountInCents);
-
-        console.log('💰 5. Creating Stripe Checkout Session...');
-
+        // ✅ Create Stripe Checkout Session
         const session = await stripe.checkout.sessions.create({
+            payment_method_types: ['card'],
             line_items: [
                 {
                     price_data: {
                         currency: 'usd',
                         product_data: {
-                            name: propertyTitle || 'Rent Payment',
-                            description: `Booking for ${propertyTitle}`,
+                            name: propertyTitle,
+                            description: `Booking payment for ${propertyTitle}`,
                             metadata: {
                                 propertyId: propertyId,
-                                bookingId: bookingId || 'pending'
-                            }
+                            },
                         },
-                        unit_amount: amountInCents,
+                        unit_amount: Math.round(Number(propertyPrice) * 100),
                     },
                     quantity: 1,
                 },
             ],
             mode: 'payment',
-            payment_intent_data: {
-                metadata: {
-                    bookingId: bookingId || 'pending'
-                }
-            },
-            success_url: `${origin}/payment/success?session_id={CHECKOUT_SESSION_ID}&booking_id=${bookingId}`,
-            cancel_url: `${origin}/payment/cancelled`,
+            success_url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/payment/cancelled`,
             metadata: {
                 propertyId: propertyId,
-                bookingId: bookingId || 'pending'
+                propertyTitle: propertyTitle,
+                amount: String(propertyPrice),
+                bookingData: JSON.stringify(bookingData)
             },
-            payment_method_types: ['card'],
         });
 
-        console.log('✅ 6. Checkout Session Created:', session.id);
-        console.log('🔗 7. Checkout URL:', session.url);
+        console.log('✅ Session created:', session.id);
 
+        // ✅ URL পাঠাচ্ছেন কিনা confirm করুন
         return NextResponse.json({
             success: true,
             sessionId: session.id,
-            url: session.url
+            url: session.url  // ← এইটা দরকার
         });
 
-    } catch (err) {
-        console.error('❌ Stripe error:', err);
-
-        let errorMessage = err.message;
-        if (err.type === 'StripeAuthenticationError') {
-            errorMessage = 'Invalid Stripe API key. Please check your STRIPE_SECRET_KEY in .env.local';
-        } else if (err.type === 'StripeInvalidRequestError') {
-            errorMessage = `Invalid request: ${err.message}`;
-        }
-
+    } catch (error) {
+        console.error('❌ Stripe Error:', error);
         return NextResponse.json(
-            { error: errorMessage },
-            { status: err.statusCode || 500 }
+            { error: error.message || 'Payment session creation failed' },
+            { status: 500 }
         );
     }
 }

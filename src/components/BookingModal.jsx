@@ -7,7 +7,11 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
-const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => {
+// ✅ আর stripePromise দরকার নেই, কারণ আমরা window.location.href use করবো
+// import { loadStripe } from '@stripe/stripe-js';
+// const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
+
+const BookingModal = ({ isOpen, onClose, property, user }) => {
     const router = useRouter();
     const [formData, setFormData] = useState({
         moveInDate: '',
@@ -54,6 +58,7 @@ const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => 
         return Object.keys(newErrors).length === 0;
     };
 
+    // ✅ এখানে main change - handleSubmit function
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -71,9 +76,11 @@ const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => 
         try {
             const propertyId = property._id?.$oid || property._id || property.id;
 
-            // ✅ 1️⃣ Create Booking
+            // ✅ Booking Data
             const bookingData = {
                 propertyId: propertyId,
+                propertyTitle: property.title,
+                propertyPrice: Number(property.price),
                 moveInDate: formData.moveInDate,
                 contactNumber: formData.contactNumber,
                 additionalNotes: formData.additionalNotes || '',
@@ -85,85 +92,42 @@ const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => 
                 }
             };
 
-            console.log('📤 1. Sending Booking Data:', bookingData);
+            console.log('📤 Booking Data:', bookingData);
 
-            const bookingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/bookings`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify(bookingData)
-            });
-
-            const bookingResult = await bookingResponse.json();
-            console.log('📥 2. Booking Response:', bookingResult);
-
-            if (!bookingResponse.ok) {
-                throw new Error(bookingResult.message || 'Failed to create booking');
-            }
-
-            const booking = bookingResult.booking;
-
-            // ✅ শুধু বুকিং তৈরি হয়েছে জানান - Payment Success Toast নয়
-            console.log('✅ Booking created:', booking._id);
-
-            if (onBookingConfirm) {
-                onBookingConfirm(booking);
-            }
-            onClose();
-
-            // ✅ 2️⃣ Create Stripe Checkout Session
-            console.log('💰 3. Creating Stripe Checkout Session...');
-            console.log('💰 Property Price:', property.price);
-            console.log('💰 Property Title:', property.title);
-            console.log('💰 Booking ID:', booking._id);
-
-            const stripeResponse = await fetch('/api/checkout_sessions', {
+            // ✅ Create Stripe Checkout Session
+            const response = await fetch('/api/checkout_sessions', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
                     propertyId: propertyId,
-                    propertyTitle: property.title || 'Rent Payment',
+                    propertyTitle: property.title,
                     propertyPrice: Number(property.price),
-                    bookingId: booking._id
+                    bookingData: bookingData
                 })
             });
 
-            console.log('💰 4. Stripe Response Status:', stripeResponse.status);
+            const sessionData = await response.json();
 
-            let stripeData;
-            try {
-                stripeData = await stripeResponse.json();
-            } catch (jsonError) {
-                console.error('❌ Failed to parse JSON:', jsonError);
-                throw new Error('Invalid response from payment server');
+            if (!response.ok) {
+                throw new Error(sessionData.error || 'Failed to create payment session');
             }
 
-            console.log('💰 5. Stripe Data:', stripeData);
-
-            if (!stripeResponse.ok) {
-                console.error('❌ 6. Stripe Error:', stripeData);
-                toast.error(stripeData.error || 'Failed to create payment session');
-                router.push(`/payment/${booking._id}`);
-                return;
-            }
-
-            // ✅ 3️⃣ Redirect to Stripe Checkout
-            if (stripeData.url) {
-                console.log('🔗 7. Redirecting to Stripe:', stripeData.url);
-                window.location.href = stripeData.url;
+            // ✅ নতুন পদ্ধতি: window.location.href ব্যবহার করে redirect
+            if (sessionData.url) {
+                console.log('🔗 Redirecting to:', sessionData.url);
+                // Modal বন্ধ করুন
+                onClose();
+                // Redirect to Stripe Checkout
+                window.location.href = sessionData.url;
             } else {
-                console.error('❌ 8. No checkout URL received');
-                toast.error('No checkout URL received. Please try again.');
-                router.push(`/payment/${booking._id}`);
+                throw new Error('No checkout URL received');
             }
 
         } catch (error) {
             console.error('❌ Error:', error);
             toast.error(error.message || 'Something went wrong. Please try again.');
-        } finally {
             setLoading(false);
         }
     };
@@ -193,7 +157,11 @@ const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => 
                                         {property?.title || 'Property Booking'}
                                     </p>
                                 </div>
-                                <button onClick={onClose} className="text-white/80 hover:text-white transition-colors">
+                                <button
+                                    onClick={onClose}
+                                    className="text-white/80 hover:text-white transition-colors"
+                                    disabled={loading}
+                                >
                                     <FaTimes className="w-5 h-5" />
                                 </button>
                             </div>
@@ -237,6 +205,7 @@ const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => 
                                     min={new Date().toISOString().split('T')[0]}
                                     className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${errors.moveInDate ? 'border-red-500' : 'border-gray-300'
                                         }`}
+                                    disabled={loading}
                                 />
                                 {errors.moveInDate && (
                                     <p className="text-red-500 text-sm mt-1">{errors.moveInDate}</p>
@@ -257,6 +226,7 @@ const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => 
                                     onChange={handleChange}
                                     className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'
                                         }`}
+                                    disabled={loading}
                                 />
                                 {errors.contactNumber && (
                                     <p className="text-red-500 text-sm mt-1">{errors.contactNumber}</p>
@@ -285,12 +255,6 @@ const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => 
                                         </span>
                                     </p>
                                 </div>
-                                {!userPhone && (
-                                    <div className="mt-2 text-xs text-yellow-600 flex items-center gap-1">
-                                        <span>⚠️</span>
-                                        <span>Please enter your phone number in the field above.</span>
-                                    </div>
-                                )}
                             </div>
 
                             {/* Additional Notes */}
@@ -306,6 +270,7 @@ const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => 
                                     value={formData.additionalNotes}
                                     onChange={handleChange}
                                     className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition resize-none"
+                                    disabled={loading}
                                 />
                             </div>
 
@@ -314,7 +279,7 @@ const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => 
                                 <div className="flex items-start gap-2">
                                     <FaDollarSign className="text-yellow-600 mt-0.5" />
                                     <p className="text-sm text-yellow-800">
-                                        <span className="font-medium">Note:</span> You will be redirected to secure payment page after confirmation.
+                                        <span className="font-medium">Note:</span> You will be redirected to secure payment page.
                                     </p>
                                 </div>
                             </div>
@@ -324,7 +289,8 @@ const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => 
                                 <button
                                     type="button"
                                     onClick={onClose}
-                                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium"
+                                    disabled={loading}
+                                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
                                     Cancel
                                 </button>
@@ -335,13 +301,16 @@ const BookingModal = ({ isOpen, onClose, property, user, onBookingConfirm }) => 
                                 >
                                     {loading ? (
                                         <>
-                                            <span className="inline-block animate-spin mr-2">⟳</span>
+                                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                                                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                            </svg>
                                             Processing...
                                         </>
                                     ) : (
                                         <>
                                             <FaHome className="w-4 h-4" />
-                                            Confirm & Pay
+                                            Pay & Book
                                         </>
                                     )}
                                 </button>

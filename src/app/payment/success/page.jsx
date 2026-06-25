@@ -3,150 +3,154 @@
 
 import { useEffect, useState } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { FaCheckCircle } from 'react-icons/fa';
-import { Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
-const PaymentSuccessPage = () => {
+export default function PaymentSuccess() {
     const searchParams = useSearchParams();
     const router = useRouter();
     const [loading, setLoading] = useState(true);
-    const [booking, setBooking] = useState(null);
-    const [error, setError] = useState(null);
+    const [status, setStatus] = useState('processing');
+    const [errorMessage, setErrorMessage] = useState('');
 
     const sessionId = searchParams.get('session_id');
-    const bookingId = searchParams.get('booking_id');
+
+    // ✅ Backend API URL
+    const API_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
 
     useEffect(() => {
-        if (sessionId && bookingId) {
-            // ✅ 2 সেকেন্ড Delay যোগ করুন - Payment Process Complete হওয়ার জন্য
-            const timer = setTimeout(() => {
-                verifyPayment();
-            }, 3000);
-
-            return () => clearTimeout(timer);
-        } else {
-            setError('Missing payment information');
-            setLoading(false);
-        }
-    }, [sessionId, bookingId]);
-
-    const verifyPayment = async () => {
-        try {
-            console.log('🔍 Verifying payment...', { sessionId, bookingId });
-
-            const res = await fetch(`/api/verify-payment?session_id=${sessionId}&booking_id=${bookingId}`);
-            const data = await res.json();
-
-            console.log('📥 Verify Response:', data);
-
-            if (data.success) {
-                setBooking(data.booking);
-                // ✅ এখানে সঠিকভাবে Payment Success Toast দেখান
-                toast.success('Payment successful! Your booking is confirmed.');
-            } else {
-                setError(data.message || 'Payment verification failed');
-                toast.error('Payment verification failed. Please contact support.');
+        const confirmPaymentAndCreateBooking = async () => {
+            if (!sessionId) {
+                toast.error('Invalid payment session');
+                router.push('/');
+                return;
             }
-        } catch (error) {
-            console.error('Error verifying payment:', error);
-            setError('Failed to verify payment');
-            toast.error('Failed to verify payment');
-        } finally {
-            setLoading(false);
-        }
-    };
 
-    if (loading) {
-        return (
-            <div className="min-h-screen flex items-center justify-center">
-                <div className="text-center">
-                    <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto" />
-                    <p className="mt-4 text-gray-600">Verifying your payment...</p>
-                </div>
-            </div>
-        );
-    }
+            console.log('🔍 Session ID:', sessionId);
 
-    if (error) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-                <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-                    <div className="text-6xl mb-4">❌</div>
-                    <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                        Payment Verification Failed
-                    </h1>
-                    <p className="text-gray-600 mb-6">{error}</p>
-                    <div className="space-y-3">
-                        <Link
-                            href="/my-bookings"
-                            className="block w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                        >
-                            View My Bookings
-                        </Link>
-                        <Link
-                            href="/all-properties"
-                            className="block w-full py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                        >
-                            Browse More Properties
-                        </Link>
-                    </div>
-                </div>
-            </div>
-        );
-    }
+            try {
+                // ✅ 1️⃣ Verify Payment
+                console.log('🔍 Verifying payment...');
+                const verifyResponse = await fetch('/api/stripe/verify-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ sessionId })
+                });
+
+                const verifyData = await verifyResponse.json();
+                console.log('📥 Verify Response:', verifyData);
+
+                if (!verifyResponse.ok) {
+                    throw new Error(verifyData.error || 'Payment verification failed');
+                }
+
+                // ✅ 2️⃣ Get Booking Data (CHECK: ইতিমধ্যে Object কিনা)
+                let bookingData = verifyData.metadata?.bookingData;
+                console.log('📥 Raw Booking Data:', bookingData);
+                console.log('📥 Type of bookingData:', typeof bookingData);
+
+                // ✅ যদি String হয় তাহলে parse করুন, যদি Object হয় তাহলে যেমন আছে রাখুন
+                if (typeof bookingData === 'string') {
+                    try {
+                        bookingData = JSON.parse(bookingData);
+                        console.log('📥 Parsed Booking Data:', bookingData);
+                    } catch (parseError) {
+                        console.error('❌ Failed to parse booking data:', parseError);
+                        throw new Error('Invalid booking data format');
+                    }
+                } else if (typeof bookingData === 'object' && bookingData !== null) {
+                    console.log('📥 Booking Data is already an object:', bookingData);
+                } else {
+                    throw new Error('No booking data found in payment session');
+                }
+
+                if (!bookingData || !bookingData.propertyId) {
+                    throw new Error('Incomplete booking data');
+                }
+
+                // ✅ 3️⃣ Create Booking in Backend
+                console.log('📤 Creating booking in backend...');
+                const bookingResponse = await fetch(`${API_URL}/api/bookings`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        propertyId: bookingData.propertyId,
+                        moveInDate: bookingData.moveInDate,
+                        contactNumber: bookingData.contactNumber,
+                        additionalNotes: bookingData.additionalNotes || '',
+                        tenantInfo: bookingData.tenantInfo,
+                        paymentStatus: 'paid',
+                        paymentSessionId: sessionId,
+                        bookingStatus: 'confirmed'
+                    })
+                });
+
+                const bookingResult = await bookingResponse.json();
+                console.log('📥 Booking Response:', bookingResult);
+
+                if (!bookingResponse.ok) {
+                    throw new Error(bookingResult.message || 'Failed to create booking');
+                }
+
+                setStatus('success');
+                toast.success('Payment successful! Booking confirmed 🎉');
+
+                setTimeout(() => {
+                    router.push('/dashboard/tenant/my-bookings');
+                }, 3000);
+
+            } catch (error) {
+                console.error('❌ Error:', error);
+                setErrorMessage(error.message);
+                setStatus('error');
+                toast.error(error.message || 'Payment confirmed but booking failed. Please contact support.');
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        confirmPaymentAndCreateBooking();
+    }, [sessionId, router, API_URL]);
 
     return (
-        <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-            <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
-                <div className="flex justify-center mb-4">
-                    <FaCheckCircle className="w-20 h-20 text-green-500" />
-                </div>
-                <h1 className="text-2xl font-bold text-gray-900 mb-2">
-                    Payment Successful! 🎉
-                </h1>
-                <p className="text-gray-600 mb-6">
-                    Your booking has been confirmed. The owner will review and approve your booking soon.
-                </p>
-
-                {booking && (
-                    <div className="bg-gray-50 rounded-xl p-4 text-left mb-6">
-                        <p className="text-sm text-gray-500">Booking ID</p>
-                        <p className="font-medium text-gray-900">{booking._id}</p>
-
-                        <p className="text-sm text-gray-500 mt-2">Property</p>
-                        <p className="font-medium text-gray-900">{booking.propertyInfo?.title}</p>
-
-                        <p className="text-sm text-gray-500 mt-2">Move-in Date</p>
-                        <p className="font-medium text-gray-900">
-                            {booking.moveInDate ? new Date(booking.moveInDate).toLocaleDateString() : 'N/A'}
-                        </p>
-
-                        <p className="text-sm text-gray-500 mt-2">Status</p>
-                        <span className="inline-block px-3 py-1 bg-yellow-100 text-yellow-800 rounded-full text-sm font-medium">
-                            {booking.bookingStatus || 'Pending'}
-                        </span>
-                    </div>
+        <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
+                {loading ? (
+                    <>
+                        <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto"></div>
+                        <h2 className="text-xl font-semibold mt-4">Processing Payment...</h2>
+                        <p className="text-gray-500 mt-2">Please wait while we confirm your payment</p>
+                    </>
+                ) : status === 'success' ? (
+                    <>
+                        <div className="text-green-500 text-6xl mb-4">✓</div>
+                        <h1 className="text-2xl font-bold text-gray-900">Payment Successful!</h1>
+                        <p className="text-gray-600 mt-2">Your booking has been confirmed.</p>
+                        <p className="text-gray-500 text-sm mt-4">Redirecting to your bookings...</p>
+                    </>
+                ) : (
+                    <>
+                        <div className="text-red-500 text-6xl mb-4">✕</div>
+                        <h1 className="text-2xl font-bold text-gray-900">Something Went Wrong</h1>
+                        <p className="text-gray-600 mt-2">{errorMessage || 'Payment confirmed but booking failed.'}</p>
+                        <div className="mt-4 space-x-3">
+                            <button
+                                onClick={() => window.location.reload()}
+                                className="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+                            >
+                                Try Again
+                            </button>
+                            <button
+                                onClick={() => router.push('/contact')}
+                                className="bg-gray-200 text-gray-700 px-6 py-2 rounded-lg hover:bg-gray-300 transition"
+                            >
+                                Contact Support
+                            </button>
+                        </div>
+                    </>
                 )}
-
-                <div className="space-y-3">
-                    <Link
-                        href="/my-bookings"
-                        className="block w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        View My Bookings
-                    </Link>
-                    <Link
-                        href="/all-properties"
-                        className="block w-full py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors"
-                    >
-                        Browse More Properties
-                    </Link>
-                </div>
             </div>
         </div>
     );
-};
-
-export default PaymentSuccessPage;
+}
