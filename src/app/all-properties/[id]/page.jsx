@@ -1,49 +1,220 @@
-import React from 'react';
-import Image from 'next/image';
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import { authClient } from '@/lib/auth-client';
+import BookingModal from '@/components/BookingModal';
 import {
     FaBed, FaBath, FaRulerCombined, FaMapMarkerAlt,
     FaCalendarAlt, FaUser, FaEnvelope, FaTag,
-    FaArrowLeft, FaHeart, FaShare, FaPrint,
+    FaArrowLeft, FaHeart, FaRegHeart, FaShare, FaPrint,
     FaWifi, FaParking, FaSwimmingPool, FaDumbbell,
-    FaShieldAlt, FaFire, FaSnowflake, FaTv
+    FaShieldAlt, FaFire, FaSnowflake, FaTv,
+    FaCalendarCheck
 } from 'react-icons/fa';
 import { MdVerified, MdPending, MdCancel, MdCheckCircle } from 'react-icons/md';
 import { GiFlowerPot, GiFruitTree } from 'react-icons/gi';
+import toast from 'react-hot-toast';
 
-const PropertyDetailsPage = async ({ params }) => {
-    const { id } = await params;
+const PropertyDetailsPage = ({ params }) => {
+    const router = useRouter();
+    const { data: session, isPending } = authClient.useSession();
+    const user = session?.user;
+    const userId = user?.id;
 
-    // Fetch all properties and find the specific one
-    const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/properties`, {
-        cache: 'no-store'
-    });
+    const [property, setProperty] = useState(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+    const [isFavorited, setIsFavorited] = useState(false);
+    const [favoriteLoading, setFavoriteLoading] = useState(false);
+    const [showBookingModal, setShowBookingModal] = useState(false);
+    const [isBooked, setIsBooked] = useState(false);
 
-    const data = await res.json();
-    const properties = Array.isArray(data) ? data : data?.properties || [];
-    const property = properties.find(p => {
-        const propertyId = p._id?.$oid || p._id || p.id;
-        return propertyId == id;
-    });
+    // প্রপার্টি ডেটা লোড করুন
+    useEffect(() => {
+        const fetchProperty = async () => {
+            try {
+                setLoading(true);
+                const { id } = await params;
 
-    if (!property) {
-        return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-                <div className="text-center">
-                    <div className="text-6xl mb-4">🔍</div>
-                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Property Not Found</h1>
-                    <p className="text-gray-600 mb-6">The property you're looking for doesn't exist or has been removed.</p>
-                    <Link
-                        href={'/all-properties'}
-                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                        <FaArrowLeft />
-                        Back to Properties
-                    </Link>
-                </div>
-            </div>
-        );
-    }
+                const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties`,
+                    { cache: 'no-store' }
+                );
+
+                if (!res.ok) throw new Error('Failed to fetch properties');
+
+                const data = await res.json();
+                const properties = Array.isArray(data) ? data : data?.properties || [];
+
+                const foundProperty = properties.find(p => {
+                    const propertyId = p._id?.$oid || p._id || p.id;
+                    return propertyId == id;
+                });
+
+                if (!foundProperty) {
+                    throw new Error('Property not found');
+                }
+
+                setProperty(foundProperty);
+
+                // ইউজার লগইন থাকলে ফেবারিট ও বুকিং স্ট্যাটাস চেক করুন
+                if (userId) {
+                    try {
+                        await checkFavoriteStatus(id);
+                    } catch (err) {
+                        console.error('Favorite check failed:', err);
+                    }
+
+                    try {
+                        await checkBookingStatus(id);
+                    } catch (err) {
+                        console.error('Booking check failed:', err);
+                        setIsBooked(false);
+                    }
+                }
+
+            } catch (err) {
+                setError(err.message);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchProperty();
+    }, [userId]);
+
+    // ✅ ফেবারিট স্ট্যাটাস চেক করুন
+    const checkFavoriteStatus = async (propertyId) => {
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/favorites/check/${propertyId}?tenantId=${userId}`
+            );
+
+            if (!res.ok) {
+                setIsFavorited(false);
+                return;
+            }
+
+            const data = await res.json();
+            setIsFavorited(data.isFavorited || false);
+        } catch (error) {
+            console.error('Error checking favorite:', error);
+            setIsFavorited(false);
+        }
+    };
+
+    // ✅ বুকিং স্ট্যাটাস চেক করুন
+    const checkBookingStatus = async (propertyId) => {
+        try {
+            const res = await fetch(
+                `${process.env.NEXT_PUBLIC_BASE_URL}/api/bookings/check/${propertyId}?tenantId=${userId}`
+            );
+
+            if (!res.ok) {
+                setIsBooked(false);
+                return;
+            }
+
+            const data = await res.json();
+            setIsBooked(data.isBooked || false);
+        } catch (error) {
+            console.error('Error checking booking:', error);
+            setIsBooked(false);
+        }
+    };
+
+    // ✅ ফেবারিট টগল করুন
+    const toggleFavorite = async () => {
+        if (!userId) {
+            toast.error('Please login to add favorites');
+            router.push('/login');
+            return;
+        }
+
+        setFavoriteLoading(true);
+        try {
+            const propertyId = property._id?.$oid || property._id || property.id;
+
+            if (isFavorited) {
+                const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/favorites/${propertyId}?tenantId=${userId}`,
+                    { method: 'DELETE' }
+                );
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    setIsFavorited(false);
+                    toast.success('Removed from favorites');
+                } else {
+                    toast.error(data.message || 'Failed to remove');
+                }
+            } else {
+                const propertyData = {
+                    title: property.title,
+                    price: property.price,
+                    location: property.location,
+                    images: property.images,
+                    description: property.description,
+                    propertyType: property.propertyType,
+                    specifications: property.specifications,
+                    amenities: property.amenities,
+                    extraFeatures: property.extraFeatures
+                };
+
+                const res = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/favorites`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        tenantId: userId,
+                        propertyId: propertyId,
+                        propertyData: propertyData
+                    })
+                });
+
+                const data = await res.json();
+
+                if (res.ok) {
+                    setIsFavorited(true);
+                    toast.success('Added to favorites ❤️');
+                } else {
+                    toast.error(data.message || 'Failed to add');
+                }
+            }
+        } catch (error) {
+            console.error('Error toggling favorite:', error);
+            toast.error('Something went wrong');
+        } finally {
+            setFavoriteLoading(false);
+        }
+    };
+
+    // ✅ Book Now Handler
+    const handleBookNow = () => {
+        if (!userId) {
+            toast.error('Please login to book this property');
+            router.push('/login');
+            return;
+        }
+
+        if (isBooked) {
+            toast.error('You have already booked this property');
+            return;
+        }
+
+        setShowBookingModal(true);
+    };
+
+    // ✅ Booking Confirm Handler
+    const handleBookingConfirm = (booking) => {
+        setIsBooked(true);
+        toast.success('Booking created successfully!');
+        router.push(`/payment/${booking._id}`);
+    };
 
     // Helper functions
     const formatPrice = (price) => {
@@ -97,7 +268,37 @@ const PropertyDetailsPage = async ({ params }) => {
         return <FaTag />;
     };
 
-    // Get the first image or use placeholder
+    if (isPending || loading) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+                <div className="text-center">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <p className="mt-4 text-gray-600">Loading property details...</p>
+                </div>
+            </div>
+        );
+    }
+
+    if (error || !property) {
+        return (
+            <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
+                <div className="text-center">
+                    <div className="text-6xl mb-4">🔍</div>
+                    <h1 className="text-2xl font-bold text-gray-800 mb-2">Property Not Found</h1>
+                    <p className="text-gray-600 mb-6">{error || "The property you're looking for doesn't exist."}</p>
+                    <Link
+                        href={'/all-properties'}
+                        className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                        <FaArrowLeft />
+                        Back to Properties
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    const propertyId = property._id?.$oid || property._id || property.id;
     const mainImage = property.images && property.images.length > 0
         ? property.images[0]
         : 'https://via.placeholder.com/1200x600/CCCCCC/FFFFFF?text=No+Image';
@@ -118,8 +319,21 @@ const PropertyDetailsPage = async ({ params }) => {
                             <span className="font-medium">Back to Properties</span>
                         </Link>
                         <div className="flex items-center gap-3">
-                            <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                                <FaHeart className="w-5 h-5 text-gray-400 hover:text-red-500" />
+                            <button
+                                onClick={toggleFavorite}
+                                disabled={favoriteLoading}
+                                className="p-2 rounded-full hover:bg-gray-100 transition-colors relative"
+                                aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                            >
+                                {favoriteLoading ? (
+                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                                ) : (
+                                    isFavorited ? (
+                                        <FaHeart className="w-5 h-5 text-red-500" />
+                                    ) : (
+                                        <FaRegHeart className="w-5 h-5 text-gray-400 hover:text-red-500" />
+                                    )
+                                )}
                             </button>
                             <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
                                 <FaShare className="w-5 h-5 text-gray-400 hover:text-blue-500" />
@@ -169,13 +383,31 @@ const PropertyDetailsPage = async ({ params }) => {
                     </div>
                 </div>
 
-                {/* Main Image */}
+                {/* Main Image with Floating Favorite Button */}
                 <div className="relative rounded-xl overflow-hidden shadow-lg mb-6 bg-gray-200">
                     <img
                         src={mainImage}
                         alt={property.title || 'Property'}
                         className="w-full h-[400px] sm:h-[500px] object-cover"
                     />
+                    <div className="absolute top-4 right-4">
+                        <button
+                            onClick={toggleFavorite}
+                            disabled={favoriteLoading}
+                            className="bg-white shadow-lg hover:shadow-xl rounded-full w-12 h-12 flex items-center justify-center transition-all hover:scale-110"
+                            aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                        >
+                            {favoriteLoading ? (
+                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
+                            ) : (
+                                isFavorited ? (
+                                    <FaHeart className="w-6 h-6 text-red-500" />
+                                ) : (
+                                    <FaRegHeart className="w-6 h-6 text-gray-600 hover:text-red-500" />
+                                )
+                            )}
+                        </button>
+                    </div>
                 </div>
 
                 {/* Gallery Thumbnails */}
@@ -340,28 +572,87 @@ const PropertyDetailsPage = async ({ params }) => {
                                     </>
                                 )}
 
-                                {/* Action Buttons */}
+                                {/* ✅ Action Buttons - Book Now + Favorite Side by Side */}
                                 <div className="space-y-3 pt-4">
-                                    <button className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/30">
-                                        Contact Owner
+                                    {/* Book Now Button - Full Width */}
+                                    <button
+                                        onClick={handleBookNow}
+                                        disabled={isBooked}
+                                        className={`w-full py-3 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${isBooked
+                                                ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                                                : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 shadow-md shadow-blue-500/30'
+                                            }`}
+                                    >
+                                        <FaCalendarCheck className="w-5 h-5" />
+                                        {isBooked ? 'Already Booked' : 'Book Now'}
                                     </button>
-                                    <button className="w-full py-3 bg-white text-blue-600 font-semibold rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors">
+
+                                    {/* Two Buttons Side by Side */}
+                                    <div className="grid grid-cols-2 gap-3">
+                                        {/* Favorite Button */}
+                                        <button
+                                            onClick={toggleFavorite}
+                                            disabled={favoriteLoading}
+                                            className={`py-3 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 border-2 ${isFavorited
+                                                    ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                                                    : 'bg-white text-gray-700 border-gray-300 hover:border-red-400 hover:text-red-500'
+                                                }`}
+                                        >
+                                            {favoriteLoading ? (
+                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                                            ) : (
+                                                <>
+                                                    {isFavorited ? (
+                                                        <FaHeart className="w-5 h-5 text-red-500" />
+                                                    ) : (
+                                                        <FaRegHeart className="w-5 h-5" />
+                                                    )}
+                                                    <span className="text-sm">{isFavorited ? 'Favorited' : 'Favorite'}</span>
+                                                </>
+                                            )}
+                                        </button>
+
+                                        {/* Contact Owner Button */}
+                                        <button className="py-3 bg-white text-blue-600 font-semibold rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2">
+                                            <FaUser className="w-4 h-4" />
+                                            <span className="text-sm">Contact</span>
+                                        </button>
+                                    </div>
+
+                                    {/* Schedule Viewing - Full Width */}
+                                    <button className="w-full py-3 bg-white text-green-600 font-semibold rounded-lg border-2 border-green-600 hover:bg-green-50 transition-colors flex items-center justify-center gap-2">
+                                        <FaCalendarAlt className="w-4 h-4" />
                                         Schedule Viewing
                                     </button>
                                 </div>
-                                <div className="space-y-3 pt-4">
-                                    <button className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/30">
-                                        Add To Favorites
-                                    </button>
-                                    <button className="w-full py-3 bg-white text-blue-600 font-semibold rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors">
-                                        Book Now
-                                    </button>
-                                </div>
+
+                                {/* Booked Status Message */}
+                                {isBooked && (
+                                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                                        <p className="text-sm text-green-700">
+                                            ✅ You have already booked this property.
+                                            <Link href="/my-bookings" className="font-medium underline ml-1">
+                                                View My Bookings
+                                            </Link>
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     </div>
                 </div>
             </div>
+
+            {/* ✅ Booking Modal */}
+            {showBookingModal && (
+                <BookingModal
+                    isOpen={showBookingModal}
+                    onClose={() => setShowBookingModal(false)}
+                    property={property}
+                    user={user}
+                    onBookingConfirm={handleBookingConfirm}
+                />
+            )}
         </div>
     );
 };
