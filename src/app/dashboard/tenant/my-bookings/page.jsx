@@ -34,7 +34,7 @@ const MyBookings = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showFilters, setShowFilters] = useState(false);
 
-    const API_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
+    const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
     // ✅ Fetch bookings
     const fetchBookings = async (page = 1, status = 'all', search = '') => {
