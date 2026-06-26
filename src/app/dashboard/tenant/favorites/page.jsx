@@ -19,7 +19,7 @@ const TenantsFavoritesPage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [removingId, setRemovingId] = useState(null);
-
+    const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
     // ফেবারিট ডেটা লোড করুন
     useEffect(() => {
         if (userId) {
@@ -35,7 +35,7 @@ const TenantsFavoritesPage = () => {
             setError(null);
 
             const res = await fetch(
-                `http://localhost:5000/api/favorites/my-favorites?tenantId=${userId}&page=1&limit=50`
+                `${API_URL}/api/favorites/my-favorites?tenantId=${userId}&page=1&limit=50`
             );
 
             if (!res.ok) {
