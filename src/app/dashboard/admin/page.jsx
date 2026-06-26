@@ -43,23 +43,29 @@ const AdminDashboardHomePage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
+    const API_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
 
     // ✅ Fetch dashboard data
+    // app/dashboard/admin/page.jsx
+
     const fetchDashboardData = async () => {
-        if (!user) return;
+        if (!user) {
+            setLoading(false);
+            return;
+        }
 
         setLoading(true);
         setError(null);
 
         try {
-            // Fetch admin stats
+            // ✅ Fetch admin stats
             const statsRes = await fetch(`${API_URL}/api/admin/stats`, {
                 cache: 'no-store'
             });
 
             if (!statsRes.ok) {
-                throw new Error('Failed to fetch stats');
+                const errorData = await statsRes.json();
+                throw new Error(errorData.message || 'Failed to fetch stats');
             }
 
             const statsData = await statsRes.json();
@@ -76,20 +82,31 @@ const AdminDashboardHomePage = () => {
                 });
             }
 
-            // ✅ Fetch recent activities (latest bookings)
-            const activitiesRes = await fetch(`${API_URL}/api/bookings?limit=5`, {
-                cache: 'no-store'
-            });
+            // ✅ Fetch recent bookings - /api/bookings?isAdmin=true&limit=5
+            try {
+                const activitiesRes = await fetch(`${API_URL}/api/bookings?isAdmin=true&limit=5`, {
+                    cache: 'no-store'
+                });
 
-            if (activitiesRes.ok) {
-                const activitiesData = await activitiesRes.json();
-                setRecentActivities(activitiesData.bookings || []);
+                if (activitiesRes.ok) {
+                    const activitiesData = await activitiesRes.json();
+                    if (activitiesData.success) {
+                        setRecentActivities(activitiesData.bookings || []);
+                    } else {
+                        setRecentActivities([]);
+                    }
+                } else {
+                    setRecentActivities([]);
+                }
+            } catch (err) {
+                console.warn('Could not fetch recent bookings:', err);
+                setRecentActivities([]);
             }
 
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
             setError(error.message);
-            toast.error('Failed to load dashboard data');
+            toast.error(error.message || 'Failed to load dashboard data');
         } finally {
             setLoading(false);
         }
@@ -98,6 +115,8 @@ const AdminDashboardHomePage = () => {
     useEffect(() => {
         if (user) {
             fetchDashboardData();
+        } else {
+            setLoading(false);
         }
     }, [user]);
 
@@ -209,7 +228,7 @@ const AdminDashboardHomePage = () => {
                     </div>
                 </motion.div>
 
-                {/* Stats Cards */}
+                {/* Stats Cards - এখন Revenue দেখাবে */}
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}

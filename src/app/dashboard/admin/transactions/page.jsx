@@ -175,6 +175,19 @@ const TransactionsPageAdmin = () => {
         );
     };
 
+    // ✅ Get owner name from transaction
+    const getOwnerName = (transaction) => {
+        // Try to get owner name from different possible fields
+        if (transaction.ownerInfo?.name) return transaction.ownerInfo.name;
+        if (transaction.owner?.name) return transaction.owner.name;
+        if (transaction.ownerName) return transaction.ownerName;
+
+        // If not found, try to get from propertyInfo
+        if (transaction.propertyInfo?.owner?.name) return transaction.propertyInfo.owner.name;
+
+        return 'N/A';
+    };
+
     // Calculate total pages
     const totalPages = Math.ceil(totalItems / itemsPerPage);
 
@@ -342,6 +355,9 @@ const TransactionsPageAdmin = () => {
                                         Tenant
                                     </th>
                                     <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                                        Owner
+                                    </th>
+                                    <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">
                                         Amount
                                     </th>
                                     <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">
@@ -361,7 +377,7 @@ const TransactionsPageAdmin = () => {
                             <tbody className="divide-y divide-gray-200">
                                 {transactions.length === 0 ? (
                                     <tr>
-                                        <td colSpan="8" className="px-4 py-8 text-center text-gray-500">
+                                        <td colSpan="9" className="px-4 py-8 text-center text-gray-500">
                                             <div className="flex flex-col items-center gap-2">
                                                 <DollarSign className="w-12 h-12 text-gray-300" />
                                                 <p className="text-sm font-medium">No transactions found</p>
@@ -391,6 +407,11 @@ const TransactionsPageAdmin = () => {
                                             <td className="px-4 py-3">
                                                 <p className="text-gray-900">{transaction.tenantInfo?.name || 'N/A'}</p>
                                                 <p className="text-xs text-gray-500">{transaction.tenantInfo?.email || 'N/A'}</p>
+                                            </td>
+                                            <td className="px-4 py-3">
+                                                <p className="text-gray-900">
+                                                    {getOwnerName(transaction)}
+                                                </p>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <p className="font-semibold text-gray-900">
@@ -505,6 +526,7 @@ const TransactionsPageAdmin = () => {
                                     <p><span className="text-sm text-gray-500">Title:</span> {selectedTransaction.propertyInfo?.title || 'N/A'}</p>
                                     <p><span className="text-sm text-gray-500">Location:</span> {selectedTransaction.propertyInfo?.location || 'N/A'}</p>
                                     <p><span className="text-sm text-gray-500">Price:</span> {formatCurrency(selectedTransaction.propertyInfo?.price)}</p>
+                                    <p><span className="text-sm text-gray-500">Owner:</span> {getOwnerName(selectedTransaction)}</p>
                                 </div>
                             </div>
 
