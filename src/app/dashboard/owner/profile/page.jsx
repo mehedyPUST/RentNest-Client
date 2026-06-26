@@ -1,11 +1,6 @@
-import React from 'react';
+// app/dashboard/owner/profile/page.jsx
+import UserProfile from '@/components/UserProfile/UserProfile';
 
-const ProfilePageForOwner = () => {
-    return (
-        <div>
-            ProfilePageForOwner
-        </div>
-    );
-};
-
-export default ProfilePageForOwner;
+export default function OwnerProfilePage() {
+    return <UserProfile role="owner" />;
+}

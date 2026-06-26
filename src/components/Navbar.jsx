@@ -20,7 +20,7 @@ const Navbar = () => {
 
     const { data: session } = authClient.useSession();
     const user = session?.user;
-    console.log(user, 'user from nav')
+    // console.log(user, 'user from nav')
     const isLoggedIn = !!user;
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);

@@ -24,12 +24,12 @@ import {
     Eye,
     Shield,
     Award,
-    Sparkles
+    Sparkles,
+    Loader2
 } from 'lucide-react';
 import { FaBed, FaBath, FaMapMarkerAlt } from 'react-icons/fa';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import Image from 'next/image';
 
 const TenantDashboardHomePage = () => {
     const router = useRouter();
@@ -45,9 +45,10 @@ const TenantDashboardHomePage = () => {
     const [recentBookings, setRecentBookings] = useState([]);
     const [recentFavorites, setRecentFavorites] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
     const [greeting, setGreeting] = useState('Good Morning');
 
-    const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
+    const API_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
 
     // ✅ Set greeting based on time
     useEffect(() => {
@@ -67,45 +68,66 @@ const TenantDashboardHomePage = () => {
 
     const fetchDashboardData = async () => {
         setLoading(true);
+        setError(null);
+
         try {
             const tenantId = user?.id || user?._id;
 
-            // Fetch bookings
-            const bookingsRes = await fetch(
-                `${API_URL}/api/bookings/my-bookings?tenantId=${tenantId}&page=1&limit=5`
-            );
-            const bookingsData = await bookingsRes.json();
+            // ✅ Fetch bookings
+            try {
+                const bookingsRes = await fetch(
+                    `${API_URL}/api/bookings/my-bookings?tenantId=${tenantId}&page=1&limit=5`,
+                    { cache: 'no-store' }
+                );
 
-            if (bookingsData.success) {
-                const bookings = bookingsData.bookings || [];
-                setRecentBookings(bookings);
-
-                setStats(prev => ({
-                    ...prev,
-                    totalBookings: bookingsData.pagination?.totalItems || bookings.length,
-                    pendingBookings: bookings.filter(b => b.bookingStatus === 'pending').length,
-                    confirmedBookings: bookings.filter(b =>
-                        b.bookingStatus === 'confirmed' || b.bookingStatus === 'approved'
-                    ).length,
-                }));
+                if (bookingsRes.ok) {
+                    const bookingsData = await bookingsRes.json();
+                    if (bookingsData.success) {
+                        const bookings = bookingsData.bookings || [];
+                        setRecentBookings(bookings);
+                        setStats(prev => ({
+                            ...prev,
+                            totalBookings: bookingsData.pagination?.totalItems || bookings.length,
+                            pendingBookings: bookings.filter(b => b.bookingStatus === 'pending').length,
+                            confirmedBookings: bookings.filter(b =>
+                                b.bookingStatus === 'confirmed' || b.bookingStatus === 'approved'
+                            ).length,
+                        }));
+                    }
+                } else {
+                    console.warn('Failed to fetch bookings:', bookingsRes.status);
+                    // Use fallback empty data
+                }
+            } catch (err) {
+                console.warn('Error fetching bookings:', err);
             }
 
-            // Fetch favorites
-            const favRes = await fetch(
-                `${API_URL}/api/favorites/my-favorites?tenantId=${tenantId}&page=1&limit=3`
-            );
-            const favData = await favRes.json();
+            // ✅ Fetch favorites
+            try {
+                const favRes = await fetch(
+                    `${API_URL}/api/favorites/my-favorites?tenantId=${tenantId}&page=1&limit=3`,
+                    { cache: 'no-store' }
+                );
 
-            if (favData.success) {
-                setRecentFavorites(favData.favorites || []);
-                setStats(prev => ({
-                    ...prev,
-                    favorites: favData.favorites?.length || 0
-                }));
+                if (favRes.ok) {
+                    const favData = await favRes.json();
+                    if (favData.success) {
+                        setRecentFavorites(favData.favorites || []);
+                        setStats(prev => ({
+                            ...prev,
+                            favorites: favData.favorites?.length || 0
+                        }));
+                    }
+                } else {
+                    console.warn('Failed to fetch favorites:', favRes.status);
+                }
+            } catch (err) {
+                console.warn('Error fetching favorites:', err);
             }
 
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
+            setError(error.message);
             toast.error('Failed to load dashboard data');
         } finally {
             setLoading(false);
@@ -183,7 +205,7 @@ const TenantDashboardHomePage = () => {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
                     <p className="mt-4 text-gray-600">Loading your dashboard...</p>
                 </div>
             </div>
@@ -233,15 +255,13 @@ const TenantDashboardHomePage = () => {
                                 Welcome to your dashboard. Here's what's happening with your rentals.
                             </p>
                         </div>
-                        <div className="flex items-center gap-3 mt-4 md:mt-0">
-                            <button
-                                onClick={() => router.push('/all-properties')}
-                                className="bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition flex items-center gap-2"
-                            >
-                                <Building2 className="w-4 h-4" />
-                                Find Properties
-                            </button>
-                        </div>
+                        <button
+                            onClick={() => router.push('/all-properties')}
+                            className="mt-4 md:mt-0 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition flex items-center gap-2"
+                        >
+                            <Building2 className="w-4 h-4" />
+                            Find Properties
+                        </button>
                     </div>
                 </motion.div>
 
@@ -350,7 +370,7 @@ const TenantDashboardHomePage = () => {
                                 Recent Bookings
                             </h2>
                             <Link
-                                href="/dashboard/tenant/bookings"
+                                href="/dashboard/tenant/my-bookings"
                                 className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
                             >
                                 View All
@@ -375,13 +395,16 @@ const TenantDashboardHomePage = () => {
                                     <div
                                         key={booking._id}
                                         className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer"
-                                        onClick={() => router.push(`/dashboard/tenant/bookings/${booking._id}`)}
+                                        onClick={() => router.push(`/dashboard/tenant/my-bookings/${booking._id}`)}
                                     >
                                         <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
                                             <img
                                                 src={booking.propertyInfo?.images?.[0] || '/placeholder.jpg'}
                                                 alt={booking.propertyInfo?.title}
                                                 className="w-full h-full object-cover"
+                                                onError={(e) => {
+                                                    e.target.src = 'https://via.placeholder.com/64x64/CCCCCC/FFFFFF?text=No+Image';
+                                                }}
                                             />
                                         </div>
                                         <div className="flex-1 min-w-0">
@@ -451,6 +474,9 @@ const TenantDashboardHomePage = () => {
                                                     src={property.images?.[0] || '/placeholder.jpg'}
                                                     alt={property.title}
                                                     className="w-full h-full object-cover"
+                                                    onError={(e) => {
+                                                        e.target.src = 'https://via.placeholder.com/64x64/CCCCCC/FFFFFF?text=No+Image';
+                                                    }}
                                                 />
                                             </div>
                                             <div className="flex-1 min-w-0">

@@ -66,6 +66,7 @@ export default function DashboardSidebar() {
             { icon: Building, href: '/dashboard/admin/all-properties', label: "All Properties" },
             { icon: BookOpen, href: '/dashboard/admin/all-bookings', label: "All Bookings" },
             { icon: CreditCard, href: '/dashboard/admin/transactions', label: "Transactions" },
+            { icon: User, href: '/dashboard/admin/profile', label: "Profile" },
         ];
     }
 
