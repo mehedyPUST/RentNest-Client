@@ -17,9 +17,11 @@ const FeaturedProperties = () => {
         const fetchProperties = async () => {
             try {
                 setLoading(true);
+                setError(null);
 
+                // ✅ Featured endpoint টা না থাকলে main endpoint ব্যবহার করুন
                 const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties/featured`,
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties?status=approved&limit=6&sortBy=createdAt`,
                     { cache: 'no-store' }
                 );
 
@@ -28,14 +30,19 @@ const FeaturedProperties = () => {
                 }
 
                 const data = await res.json();
+                console.log('📥 Featured Properties Response:', data);
 
+                // ✅ ডেটা পার্স করুন
+                let featuredProps = [];
                 if (data.success && data.properties) {
-                    setProperties(data.properties);
+                    featuredProps = data.properties;
+                } else if (Array.isArray(data)) {
+                    featuredProps = data;
                 } else {
-                    setProperties([]);
+                    featuredProps = [];
                 }
 
-                setError(null);
+                setProperties(featuredProps);
             } catch (err) {
                 console.error('Error fetching properties:', err);
                 setError(err.message);
@@ -327,6 +334,9 @@ const FeaturedProperties = () => {
                                         src={imageUrl}
                                         alt={property.title || 'Property'}
                                         className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.target.src = 'https://via.placeholder.com/800x600/CCCCCC/FFFFFF?text=No+Image';
+                                        }}
                                     />
 
                                     {/* Property Type Badge - Capitalized */}
@@ -464,7 +474,7 @@ const FeaturedProperties = () => {
                             className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-gray-900 border-2 border-blue-600 hover:bg-blue-600 text-blue-600 hover:text-white dark:text-blue-400 dark:hover:text-white font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
                         >
                             <Building2 className="w-5 h-5" />
-                            View All  Properties
+                            View All Properties
                             <motion.svg
                                 className="w-5 h-5"
                                 fill="none"

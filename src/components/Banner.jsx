@@ -5,8 +5,10 @@ import { motion } from 'framer-motion';
 import { Button } from "@heroui/react";
 import { FaSearch } from 'react-icons/fa';
 import { Building2, MapPin, DollarSign, Bed, Bath, Square, Sparkles, Users } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
 const Banner = () => {
+    const router = useRouter();
     const [searchParams, setSearchParams] = useState({
         location: '',
         propertyType: '',
@@ -21,6 +23,7 @@ const Banner = () => {
         { key: "condo", label: "Condo" },
         { key: "townhouse", label: "Townhouse" },
         { key: "studio", label: "Studio" },
+        { key: "land", label: "Land" },
     ];
 
     const priceRanges = [
@@ -30,13 +33,61 @@ const Banner = () => {
         { key: "2000", label: "$2,000" },
         { key: "3000", label: "$3,000" },
         { key: "5000", label: "$5,000" },
-        { key: "10000", label: "$10,000+" },
+        { key: "10000", label: "$10,000" },
+        { key: "20000", label: "$20,000" },
+        { key: "50000", label: "$50,000" },
     ];
 
+    // Handle search - navigate to all-properties with filters
     const handleSearch = (e) => {
         e.preventDefault();
-        console.log('Search params:', searchParams);
-        // router.push(`/properties?${new URLSearchParams(searchParams)}`);
+
+        // Build query parameters
+        const params = new URLSearchParams();
+
+        if (searchParams.location) {
+            params.append('location', searchParams.location);
+        }
+        if (searchParams.propertyType) {
+            params.append('propertyType', searchParams.propertyType);
+        }
+        if (searchParams.minPrice) {
+            params.append('minPrice', searchParams.minPrice);
+        }
+        if (searchParams.maxPrice) {
+            params.append('maxPrice', searchParams.maxPrice);
+        }
+
+        // Navigate to all-properties with filters
+        const queryString = params.toString();
+        const url = queryString ? `/all-properties?${queryString}` : '/all-properties';
+
+        router.push(url);
+    };
+
+    // Quick filter handler
+    const handleQuickFilter = (filterType, value) => {
+        const params = new URLSearchParams();
+
+        switch (filterType) {
+            case 'beds':
+                params.append('bedrooms', '2');
+                break;
+            case 'baths':
+                params.append('bathrooms', '2');
+                break;
+            case 'sqft':
+                // You can add sqft filter if your backend supports it
+                params.append('minPrice', '1000');
+                break;
+            case 'petFriendly':
+                params.append('petFriendly', 'true');
+                break;
+            default:
+                break;
+        }
+
+        router.push(`/all-properties?${params.toString()}`);
     };
 
     const handleInputChange = (e) => {
@@ -45,9 +96,10 @@ const Banner = () => {
     };
 
     const quickFilters = [
-        { key: 'beds', label: '2+ Beds', icon: Bed },
-        { key: 'baths', label: '2+ Baths', icon: Bath },
-        { key: 'sqft', label: '1000+ sqft', icon: Square },
+        { key: 'beds', label: '2+ Beds', icon: Bed, action: 'beds' },
+        { key: 'baths', label: '2+ Baths', icon: Bath, action: 'baths' },
+        { key: 'sqft', label: '1000+ sqft', icon: Square, action: 'sqft' },
+        { key: 'petFriendly', label: 'Pet Friendly', icon: FaSearch, action: 'petFriendly' },
     ];
 
     // Animation Variants
@@ -317,21 +369,12 @@ const Banner = () => {
                                     className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 border border-white/10 transition-all text-sm"
                                     whileHover={{ scale: 1.05 }}
                                     whileTap={{ scale: 0.95 }}
-                                    onClick={() => console.log(`Filter: ${filter.label}`)}
+                                    onClick={() => handleQuickFilter(filter.action, filter.key)}
                                 >
                                     <filter.icon className="w-3 h-3" />
                                     {filter.label}
                                 </motion.button>
                             ))}
-                            <motion.button
-                                className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white/80 border border-white/10 transition-all text-sm"
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={() => console.log('Filter: Pet Friendly')}
-                            >
-                                <FaSearch className="w-3 h-3" />
-                                Pet Friendly
-                            </motion.button>
                         </motion.div>
                     </motion.div>
 

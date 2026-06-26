@@ -1,18 +1,15 @@
 // app/dashboard/tenant/my-bookings/page.jsx
-// app/dashboard/tenant/my-bookings/page.jsx
-
-
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useSession } from '@/lib/auth-client'; // 
+import { useSession } from '@/lib/auth-client';
 import {
     FaHome, FaCalendarAlt, FaMapMarkerAlt, FaDollarSign,
     FaCheckCircle, FaClock, FaTimesCircle, FaEye, FaTrash,
     FaSpinner, FaChevronLeft, FaChevronRight, FaSearch,
     FaFilter, FaTimes, FaBed, FaBath, FaSquare,
-    FaUser, FaPhone, FaEnvelope
+    FaUser, FaPhone, FaEnvelope, FaInfoCircle
 } from 'react-icons/fa';
 import toast from 'react-hot-toast';
 
@@ -337,7 +334,7 @@ const MyBookings = () => {
                             )}
                         </div>
                         <button
-                            onClick={() => router.push('/properties')}
+                            onClick={() => router.push('/all-properties')}
                             className="mt-4 sm:mt-0 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition flex items-center gap-2"
                         >
                             <FaHome className="text-sm" />
@@ -470,22 +467,22 @@ const MyBookings = () => {
                                 Pending ({getStatusCount('pending')})
                             </button>
                             <button
-                                onClick={() => handleStatusFilter('confirmed')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filterStatus === 'confirmed'
+                                onClick={() => handleStatusFilter('approved')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filterStatus === 'approved'
                                     ? 'bg-green-500 text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                             >
-                                Confirmed ({getStatusCount('confirmed') + getStatusCount('approved')})
+                                Approved ({getStatusCount('approved')})
                             </button>
                             <button
-                                onClick={() => handleStatusFilter('cancelled')}
-                                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filterStatus === 'cancelled'
+                                onClick={() => handleStatusFilter('rejected')}
+                                className={`px-4 py-2 rounded-lg text-sm font-medium transition ${filterStatus === 'rejected'
                                     ? 'bg-red-500 text-white'
                                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
                                     }`}
                             >
-                                Cancelled ({getStatusCount('cancelled') + getStatusCount('rejected')})
+                                Rejected ({getStatusCount('rejected')})
                             </button>
                         </div>
                     )}
@@ -498,7 +495,7 @@ const MyBookings = () => {
                         <h3 className="text-xl font-semibold text-gray-700 mb-2">No bookings found</h3>
                         <p className="text-gray-500">You haven't made any bookings yet.</p>
                         <button
-                            onClick={() => router.push('/properties')}
+                            onClick={() => router.push('/all-properties')}
                             className="mt-4 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
                         >
                             Browse Properties
@@ -513,7 +510,7 @@ const MyBookings = () => {
                             >
                                 <div className="p-6">
                                     <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-                                        {/* Property Info - Your Data Sample অনুযায়ী */}
+                                        {/* Property Info */}
                                         <div className="flex items-start gap-4 flex-1">
                                             <div className="w-24 h-24 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
                                                 <img
@@ -575,7 +572,75 @@ const MyBookings = () => {
                                         </div>
                                     </div>
 
-                                    {/* Booking Details - Your Data Sample অনুযায়ী */}
+                                    {/* ✅ Rejection Reason - এখানে যোগ করুন */}
+                                    {booking.bookingStatus === 'rejected' && (
+                                        <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                            <div className="flex items-start gap-3">
+                                                <FaTimesCircle className="text-red-500 mt-0.5 flex-shrink-0" />
+                                                <div>
+                                                    <p className="text-sm font-semibold text-red-700">
+                                                        Booking Rejected ❌
+                                                    </p>
+                                                    {booking.rejectionReason && (
+                                                        <p className="text-sm text-red-600 mt-1">
+                                                            <span className="font-medium">Reason:</span> {booking.rejectionReason}
+                                                        </p>
+                                                    )}
+                                                    {booking.rejectedAt && (
+                                                        <p className="text-xs text-red-400 mt-1">
+                                                            Rejected on: {formatDate(booking.rejectedAt)}
+                                                        </p>
+                                                    )}
+                                                    {!booking.rejectionReason && (
+                                                        <p className="text-sm text-red-500 mt-1">
+                                                            No specific reason provided.
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ✅ Approved Message */}
+                                    {(booking.bookingStatus === 'approved' || booking.bookingStatus === 'confirmed') && (
+                                        <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
+                                            <div className="flex items-start gap-3">
+                                                <FaCheckCircle className="text-green-500 mt-0.5 flex-shrink-0" />
+                                                <div>
+                                                    <p className="text-sm font-semibold text-green-700">
+                                                        Booking Approved! ✅
+                                                    </p>
+                                                    <p className="text-sm text-green-600 mt-1">
+                                                        Your booking has been confirmed. Move-in date: {formatDate(booking.moveInDate)}
+                                                    </p>
+                                                    {booking.approvedAt && (
+                                                        <p className="text-xs text-green-400 mt-1">
+                                                            Approved on: {formatDate(booking.approvedAt)}
+                                                        </p>
+                                                    )}
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* ✅ Pending Message */}
+                                    {booking.bookingStatus === 'pending' && (
+                                        <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+                                            <div className="flex items-start gap-3">
+                                                <FaClock className="text-yellow-500 mt-0.5 flex-shrink-0" />
+                                                <div>
+                                                    <p className="text-sm font-semibold text-yellow-700">
+                                                        Awaiting Approval ⏳
+                                                    </p>
+                                                    <p className="text-sm text-yellow-600 mt-1">
+                                                        Your booking is pending owner approval. We'll notify you once it's confirmed.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    {/* Booking Details */}
                                     <div className="mt-4 pt-4 border-t border-gray-100">
                                         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4 text-sm">
                                             <div>
@@ -610,7 +675,7 @@ const MyBookings = () => {
                                             </div>
                                         </div>
 
-                                        {/* Additional Info - যদি থাকে */}
+                                        {/* Additional Notes */}
                                         {booking.additionalNotes && (
                                             <div className="mt-3 pt-3 border-t border-gray-100">
                                                 <p className="text-sm text-gray-500">Additional Notes:</p>

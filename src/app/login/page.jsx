@@ -49,7 +49,7 @@ export default function SignInPage() {
             return;
         }
 
-        toast.success("Logged in Successfully! Welcome to Drive Fleet.");
+        toast.success("Logged in Successfully! Welcome to RentNest.");
 
         setTimeout(() => {
             router.push("/");
@@ -79,7 +79,7 @@ export default function SignInPage() {
                     </h1>
 
                     <p className="text-gray-500 text-sm mt-2">
-                        Access your account and enjoy your  Drive Fleet
+                        Access your account and enjoy your  RentNest
                     </p>
                 </div>
 

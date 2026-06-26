@@ -7,10 +7,6 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 
-// ✅ আর stripePromise দরকার নেই, কারণ আমরা window.location.href use করবো
-// import { loadStripe } from '@stripe/stripe-js';
-// const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY);
-
 const BookingModal = ({ isOpen, onClose, property, user }) => {
     const router = useRouter();
     const [formData, setFormData] = useState({
@@ -58,7 +54,6 @@ const BookingModal = ({ isOpen, onClose, property, user }) => {
         return Object.keys(newErrors).length === 0;
     };
 
-    // ✅ এখানে main change - handleSubmit function
     const handleSubmit = async (e) => {
         e.preventDefault();
 
@@ -76,11 +71,9 @@ const BookingModal = ({ isOpen, onClose, property, user }) => {
         try {
             const propertyId = property._id?.$oid || property._id || property.id;
 
-            // ✅ Booking Data
+            // ✅ Step 1: Create Booking
             const bookingData = {
                 propertyId: propertyId,
-                propertyTitle: property.title,
-                propertyPrice: Number(property.price),
                 moveInDate: formData.moveInDate,
                 contactNumber: formData.contactNumber,
                 additionalNotes: formData.additionalNotes || '',
@@ -92,37 +85,52 @@ const BookingModal = ({ isOpen, onClose, property, user }) => {
                 }
             };
 
-            console.log('📤 Booking Data:', bookingData);
+            console.log('📤 Creating booking:', bookingData);
 
-            // ✅ Create Stripe Checkout Session
-            const response = await fetch('/api/checkout_sessions', {
+            const bookingResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/bookings`, {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(bookingData)
+            });
+
+            const bookingResult = await bookingResponse.json();
+
+            if (!bookingResponse.ok) {
+                throw new Error(bookingResult.message || 'Failed to create booking');
+            }
+
+            const bookingId = bookingResult.booking?._id;
+            console.log('✅ Booking created:', bookingId);
+
+            if (!bookingId) {
+                throw new Error('Booking ID not received');
+            }
+
+            // ✅ Step 2: Create Stripe Checkout Session
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/create-checkout-session`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     propertyId: propertyId,
                     propertyTitle: property.title,
                     propertyPrice: Number(property.price),
-                    bookingData: bookingData
+                    bookingId: bookingId
                 })
             });
 
             const sessionData = await response.json();
 
             if (!response.ok) {
-                throw new Error(sessionData.error || 'Failed to create payment session');
+                throw new Error(sessionData.message || 'Failed to create payment session');
             }
 
-            // ✅ নতুন পদ্ধতি: window.location.href ব্যবহার করে redirect
+            // ✅ Step 3: Redirect to Stripe Checkout using window.location.href
             if (sessionData.url) {
-                console.log('🔗 Redirecting to:', sessionData.url);
-                // Modal বন্ধ করুন
-                onClose();
-                // Redirect to Stripe Checkout
-                window.location.href = sessionData.url;
+                console.log('🔗 Redirecting to Stripe Checkout:', sessionData.url);
+                onClose(); // Close the modal
+                window.location.href = sessionData.url; // Redirect user
             } else {
-                throw new Error('No checkout URL received');
+                throw new Error('No checkout URL received from server');
             }
 
         } catch (error) {
@@ -176,6 +184,9 @@ const BookingModal = ({ isOpen, onClose, property, user }) => {
                                             src={property?.images?.[0] || '/placeholder.jpg'}
                                             alt={property?.title}
                                             className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.target.src = 'https://via.placeholder.com/800x600/CCCCCC/FFFFFF?text=No+Image';
+                                            }}
                                         />
                                     </div>
                                     <div className="flex-1 min-w-0">
@@ -203,8 +214,7 @@ const BookingModal = ({ isOpen, onClose, property, user }) => {
                                     value={formData.moveInDate}
                                     onChange={handleChange}
                                     min={new Date().toISOString().split('T')[0]}
-                                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${errors.moveInDate ? 'border-red-500' : 'border-gray-300'
-                                        }`}
+                                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${errors.moveInDate ? 'border-red-500' : 'border-gray-300'}`}
                                     disabled={loading}
                                 />
                                 {errors.moveInDate && (
@@ -224,8 +234,7 @@ const BookingModal = ({ isOpen, onClose, property, user }) => {
                                     placeholder="Enter your phone number"
                                     value={formData.contactNumber}
                                     onChange={handleChange}
-                                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'
-                                        }`}
+                                    className={`w-full px-4 py-2.5 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition ${errors.contactNumber ? 'border-red-500' : 'border-gray-300'}`}
                                     disabled={loading}
                                 />
                                 {errors.contactNumber && (

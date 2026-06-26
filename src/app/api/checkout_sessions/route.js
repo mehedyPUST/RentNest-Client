@@ -9,8 +9,9 @@ const stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
 export async function POST(request) {
     try {
         const body = await request.json();
-        const { propertyId, propertyTitle, propertyPrice, bookingData } = body;
+        const { propertyId, propertyTitle, propertyPrice, bookingData, bookingId } = body;
 
+        // ✅ Check for bookingId
         if (!propertyId || !propertyTitle || !propertyPrice || !bookingData) {
             return NextResponse.json(
                 { error: 'Missing required fields' },
@@ -18,7 +19,7 @@ export async function POST(request) {
             );
         }
 
-        // ✅ Create Stripe Checkout Session
+        // ✅ Create Stripe Checkout Session with bookingId in success_url
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: [
@@ -30,6 +31,7 @@ export async function POST(request) {
                             description: `Booking payment for ${propertyTitle}`,
                             metadata: {
                                 propertyId: propertyId,
+                                bookingId: bookingId || 'pending',
                             },
                         },
                         unit_amount: Math.round(Number(propertyPrice) * 100),
@@ -38,17 +40,20 @@ export async function POST(request) {
                 },
             ],
             mode: 'payment',
-            success_url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/payment/cancelled`,
+            // ✅ Add bookingId to success_url
+            success_url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/payment/success?session_id={CHECKOUT_SESSION_ID}&bookingId=${bookingId || ''}`,
+            cancel_url: `${process.env.NEXT_PUBLIC_FRONTEND_URL}/payment/cancelled?bookingId=${bookingId || ''}`,
             metadata: {
                 propertyId: propertyId,
                 propertyTitle: propertyTitle,
                 amount: String(propertyPrice),
+                bookingId: bookingId || 'pending',
                 bookingData: JSON.stringify(bookingData)
             },
         });
 
         console.log('✅ Session created:', session.id);
+        console.log('✅ Booking ID:', bookingId);
 
         // ✅ URL পাঠাচ্ছেন কিনা confirm করুন
         return NextResponse.json({
