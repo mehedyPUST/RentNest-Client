@@ -254,6 +254,9 @@ const AllPropertiesContent = () => {
                     )}
                 </div>
 
+
+                {/* hffhfh */}
+
                 {/* Search and Filter Bar */}
                 <div className="mb-8">
                     <div className="flex flex-col md:flex-row gap-4">
