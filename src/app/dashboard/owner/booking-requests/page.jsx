@@ -22,7 +22,9 @@ import {
     ChevronRight,
     Search,
     Filter,
-    MessageSquare
+    MessageSquare,
+    RotateCcw,
+    Info
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -48,6 +50,17 @@ const BookingRequestsPage = () => {
     const [rejectionReason, setRejectionReason] = useState('');
     const [showRejectModal, setShowRejectModal] = useState(false);
     const [rejectBookingId, setRejectBookingId] = useState(null);
+
+    const [confirmModal, setConfirmModal] = useState({
+        isOpen: false,
+        id: null,
+        title: '',
+        action: '', // 'approve', 'reject', 'reject_modal'
+        message: '',
+        confirmText: '',
+        confirmColor: '',
+        booking: null
+    });
 
     const API_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
 
@@ -94,12 +107,36 @@ const BookingRequestsPage = () => {
         }
     };
 
-    // Handle approve booking
-    const handleApprove = async (bookingId) => {
-        if (!confirm('Are you sure you want to approve this booking request?')) {
-            return;
-        }
+    // ✅ Open Confirmation Modal
+    const openConfirmModal = (booking, action, message, confirmText, confirmColor) => {
+        setConfirmModal({
+            isOpen: true,
+            id: booking._id,
+            title: booking.propertyInfo?.title || 'Booking',
+            action: action,
+            message: message,
+            confirmText: confirmText,
+            confirmColor: confirmColor,
+            booking: booking
+        });
+    };
 
+    // ✅ Close Confirmation Modal
+    const closeConfirmModal = () => {
+        setConfirmModal({
+            isOpen: false,
+            id: null,
+            title: '',
+            action: '',
+            message: '',
+            confirmText: '',
+            confirmColor: '',
+            booking: null
+        });
+    };
+
+    // ✅ Handle Approve (works for pending and rejected)
+    const handleApprove = async (bookingId) => {
         setProcessingId(bookingId);
         try {
             const response = await fetch(`${API_URL}/api/bookings/${bookingId}/status`, {
@@ -114,8 +151,9 @@ const BookingRequestsPage = () => {
                 throw new Error(data.message || 'Failed to approve booking');
             }
 
-            toast.success('Booking approved successfully!');
+            toast.success('Booking approved successfully! ✅');
             fetchBookings(pagination.currentPage, filter, searchTerm);
+            closeConfirmModal();
         } catch (error) {
             console.error('Error approving booking:', error);
             toast.error(error.message || 'Failed to approve booking');
@@ -124,7 +162,7 @@ const BookingRequestsPage = () => {
         }
     };
 
-    // Handle reject booking
+    // ✅ Handle Reject (works for pending and approved)
     const handleReject = async (bookingId, reason) => {
         setProcessingId(bookingId);
         try {
@@ -143,7 +181,7 @@ const BookingRequestsPage = () => {
                 throw new Error(data.message || 'Failed to reject booking');
             }
 
-            toast.success('Booking rejected successfully');
+            toast.success('Booking rejected successfully ❌');
             fetchBookings(pagination.currentPage, filter, searchTerm);
         } catch (error) {
             console.error('Error rejecting booking:', error);
@@ -153,6 +191,7 @@ const BookingRequestsPage = () => {
             setShowRejectModal(false);
             setRejectBookingId(null);
             setRejectionReason('');
+            closeConfirmModal();
         }
     };
 
@@ -365,97 +404,114 @@ const BookingRequestsPage = () => {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {bookings.map((booking) => (
-                        <motion.div
-                            key={booking._id}
-                            initial={{ opacity: 0, y: 20 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition"
-                        >
-                            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                {/* Property Info */}
-                                <div className="flex-1 min-w-0">
-                                    <div className="flex items-start gap-4">
-                                        <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200 dark:bg-gray-800">
-                                            {booking.propertyInfo?.images?.[0] ? (
-                                                <img
-                                                    src={booking.propertyInfo.images[0]}
-                                                    alt={booking.propertyInfo.title}
-                                                    className="w-full h-full object-cover"
-                                                />
-                                            ) : (
-                                                <div className="w-full h-full flex items-center justify-center">
-                                                    <Home className="w-8 h-8 text-gray-400" />
+                    {bookings.map((booking) => {
+                        const isPending = booking.bookingStatus === 'pending';
+                        const isApproved = booking.bookingStatus === 'approved' || booking.bookingStatus === 'confirmed';
+                        const isRejected = booking.bookingStatus === 'rejected';
+
+                        return (
+                            <motion.div
+                                key={booking._id}
+                                initial={{ opacity: 0, y: 20 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition"
+                            >
+                                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                                    {/* Property Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <div className="flex items-start gap-4">
+                                            <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200 dark:bg-gray-800">
+                                                {booking.propertyInfo?.images?.[0] ? (
+                                                    <img
+                                                        src={booking.propertyInfo.images[0]}
+                                                        alt={booking.propertyInfo.title}
+                                                        className="w-full h-full object-cover"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full flex items-center justify-center">
+                                                        <Home className="w-8 h-8 text-gray-400" />
+                                                    </div>
+                                                )}
+                                            </div>
+                                            <div className="min-w-0">
+                                                <h3 className="font-semibold text-gray-900 dark:text-white truncate">
+                                                    {booking.propertyInfo?.title || 'Property'}
+                                                </h3>
+                                                <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                                    <MapPin className="w-3 h-3" />
+                                                    {booking.propertyInfo?.location || 'N/A'}
+                                                </p>
+                                                <div className="flex flex-wrap items-center gap-3 mt-1">
+                                                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                                        {formatCurrency(booking.propertyInfo?.price)}
+                                                    </span>
+                                                    <span className="text-xs text-gray-400">|</span>
+                                                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                                                        Move-in: {formatDate(booking.moveInDate)}
+                                                    </span>
                                                 </div>
-                                            )}
-                                        </div>
-                                        <div className="min-w-0">
-                                            <h3 className="font-semibold text-gray-900 dark:text-white truncate">
-                                                {booking.propertyInfo?.title || 'Property'}
-                                            </h3>
-                                            <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                                <MapPin className="w-3 h-3" />
-                                                {booking.propertyInfo?.location || 'N/A'}
-                                            </p>
-                                            <div className="flex flex-wrap items-center gap-3 mt-1">
-                                                <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
-                                                    {formatCurrency(booking.propertyInfo?.price)}
-                                                </span>
-                                                <span className="text-xs text-gray-400">|</span>
-                                                <span className="text-xs text-gray-500 dark:text-gray-400">
-                                                    Move-in: {formatDate(booking.moveInDate)}
-                                                </span>
                                             </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {/* Tenant Info */}
-                                <div className="flex-1 min-w-0">
-                                    <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                                        <User className="w-3 h-3" />
-                                        {booking.tenantInfo?.name || 'Unknown Tenant'}
-                                    </p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                        <Mail className="w-3 h-3" />
-                                        {booking.tenantInfo?.email || 'No email'}
-                                    </p>
-                                    <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
-                                        <Phone className="w-3 h-3" />
-                                        {booking.contactNumber || 'No phone'}
-                                    </p>
-                                </div>
-
-                                {/* Status & Actions */}
-                                <div className="flex flex-col items-end gap-3">
-                                    <div className="flex flex-wrap items-center gap-2">
-                                        {getStatusBadge(booking.bookingStatus)}
-                                        {getPaymentBadge(booking.paymentStatus)}
+                                    {/* Tenant Info */}
+                                    <div className="flex-1 min-w-0">
+                                        <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                                            <User className="w-3 h-3" />
+                                            {booking.tenantInfo?.name || 'Unknown Tenant'}
+                                        </p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                            <Mail className="w-3 h-3" />
+                                            {booking.tenantInfo?.email || 'No email'}
+                                        </p>
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                            <Phone className="w-3 h-3" />
+                                            {booking.contactNumber || 'No phone'}
+                                        </p>
                                     </div>
 
-                                    <div className="flex gap-2">
-                                        <button
-                                            onClick={() => viewBookingDetails(booking)}
-                                            className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
-                                            title="View Details"
-                                        >
-                                            <Eye className="w-4 h-4" />
-                                        </button>
+                                    {/* Status & Actions */}
+                                    <div className="flex flex-col items-end gap-3">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            {getStatusBadge(booking.bookingStatus)}
+                                            {getPaymentBadge(booking.paymentStatus)}
+                                        </div>
 
-                                        {booking.bookingStatus === 'pending' && (
-                                            <>
+                                        <div className="flex gap-2">
+                                            <button
+                                                onClick={() => viewBookingDetails(booking)}
+                                                className="p-2 text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition"
+                                                title="View Details"
+                                            >
+                                                <Eye className="w-4 h-4" />
+                                            </button>
+
+                                            {/* ✅ Approve Button - Pending + Rejected */}
+                                            {(isPending || isRejected) && (
                                                 <button
-                                                    onClick={() => handleApprove(booking._id)}
+                                                    onClick={() => openConfirmModal(
+                                                        booking,
+                                                        'approve',
+                                                        `Are you sure you want to ${isRejected ? 're-approve' : 'approve'} "${booking.propertyInfo?.title}"?`,
+                                                        isRejected ? 'Re-Approve' : 'Approve',
+                                                        'bg-green-600 hover:bg-green-700'
+                                                    )}
                                                     disabled={processingId === booking._id}
                                                     className="p-2 text-green-600 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300 hover:bg-green-50 dark:hover:bg-green-900/20 rounded-lg transition disabled:opacity-50"
-                                                    title="Approve"
+                                                    title={isRejected ? "Re-Approve" : "Approve"}
                                                 >
                                                     {processingId === booking._id ? (
                                                         <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : isRejected ? (
+                                                        <RotateCcw className="w-4 h-4" />
                                                     ) : (
                                                         <CheckCircle className="w-4 h-4" />
                                                     )}
                                                 </button>
+                                            )}
+
+                                            {/* ✅ Reject Button - Pending + Approved */}
+                                            {(isPending || isApproved) && (
                                                 <button
                                                     onClick={() => {
                                                         setRejectBookingId(booking._id);
@@ -463,27 +519,125 @@ const BookingRequestsPage = () => {
                                                     }}
                                                     disabled={processingId === booking._id}
                                                     className="p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition disabled:opacity-50"
-                                                    title="Reject"
+                                                    title={isApproved ? "Reject Approved" : "Reject"}
                                                 >
-                                                    <XCircle className="w-4 h-4" />
+                                                    {processingId === booking._id ? (
+                                                        <Loader2 className="w-4 h-4 animate-spin" />
+                                                    ) : (
+                                                        <XCircle className="w-4 h-4" />
+                                                    )}
                                                 </button>
-                                            </>
-                                        )}
+                                            )}
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
 
-                            {/* Additional Info */}
-                            {booking.additionalNotes && (
-                                <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
-                                    <p className="text-sm text-gray-500 dark:text-gray-400">
-                                        <MessageSquare className="w-3 h-3 inline mr-1" />
-                                        {booking.additionalNotes}
-                                    </p>
-                                </div>
-                            )}
-                        </motion.div>
-                    ))}
+                                {/* Rejection Reason (if rejected) */}
+                                {isRejected && booking.rejectionReason && (
+                                    <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                        <p className="text-sm text-red-700 dark:text-red-400">
+                                            <span className="font-semibold">Rejection Reason:</span>
+                                            <br />
+                                            {booking.rejectionReason}
+                                        </p>
+                                    </div>
+                                )}
+
+                                {/* Additional Info */}
+                                {booking.additionalNotes && (
+                                    <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
+                                        <p className="text-sm text-gray-500 dark:text-gray-400">
+                                            <MessageSquare className="w-3 h-3 inline mr-1" />
+                                            {booking.additionalNotes}
+                                        </p>
+                                    </div>
+                                )}
+                            </motion.div>
+                        );
+                    })}
+                </div>
+            )}
+
+            {/* Pagination */}
+            {pagination.totalPages > 1 && (
+                <div className="flex justify-center mt-6">
+                    <div className="flex gap-2">
+                        <button
+                            onClick={() => {
+                                const newPage = pagination.currentPage - 1;
+                                if (newPage >= 1) {
+                                    fetchBookings(newPage, filter, searchTerm);
+                                }
+                            }}
+                            disabled={pagination.currentPage === 1}
+                            className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <span className="px-3 py-1 bg-blue-600 text-white rounded-lg">
+                            {pagination.currentPage} / {pagination.totalPages}
+                        </span>
+                        <button
+                            onClick={() => {
+                                const newPage = pagination.currentPage + 1;
+                                if (newPage <= pagination.totalPages) {
+                                    fetchBookings(newPage, filter, searchTerm);
+                                }
+                            }}
+                            disabled={pagination.currentPage === pagination.totalPages}
+                            className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <ChevronRight className="w-4 h-4" />
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* ✅ Confirmation Modal (Approve / Reject) */}
+            {confirmModal.isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6">
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className={`p-2 rounded-full ${confirmModal.action === 'approve' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-red-100 dark:bg-red-900/30'}`}>
+                                {confirmModal.action === 'approve' ? (
+                                    <Info className="w-6 h-6 text-green-600 dark:text-green-400" />
+                                ) : (
+                                    <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                                )}
+                            </div>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                                {confirmModal.action === 'approve' ? 'Approve Booking' : 'Reject Booking'}
+                            </h2>
+                        </div>
+
+                        <p className="text-gray-600 dark:text-gray-400 mb-6">
+                            {confirmModal.message}
+                        </p>
+
+                        <div className="flex gap-3">
+                            <button
+                                onClick={closeConfirmModal}
+                                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={() => {
+                                    if (confirmModal.action === 'approve') {
+                                        handleApprove(confirmModal.id);
+                                    }
+                                }}
+                                disabled={processingId === confirmModal.id}
+                                className={`flex-1 px-4 py-2 text-white rounded-lg transition font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed ${confirmModal.confirmColor}`}
+                            >
+                                {processingId === confirmModal.id ? (
+                                    <Loader2 className="w-4 h-4 animate-spin" />
+                                ) : (
+                                    confirmModal.confirmText
+                                )}
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
 
@@ -545,6 +699,14 @@ const BookingRequestsPage = () => {
                                 </div>
                             </div>
 
+                            {/* Rejection Reason (if any) */}
+                            {selectedBooking.bookingStatus === 'rejected' && selectedBooking.rejectionReason && (
+                                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
+                                    <p className="text-sm font-semibold text-red-700 dark:text-red-400">Rejection Reason</p>
+                                    <p className="text-sm text-red-600 dark:text-red-300 mt-1">{selectedBooking.rejectionReason}</p>
+                                </div>
+                            )}
+
                             {/* Additional Notes */}
                             {selectedBooking.additionalNotes && (
                                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
@@ -561,18 +723,27 @@ const BookingRequestsPage = () => {
             {showRejectModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full p-6">
-                        <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
-                            Reject Booking
-                        </h2>
-                        <p className="text-gray-600 dark:text-gray-400 mb-4">
-                            Please provide a reason for rejecting this booking request.
+                        <div className="flex items-center gap-3 mb-4">
+                            <div className="p-2 rounded-full bg-red-100 dark:bg-red-900/30">
+                                <XCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                            </div>
+                            <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                                Reject Booking
+                            </h2>
+                        </div>
+
+                        <p className="text-gray-600 dark:text-gray-400 mb-2">
+                            Please provide a reason for rejecting <strong>"{rejectBookingId ? bookings.find(b => b._id === rejectBookingId)?.propertyInfo?.title || 'this booking' : 'this booking'}"</strong>
                         </p>
+
                         <textarea
                             value={rejectionReason}
                             onChange={(e) => setRejectionReason(e.target.value)}
                             placeholder="Enter rejection reason..."
                             className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-red-500 outline-none bg-white dark:bg-gray-900 min-h-[100px]"
+                            autoFocus
                         />
+
                         <div className="flex gap-3 mt-4">
                             <button
                                 onClick={() => {
@@ -580,17 +751,17 @@ const BookingRequestsPage = () => {
                                     setRejectBookingId(null);
                                     setRejectionReason('');
                                 }}
-                                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
+                                className="flex-1 px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium"
                             >
                                 Cancel
                             </button>
                             <button
                                 onClick={() => handleReject(rejectBookingId, rejectionReason)}
                                 disabled={processingId === rejectBookingId}
-                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition disabled:opacity-50"
+                                className="flex-1 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                                 {processingId === rejectBookingId ? (
-                                    <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                                    <Loader2 className="w-4 h-4 animate-spin" />
                                 ) : (
                                     'Reject'
                                 )}
