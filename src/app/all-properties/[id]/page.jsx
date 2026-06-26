@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authClient } from '@/lib/auth-client';
 import BookingModal from '@/components/BookingModal';
+import ReviewSection from '@/components/ReviewSection'; // ✅ নতুন Import
 import {
     FaBed, FaBath, FaRulerCombined, FaMapMarkerAlt,
     FaCalendarAlt, FaUser, FaEnvelope, FaTag,
@@ -579,8 +580,8 @@ const PropertyDetailsPage = ({ params }) => {
                                         onClick={handleBookNow}
                                         disabled={isBooked}
                                         className={`w-full py-3 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${isBooked
-                                                ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                                                : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 shadow-md shadow-blue-500/30'
+                                            ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 shadow-md shadow-blue-500/30'
                                             }`}
                                     >
                                         <FaCalendarCheck className="w-5 h-5" />
@@ -594,8 +595,8 @@ const PropertyDetailsPage = ({ params }) => {
                                             onClick={toggleFavorite}
                                             disabled={favoriteLoading}
                                             className={`py-3 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 border-2 ${isFavorited
-                                                    ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
-                                                    : 'bg-white text-gray-700 border-gray-300 hover:border-red-400 hover:text-red-500'
+                                                ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                                                : 'bg-white text-gray-700 border-gray-300 hover:border-red-400 hover:text-red-500'
                                                 }`}
                                         >
                                             {favoriteLoading ? (
@@ -641,6 +642,14 @@ const PropertyDetailsPage = ({ params }) => {
                         </div>
                     </div>
                 </div>
+
+                {/* ============================================================ */}
+                {/* ✅ REVIEWS SECTION - এখানে নতুন যোগ করুন */}
+                {/* ============================================================ */}
+                <div className="mt-12 border-t border-gray-200 pt-8">
+                    <ReviewSection propertyId={propertyId} />
+                </div>
+
             </div>
 
             {/* ✅ Booking Modal */}
