@@ -10,7 +10,7 @@ import {
     FaCalendarAlt, FaUser, FaEnvelope, FaTag,
     FaArrowLeft, FaHeart, FaShare, FaPrint,
     FaWifi, FaParking, FaSwimmingPool, FaDumbbell,
-    FaShieldAlt, FaFire, FaSnowflake, FaTv, FaEdit, FaEye
+    FaShieldAlt, FaFire, FaSnowflake, FaTv, FaEdit, FaEye, FaTrash
 } from 'react-icons/fa';
 import { MdVerified, MdPending, MdCancel, MdCheckCircle, MdWarning, MdInfo } from 'react-icons/md';
 import { GiFlowerPot, GiFruitTree } from 'react-icons/gi';
@@ -162,10 +162,36 @@ const OwnerPropertyDetailsPage = () => {
     // Handle Update
     const handlePropertyUpdate = (updatedProperty) => {
         setProperty(updatedProperty);
-        toast.success('Property resubmitted for review!');
+        toast.success('Property updated successfully!');
         setTimeout(() => {
             router.push('/dashboard/owner/my-properties');
         }, 1500);
+    };
+
+    // ✅ Delete Property Handler
+    const handleDelete = async () => {
+        if (!confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const propertyId = property._id?.$oid || property._id || property.id;
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/properties/${propertyId}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                toast.success('Property deleted successfully');
+                router.push('/dashboard/owner/my-properties');
+            } else {
+                toast.error(data.message || 'Failed to delete property');
+            }
+        } catch (error) {
+            console.error('Error deleting property:', error);
+            toast.error('Failed to delete property');
+        }
     };
 
     if (loading) {
@@ -275,7 +301,6 @@ const OwnerPropertyDetailsPage = () => {
                                         <span className="font-semibold">💡 Suggestion:</span> Please review the rejection reason and make necessary changes before submitting again.
                                     </p>
                                     <div className="mt-3 flex flex-wrap gap-3">
-                                        {/* ✅ Edit & Resubmit Button - Opens Modal */}
                                         <button
                                             onClick={handleEditResubmit}
                                             className="inline-flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium"
@@ -600,11 +625,10 @@ const OwnerPropertyDetailsPage = () => {
                                         </>
                                     )}
 
-                                    {/* Action Buttons - Conditional */}
+                                    {/* ✅ Action Buttons - শুধু Edit & Delete */}
                                     <div className="space-y-3 pt-4 border-t border-gray-100">
                                         {isRejected ? (
                                             <>
-                                                {/* ✅ Edit & Resubmit Button - Opens Modal */}
                                                 <button
                                                     onClick={handleEditResubmit}
                                                     className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-md shadow-red-500/30 flex items-center justify-center gap-2"
@@ -612,53 +636,48 @@ const OwnerPropertyDetailsPage = () => {
                                                     <FaEdit className="w-4 h-4" />
                                                     Edit & Resubmit
                                                 </button>
-                                                <Link
-                                                    href="/dashboard/owner/my-properties"
-                                                    className="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 block text-center"
+                                                <button
+                                                    onClick={handleDelete}
+                                                    className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-md shadow-red-500/30 flex items-center justify-center gap-2"
                                                 >
-                                                    View All Properties
-                                                </Link>
+                                                    <FaTrash className="w-4 h-4" />
+                                                    Delete Property
+                                                </button>
                                             </>
                                         ) : isPending ? (
                                             <>
-                                                <button className="w-full py-3 bg-yellow-500 text-white font-semibold rounded-lg cursor-not-allowed opacity-70 flex items-center justify-center gap-2">
-                                                    <MdPending className="w-5 h-5 animate-spin" />
-                                                    Under Review
-                                                </button>
-                                                <button className="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors">
-                                                    Contact Support
-                                                </button>
-                                            </>
-                                        ) : (
-                                            // ✅ Approved - Show all action buttons
-                                            <>
                                                 <button
-                                                    onClick={handleViewLive}
-                                                    className="w-full py-3 bg-green-600 text-white font-semibold rounded-lg hover:bg-green-700 transition-colors shadow-md shadow-green-500/30 flex items-center justify-center gap-2"
-                                                >
-                                                    <FaEye className="w-4 h-4" />
-                                                    View Live Property
-                                                </button>
-                                                <button className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/30 flex items-center justify-center gap-2">
-                                                    <FaHeart className="w-4 h-4" />
-                                                    Add To Favorites
-                                                </button>
-                                                <button className="w-full py-3 bg-white text-blue-600 font-semibold rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors">
-                                                    Contact Owner
-                                                </button>
-                                                <button className="w-full py-3 bg-white text-blue-600 font-semibold rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors">
-                                                    Schedule Viewing
-                                                </button>
-                                                <button className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/30">
-                                                    Book Now
-                                                </button>
-                                                <Link
-                                                    href={`/dashboard/owner/properties/edit/${id}`}
-                                                    className="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 block text-center"
+                                                    onClick={handleEditResubmit}
+                                                    className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/30 flex items-center justify-center gap-2"
                                                 >
                                                     <FaEdit className="w-4 h-4" />
                                                     Edit Property
-                                                </Link>
+                                                </button>
+                                                <button
+                                                    onClick={handleDelete}
+                                                    className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-md shadow-red-500/30 flex items-center justify-center gap-2"
+                                                >
+                                                    <FaTrash className="w-4 h-4" />
+                                                    Delete Property
+                                                </button>
+                                            </>
+                                        ) : (
+                                            // ✅ Approved
+                                            <>
+                                                <button
+                                                    onClick={handleEditResubmit}
+                                                    className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/30 flex items-center justify-center gap-2"
+                                                >
+                                                    <FaEdit className="w-4 h-4" />
+                                                    Edit Property
+                                                </button>
+                                                <button
+                                                    onClick={handleDelete}
+                                                    className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-md shadow-red-500/30 flex items-center justify-center gap-2"
+                                                >
+                                                    <FaTrash className="w-4 h-4" />
+                                                    Delete Property
+                                                </button>
                                             </>
                                         )}
                                     </div>

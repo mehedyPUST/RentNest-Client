@@ -5,14 +5,15 @@ import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authClient } from '@/lib/auth-client';
 import BookingModal from '@/components/BookingModal';
-import ReviewSection from '@/components/ReviewSection'; // ✅ নতুন Import
+import ReviewSection from '@/components/ReviewSection';
+import EditPropertyModal from '@/components/EditPropertyModal';
 import {
     FaBed, FaBath, FaRulerCombined, FaMapMarkerAlt,
     FaCalendarAlt, FaUser, FaEnvelope, FaTag,
     FaArrowLeft, FaHeart, FaRegHeart, FaShare, FaPrint,
     FaWifi, FaParking, FaSwimmingPool, FaDumbbell,
     FaShieldAlt, FaFire, FaSnowflake, FaTv,
-    FaCalendarCheck
+    FaCalendarCheck, FaEdit, FaTrash, FaEye
 } from 'react-icons/fa';
 import { MdVerified, MdPending, MdCancel, MdCheckCircle } from 'react-icons/md';
 import { GiFlowerPot, GiFruitTree } from 'react-icons/gi';
@@ -32,6 +33,21 @@ const PropertyDetailsPage = ({ params }) => {
     const [showBookingModal, setShowBookingModal] = useState(false);
     const [isBooked, setIsBooked] = useState(false);
 
+    // ✅ Edit Modal State
+    const [editModalOpen, setEditModalOpen] = useState(false);
+
+    // ✅ Check if current user is owner
+    const isOwner = () => {
+        if (!user || !property) return false;
+        const ownerId = property.ownerId || property.owner?.id;
+        return userId === ownerId;
+    };
+
+    // ✅ Check if current user is admin
+    const isAdmin = () => {
+        return user?.role?.toLowerCase() === 'admin';
+    };
+
     // প্রপার্টি ডেটা লোড করুন
     useEffect(() => {
         const fetchProperty = async () => {
@@ -39,20 +55,16 @@ const PropertyDetailsPage = ({ params }) => {
                 setLoading(true);
                 const { id } = await params;
 
+                // ✅ Single property fetch
                 const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties`,
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties/${id}`,
                     { cache: 'no-store' }
                 );
 
-                if (!res.ok) throw new Error('Failed to fetch properties');
+                if (!res.ok) throw new Error('Failed to fetch property');
 
                 const data = await res.json();
-                const properties = Array.isArray(data) ? data : data?.properties || [];
-
-                const foundProperty = properties.find(p => {
-                    const propertyId = p._id?.$oid || p._id || p.id;
-                    return propertyId == id;
-                });
+                const foundProperty = data;
 
                 if (!foundProperty) {
                     throw new Error('Property not found');
@@ -217,6 +229,44 @@ const PropertyDetailsPage = ({ params }) => {
         router.push(`/payment/${booking._id}`);
     };
 
+    // ✅ Edit Property Handler - Open Modal
+    const handleEdit = () => {
+        setEditModalOpen(true);
+    };
+
+    // ✅ Handle Property Update
+    const handlePropertyUpdate = (updatedProperty) => {
+        setProperty(updatedProperty);
+        toast.success('Property updated successfully!');
+        setEditModalOpen(false);
+    };
+
+    // ✅ Delete Property Handler
+    const handleDelete = async () => {
+        if (!confirm('Are you sure you want to delete this property? This action cannot be undone.')) {
+            return;
+        }
+
+        try {
+            const propertyId = property._id?.$oid || property._id || property.id;
+            const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/properties/${propertyId}`, {
+                method: 'DELETE',
+            });
+
+            const data = await response.json();
+
+            if (response.ok && data.success) {
+                toast.success('Property deleted successfully');
+                router.push('/all-properties');
+            } else {
+                toast.error(data.message || 'Failed to delete property');
+            }
+        } catch (error) {
+            console.error('Error deleting property:', error);
+            toast.error('Failed to delete property');
+        }
+    };
+
     // Helper functions
     const formatPrice = (price) => {
         if (!price) return 'N/A';
@@ -269,6 +319,161 @@ const PropertyDetailsPage = ({ params }) => {
         return <FaTag />;
     };
 
+    // ✅ Role-based action buttons
+    const renderActionButtons = () => {
+        const isOwnerUser = isOwner();
+        const isAdminUser = isAdmin();
+
+        // ✅ Owner Actions
+        if (isOwnerUser) {
+            return (
+                <div className="space-y-3 pt-4 border-t border-gray-100">
+                    <button
+                        onClick={handleEdit}
+                        className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/30 flex items-center justify-center gap-2"
+                    >
+                        <FaEdit className="w-4 h-4" />
+                        Edit Property
+                    </button>
+
+                    <button
+                        onClick={handleDelete}
+                        className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-md shadow-red-500/30 flex items-center justify-center gap-2"
+                    >
+                        <FaTrash className="w-4 h-4" />
+                        Delete Property
+                    </button>
+                </div>
+            );
+        }
+
+        // ✅ Admin Actions
+        if (isAdminUser) {
+            return (
+                <div className="space-y-3 pt-4 border-t border-gray-100">
+                    <button
+                        onClick={handleEdit}
+                        className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors shadow-md shadow-blue-500/30 flex items-center justify-center gap-2"
+                    >
+                        <FaEdit className="w-4 h-4" />
+                        Edit Property
+                    </button>
+
+                    <button
+                        onClick={handleDelete}
+                        className="w-full py-3 bg-red-600 text-white font-semibold rounded-lg hover:bg-red-700 transition-colors shadow-md shadow-red-500/30 flex items-center justify-center gap-2"
+                    >
+                        <FaTrash className="w-4 h-4" />
+                        Delete Property
+                    </button>
+
+                    <Link
+                        href="/dashboard/admin/all-properties"
+                        className="w-full py-3 bg-gray-200 text-gray-700 font-semibold rounded-lg hover:bg-gray-300 transition-colors flex items-center justify-center gap-2 block text-center"
+                    >
+                        <FaArrowLeft className="w-4 h-4" />
+                        Back to Admin Panel
+                    </Link>
+                </div>
+            );
+        }
+
+        // ✅ Tenant Actions (Default)
+        return (
+            <div className="space-y-3 pt-4">
+                <button
+                    onClick={handleBookNow}
+                    disabled={isBooked}
+                    className={`w-full py-3 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${isBooked
+                            ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 shadow-md shadow-blue-500/30'
+                        }`}
+                >
+                    <FaCalendarCheck className="w-5 h-5" />
+                    {isBooked ? 'Already Booked' : 'Book Now'}
+                </button>
+
+                <div className="grid grid-cols-2 gap-3">
+                    <button
+                        onClick={toggleFavorite}
+                        disabled={favoriteLoading}
+                        className={`py-3 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 border-2 ${isFavorited
+                                ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                                : 'bg-white text-gray-700 border-gray-300 hover:border-red-400 hover:text-red-500'
+                            }`}
+                    >
+                        {favoriteLoading ? (
+                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                        ) : (
+                            <>
+                                {isFavorited ? (
+                                    <FaHeart className="w-5 h-5 text-red-500" />
+                                ) : (
+                                    <FaRegHeart className="w-5 h-5" />
+                                )}
+                                <span className="text-sm">{isFavorited ? 'Favorited' : 'Favorite'}</span>
+                            </>
+                        )}
+                    </button>
+
+                    <button
+                        onClick={() => {
+                            const ownerEmail = property.owner?.email;
+                            if (ownerEmail) {
+                                window.location.href = `mailto:${ownerEmail}?subject=Inquiry about ${property.title}`;
+                            } else {
+                                toast.info('Owner contact information not available');
+                            }
+                        }}
+                        className="py-3 bg-white text-blue-600 font-semibold rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2"
+                    >
+                        <FaUser className="w-4 h-4" />
+                        <span className="text-sm">Contact</span>
+                    </button>
+                </div>
+
+                <button
+                    onClick={() => {
+                        toast.success('Viewing request sent! The owner will contact you shortly.');
+                    }}
+                    className="w-full py-3 bg-white text-green-600 font-semibold rounded-lg border-2 border-green-600 hover:bg-green-50 transition-colors flex items-center justify-center gap-2"
+                >
+                    <FaCalendarAlt className="w-4 h-4" />
+                    Schedule Viewing
+                </button>
+
+                {isBooked && (
+                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
+                        <p className="text-sm text-green-700">
+                            ✅ You have already booked this property.
+                            <Link href="/dashboard/tenant/my-bookings" className="font-medium underline ml-1">
+                                View My Bookings
+                            </Link>
+                        </p>
+                    </div>
+                )}
+            </div>
+        );
+    };
+
+    // ✅ Guest Actions
+    const renderGuestActions = () => {
+        return (
+            <div className="space-y-3 pt-4 border-t border-gray-100">
+                <Link
+                    href="/login"
+                    className="w-full py-3 bg-blue-600 text-white font-semibold rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 block text-center"
+                >
+                    <FaUser className="w-4 h-4" />
+                    Login to Book
+                </Link>
+                <p className="text-sm text-gray-500 text-center">
+                    Please login to book, favorite, or contact the owner.
+                </p>
+            </div>
+        );
+    };
+
     if (isPending || loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
@@ -307,251 +512,255 @@ const PropertyDetailsPage = ({ params }) => {
     const galleryImages = property.images?.slice(1) || [];
 
     return (
-        <div className="min-h-screen bg-gray-50">
-            {/* Top Navigation */}
-            <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-                    <div className="flex items-center justify-between h-16">
-                        <Link
-                            href="/all-properties"
-                            className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
-                        >
-                            <FaArrowLeft />
-                            <span className="font-medium">Back to Properties</span>
-                        </Link>
-                        <div className="flex items-center gap-3">
-                            <button
-                                onClick={toggleFavorite}
-                                disabled={favoriteLoading}
-                                className="p-2 rounded-full hover:bg-gray-100 transition-colors relative"
-                                aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+        <>
+            <div className="min-h-screen bg-gray-50">
+                {/* Top Navigation */}
+                <div className="bg-white border-b border-gray-200 sticky top-0 z-10 shadow-sm">
+                    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+                        <div className="flex items-center justify-between h-16">
+                            <Link
+                                href={isAdmin() ? '/dashboard/admin/all-properties' : '/all-properties'}
+                                className="flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors"
                             >
-                                {favoriteLoading ? (
-                                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                                ) : (
-                                    isFavorited ? (
-                                        <FaHeart className="w-5 h-5 text-red-500" />
+                                <FaArrowLeft />
+                                <span className="font-medium">
+                                    {isAdmin() ? 'Back to Admin Panel' : 'Back to Properties'}
+                                </span>
+                            </Link>
+                            <div className="flex items-center gap-3">
+                                {user && !isOwner() && !isAdmin() && (
+                                    <button
+                                        onClick={toggleFavorite}
+                                        disabled={favoriteLoading}
+                                        className="p-2 rounded-full hover:bg-gray-100 transition-colors relative"
+                                        aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
+                                    >
+                                        {favoriteLoading ? (
+                                            <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
+                                        ) : (
+                                            isFavorited ? (
+                                                <FaHeart className="w-5 h-5 text-red-500" />
+                                            ) : (
+                                                <FaRegHeart className="w-5 h-5 text-gray-400 hover:text-red-500" />
+                                            )
+                                        )}
+                                    </button>
+                                )}
+                                <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                                    <FaShare className="w-5 h-5 text-gray-400 hover:text-blue-500" />
+                                </button>
+                                <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
+                                    <FaPrint className="w-5 h-5 text-gray-400 hover:text-gray-600" />
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+                    {/* Property Header */}
+                    <div className="mb-8">
+                        <div className="flex flex-wrap items-start justify-between gap-4">
+                            <div>
+                                <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
+                                    {property.title || 'Untitled Property'}
+                                </h1>
+                                <div className="flex flex-wrap items-center gap-3 text-gray-600">
+                                    <span className="flex items-center gap-1">
+                                        <FaMapMarkerAlt className="text-red-500" />
+                                        {property.location || 'Location not specified'}
+                                    </span>
+                                    <span className="text-gray-300">|</span>
+                                    <span className="capitalize">{property.propertyType || 'Property'}</span>
+                                    {property.status && (
+                                        <>
+                                            <span className="text-gray-300">|</span>
+                                            <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(property.status)}`}>
+                                                {getStatusIcon(property.status)}
+                                                {property.status}
+                                            </span>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                            <div className="text-right">
+                                <div className="text-3xl font-bold text-blue-600">
+                                    {formatPrice(property.price)}
+                                </div>
+                                <div className="text-sm text-gray-500 capitalize">
+                                    {property.rentType || 'N/A'}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* Main Image */}
+                    <div className="relative rounded-xl overflow-hidden shadow-lg mb-6 bg-gray-200">
+                        <img
+                            src={mainImage}
+                            alt={property.title || 'Property'}
+                            className="w-full h-[400px] sm:h-[500px] object-cover"
+                        />
+                        {user && !isOwner() && !isAdmin() && (
+                            <div className="absolute top-4 right-4">
+                                <button
+                                    onClick={toggleFavorite}
+                                    disabled={favoriteLoading}
+                                    className="bg-white shadow-lg hover:shadow-xl rounded-full w-12 h-12 flex items-center justify-center transition-all hover:scale-110"
+                                >
+                                    {favoriteLoading ? (
+                                        <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
                                     ) : (
-                                        <FaRegHeart className="w-5 h-5 text-gray-400 hover:text-red-500" />
-                                    )
-                                )}
-                            </button>
-                            <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                                <FaShare className="w-5 h-5 text-gray-400 hover:text-blue-500" />
-                            </button>
-                            <button className="p-2 rounded-full hover:bg-gray-100 transition-colors">
-                                <FaPrint className="w-5 h-5 text-gray-400 hover:text-gray-600" />
-                            </button>
-                        </div>
+                                        isFavorited ? (
+                                            <FaHeart className="w-6 h-6 text-red-500" />
+                                        ) : (
+                                            <FaRegHeart className="w-6 h-6 text-gray-600 hover:text-red-500" />
+                                        )
+                                    )}
+                                </button>
+                            </div>
+                        )}
                     </div>
-                </div>
-            </div>
 
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-                {/* Property Header */}
-                <div className="mb-8">
-                    <div className="flex flex-wrap items-start justify-between gap-4">
-                        <div>
-                            <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">
-                                {property.title || 'Untitled Property'}
-                            </h1>
-                            <div className="flex flex-wrap items-center gap-3 text-gray-600">
-                                <span className="flex items-center gap-1">
-                                    <FaMapMarkerAlt className="text-red-500" />
-                                    {property.location || 'Location not specified'}
-                                </span>
-                                <span className="text-gray-300">|</span>
-                                <span className="capitalize">{property.propertyType || 'Property'}</span>
-                                {property.status && (
-                                    <>
-                                        <span className="text-gray-300">|</span>
-                                        <span className={`inline-flex items-center gap-1 px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(property.status)}`}>
-                                            {getStatusIcon(property.status)}
-                                            {property.status}
-                                        </span>
-                                    </>
-                                )}
-                            </div>
-                        </div>
-                        <div className="text-right">
-                            <div className="text-3xl font-bold text-blue-600">
-                                {formatPrice(property.price)}
-                            </div>
-                            <div className="text-sm text-gray-500 capitalize">
-                                {property.rentType || 'N/A'}
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* Main Image with Floating Favorite Button */}
-                <div className="relative rounded-xl overflow-hidden shadow-lg mb-6 bg-gray-200">
-                    <img
-                        src={mainImage}
-                        alt={property.title || 'Property'}
-                        className="w-full h-[400px] sm:h-[500px] object-cover"
-                    />
-                    <div className="absolute top-4 right-4">
-                        <button
-                            onClick={toggleFavorite}
-                            disabled={favoriteLoading}
-                            className="bg-white shadow-lg hover:shadow-xl rounded-full w-12 h-12 flex items-center justify-center transition-all hover:scale-110"
-                            aria-label={isFavorited ? 'Remove from favorites' : 'Add to favorites'}
-                        >
-                            {favoriteLoading ? (
-                                <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600"></div>
-                            ) : (
-                                isFavorited ? (
-                                    <FaHeart className="w-6 h-6 text-red-500" />
-                                ) : (
-                                    <FaRegHeart className="w-6 h-6 text-gray-600 hover:text-red-500" />
-                                )
+                    {/* Gallery Thumbnails */}
+                    {galleryImages.length > 0 && (
+                        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 mb-8">
+                            {galleryImages.slice(0, 5).map((img, index) => (
+                                <div key={index} className="relative rounded-lg overflow-hidden aspect-square bg-gray-200 cursor-pointer hover:opacity-80 transition-opacity">
+                                    <img
+                                        src={img}
+                                        alt={`Property ${index + 2}`}
+                                        className="w-full h-full object-cover"
+                                    />
+                                </div>
+                            ))}
+                            {galleryImages.length > 5 && (
+                                <div className="relative rounded-lg overflow-hidden aspect-square bg-gray-800 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
+                                    <span className="text-white text-xl font-bold">
+                                        +{galleryImages.length - 5}
+                                    </span>
+                                </div>
                             )}
-                        </button>
-                    </div>
-                </div>
+                        </div>
+                    )}
 
-                {/* Gallery Thumbnails */}
-                {galleryImages.length > 0 && (
-                    <div className="grid grid-cols-4 sm:grid-cols-6 gap-3 mb-8">
-                        {galleryImages.slice(0, 5).map((img, index) => (
-                            <div key={index} className="relative rounded-lg overflow-hidden aspect-square bg-gray-200 cursor-pointer hover:opacity-80 transition-opacity">
-                                <img
-                                    src={img}
-                                    alt={`Property ${index + 2}`}
-                                    className="w-full h-full object-cover"
-                                />
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                        {/* Main Content */}
+                        <div className="lg:col-span-2 space-y-8">
+                            {/* Description */}
+                            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                <h2 className="text-xl font-bold text-gray-900 mb-4">Description</h2>
+                                <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
+                                    {property.description || 'No description provided.'}
+                                </p>
                             </div>
-                        ))}
-                        {galleryImages.length > 5 && (
-                            <div className="relative rounded-lg overflow-hidden aspect-square bg-gray-800 flex items-center justify-center cursor-pointer hover:opacity-90 transition-opacity">
-                                <span className="text-white text-xl font-bold">
-                                    +{galleryImages.length - 5}
-                                </span>
-                            </div>
-                        )}
-                    </div>
-                )}
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    {/* Main Content */}
-                    <div className="lg:col-span-2 space-y-8">
-                        {/* Description */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            <h2 className="text-xl font-bold text-gray-900 mb-4">Description</h2>
-                            <p className="text-gray-600 leading-relaxed whitespace-pre-wrap">
-                                {property.description || 'No description provided.'}
-                            </p>
+                            {/* Specifications */}
+                            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                <h2 className="text-xl font-bold text-gray-900 mb-4">Specifications</h2>
+                                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                                    <div className="bg-gray-50 rounded-lg p-4 text-center">
+                                        <FaBed className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+                                        <div className="text-2xl font-bold text-gray-900">
+                                            {property.specifications?.bedrooms || 0}
+                                        </div>
+                                        <div className="text-sm text-gray-500">Bedrooms</div>
+                                    </div>
+                                    <div className="bg-gray-50 rounded-lg p-4 text-center">
+                                        <FaBath className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+                                        <div className="text-2xl font-bold text-gray-900">
+                                            {property.specifications?.bathrooms || 0}
+                                        </div>
+                                        <div className="text-sm text-gray-500">Bathrooms</div>
+                                    </div>
+                                    <div className="bg-gray-50 rounded-lg p-4 text-center">
+                                        <FaRulerCombined className="w-6 h-6 text-blue-500 mx-auto mb-2" />
+                                        <div className="text-2xl font-bold text-gray-900">
+                                            {property.specifications?.size || 'N/A'}
+                                        </div>
+                                        <div className="text-sm text-gray-500">Size (sqft)</div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            {/* Amenities */}
+                            {property.amenities && property.amenities.length > 0 && (
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                    <h2 className="text-xl font-bold text-gray-900 mb-4">Amenities</h2>
+                                    <div className="flex flex-wrap gap-3">
+                                        {property.amenities.map((amenity, index) => (
+                                            <span
+                                                key={index}
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium"
+                                            >
+                                                {getAmenityIcon(amenity)}
+                                                {amenity}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
+
+                            {/* Extra Features */}
+                            {property.extraFeatures && property.extraFeatures.length > 0 && (
+                                <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
+                                    <h2 className="text-xl font-bold text-gray-900 mb-4">Extra Features</h2>
+                                    <div className="flex flex-wrap gap-3">
+                                        {property.extraFeatures.map((feature, index) => (
+                                            <span
+                                                key={index}
+                                                className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium"
+                                            >
+                                                <FaTag className="w-4 h-4" />
+                                                {feature}
+                                            </span>
+                                        ))}
+                                    </div>
+                                </div>
+                            )}
                         </div>
 
-                        {/* Specifications */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                            <h2 className="text-xl font-bold text-gray-900 mb-4">Specifications</h2>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                                <div className="bg-gray-50 rounded-lg p-4 text-center">
-                                    <FaBed className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                                    <div className="text-2xl font-bold text-gray-900">
-                                        {property.specifications?.bedrooms || 0}
-                                    </div>
-                                    <div className="text-sm text-gray-500">Bedrooms</div>
-                                </div>
-                                <div className="bg-gray-50 rounded-lg p-4 text-center">
-                                    <FaBath className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                                    <div className="text-2xl font-bold text-gray-900">
-                                        {property.specifications?.bathrooms || 0}
-                                    </div>
-                                    <div className="text-sm text-gray-500">Bathrooms</div>
-                                </div>
-                                <div className="bg-gray-50 rounded-lg p-4 text-center">
-                                    <FaRulerCombined className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                                    <div className="text-2xl font-bold text-gray-900">
-                                        {property.specifications?.size || 'N/A'}
-                                    </div>
-                                    <div className="text-sm text-gray-500">Size (sqft)</div>
-                                </div>
-                            </div>
-                        </div>
+                        {/* Sidebar */}
+                        <div className="space-y-6">
+                            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 sticky top-24">
+                                <h3 className="text-lg font-bold text-gray-900 mb-4">Property Details</h3>
 
-                        {/* Amenities */}
-                        {property.amenities && property.amenities.length > 0 && (
-                            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4">Amenities</h2>
-                                <div className="flex flex-wrap gap-3">
-                                    {property.amenities.map((amenity, index) => (
-                                        <span
-                                            key={index}
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium"
-                                        >
-                                            {getAmenityIcon(amenity)}
-                                            {amenity}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-
-                        {/* Extra Features */}
-                        {property.extraFeatures && property.extraFeatures.length > 0 && (
-                            <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100">
-                                <h2 className="text-xl font-bold text-gray-900 mb-4">Extra Features</h2>
-                                <div className="flex flex-wrap gap-3">
-                                    {property.extraFeatures.map((feature, index) => (
-                                        <span
-                                            key={index}
-                                            className="inline-flex items-center gap-2 px-4 py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium"
-                                        >
-                                            <FaTag className="w-4 h-4" />
-                                            {feature}
-                                        </span>
-                                    ))}
-                                </div>
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Sidebar */}
-                    <div className="space-y-6">
-                        {/* Property Info Card */}
-                        <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-100 sticky top-24">
-                            <h3 className="text-lg font-bold text-gray-900 mb-4">Property Details</h3>
-
-                            <div className="space-y-4">
-                                <div className="flex items-start gap-3">
-                                    <FaTag className="w-5 h-5 text-gray-400 mt-0.5" />
-                                    <div>
-                                        <div className="text-sm text-gray-500">Type</div>
-                                        <div className="font-medium capitalize text-gray-900">
-                                            {property.propertyType || 'N/A'}
+                                <div className="space-y-4">
+                                    <div className="flex items-start gap-3">
+                                        <FaTag className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <div className="text-sm text-gray-500">Type</div>
+                                            <div className="font-medium capitalize text-gray-900">
+                                                {property.propertyType || 'N/A'}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="flex items-start gap-3">
-                                    <FaMapMarkerAlt className="w-5 h-5 text-gray-400 mt-0.5" />
-                                    <div>
-                                        <div className="text-sm text-gray-500">Location</div>
-                                        <div className="font-medium text-gray-900">
-                                            {property.location || 'N/A'}
+                                    <div className="flex items-start gap-3">
+                                        <FaMapMarkerAlt className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <div className="text-sm text-gray-500">Location</div>
+                                            <div className="font-medium text-gray-900">
+                                                {property.location || 'N/A'}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                <div className="flex items-start gap-3">
-                                    <FaCalendarAlt className="w-5 h-5 text-gray-400 mt-0.5" />
-                                    <div>
-                                        <div className="text-sm text-gray-500">Listed On</div>
-                                        <div className="font-medium text-gray-900">
-                                            {property.createdAt ? new Date(property.createdAt).toLocaleDateString('en-US', {
-                                                year: 'numeric',
-                                                month: 'long',
-                                                day: 'numeric'
-                                            }) : 'N/A'}
+                                    <div className="flex items-start gap-3">
+                                        <FaCalendarAlt className="w-5 h-5 text-gray-400 mt-0.5" />
+                                        <div>
+                                            <div className="text-sm text-gray-500">Listed On</div>
+                                            <div className="font-medium text-gray-900">
+                                                {property.createdAt ? new Date(property.createdAt).toLocaleDateString('en-US', {
+                                                    year: 'numeric',
+                                                    month: 'long',
+                                                    day: 'numeric'
+                                                }) : 'N/A'}
+                                            </div>
                                         </div>
                                     </div>
-                                </div>
 
-                                {property.owner && (
-                                    <>
+                                    {property.owner && (
                                         <div className="border-t border-gray-100 pt-4">
                                             <h4 className="text-sm font-semibold text-gray-700 mb-3">Owner Information</h4>
                                             <div className="flex items-start gap-3">
@@ -570,99 +779,43 @@ const PropertyDetailsPage = ({ params }) => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </>
-                                )}
+                                    )}
 
-                                {/* ✅ Action Buttons - Book Now + Favorite Side by Side */}
-                                <div className="space-y-3 pt-4">
-                                    {/* Book Now Button - Full Width */}
-                                    <button
-                                        onClick={handleBookNow}
-                                        disabled={isBooked}
-                                        className={`w-full py-3 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${isBooked
-                                            ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 shadow-md shadow-blue-500/30'
-                                            }`}
-                                    >
-                                        <FaCalendarCheck className="w-5 h-5" />
-                                        {isBooked ? 'Already Booked' : 'Book Now'}
-                                    </button>
-
-                                    {/* Two Buttons Side by Side */}
-                                    <div className="grid grid-cols-2 gap-3">
-                                        {/* Favorite Button */}
-                                        <button
-                                            onClick={toggleFavorite}
-                                            disabled={favoriteLoading}
-                                            className={`py-3 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 border-2 ${isFavorited
-                                                ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
-                                                : 'bg-white text-gray-700 border-gray-300 hover:border-red-400 hover:text-red-500'
-                                                }`}
-                                        >
-                                            {favoriteLoading ? (
-                                                <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600"></div>
-                                            ) : (
-                                                <>
-                                                    {isFavorited ? (
-                                                        <FaHeart className="w-5 h-5 text-red-500" />
-                                                    ) : (
-                                                        <FaRegHeart className="w-5 h-5" />
-                                                    )}
-                                                    <span className="text-sm">{isFavorited ? 'Favorited' : 'Favorite'}</span>
-                                                </>
-                                            )}
-                                        </button>
-
-                                        {/* Contact Owner Button */}
-                                        <button className="py-3 bg-white text-blue-600 font-semibold rounded-lg border-2 border-blue-600 hover:bg-blue-50 transition-colors flex items-center justify-center gap-2">
-                                            <FaUser className="w-4 h-4" />
-                                            <span className="text-sm">Contact</span>
-                                        </button>
-                                    </div>
-
-                                    {/* Schedule Viewing - Full Width */}
-                                    <button className="w-full py-3 bg-white text-green-600 font-semibold rounded-lg border-2 border-green-600 hover:bg-green-50 transition-colors flex items-center justify-center gap-2">
-                                        <FaCalendarAlt className="w-4 h-4" />
-                                        Schedule Viewing
-                                    </button>
+                                    {/* ✅ Role-Based Action Buttons */}
+                                    {user ? renderActionButtons() : renderGuestActions()}
                                 </div>
-
-                                {/* Booked Status Message */}
-                                {isBooked && (
-                                    <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
-                                        <p className="text-sm text-green-700">
-                                            ✅ You have already booked this property.
-                                            <Link href="/my-bookings" className="font-medium underline ml-1">
-                                                View My Bookings
-                                            </Link>
-                                        </p>
-                                    </div>
-                                )}
                             </div>
                         </div>
                     </div>
+
+                    {/* ✅ Reviews Section */}
+                    <div className="mt-12 border-t border-gray-200 pt-8">
+                        <ReviewSection propertyId={propertyId} />
+                    </div>
                 </div>
 
-                {/* ============================================================ */}
-                {/* ✅ REVIEWS SECTION - এখানে নতুন যোগ করুন */}
-                {/* ============================================================ */}
-                <div className="mt-12 border-t border-gray-200 pt-8">
-                    <ReviewSection propertyId={propertyId} />
-                </div>
-
+                {/* ✅ Booking Modal */}
+                {showBookingModal && (
+                    <BookingModal
+                        isOpen={showBookingModal}
+                        onClose={() => setShowBookingModal(false)}
+                        property={property}
+                        user={user}
+                        onBookingConfirm={handleBookingConfirm}
+                    />
+                )}
             </div>
 
-            {/* ✅ Booking Modal */}
-            {showBookingModal && (
-                <BookingModal
-                    isOpen={showBookingModal}
-                    onClose={() => setShowBookingModal(false)}
-                    property={property}
-                    user={user}
-                    onBookingConfirm={handleBookingConfirm}
-                />
-            )}
-        </div>
+            {/* ✅ Edit Property Modal */}
+            <EditPropertyModal
+                isOpen={editModalOpen}
+                onClose={() => {
+                    setEditModalOpen(false);
+                }}
+                property={property}
+                onUpdate={handlePropertyUpdate}
+            />
+        </>
     );
 };
 
