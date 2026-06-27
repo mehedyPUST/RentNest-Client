@@ -24,17 +24,15 @@ import {
     Settings,
     Award,
     Home,
-    LogOut,
     Users,
-    CloudUpload,
-    Image as ImageIcon
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 const UserProfile = ({ role = 'tenant' }) => {
     const router = useRouter();
-    const { data: session, status } = useSession();
+    // ✅ সঠিকভাবে update ফাংশন নিন
+    const { data: session, status, update } = useSession();
     const user = session?.user || null;
 
     const [isEditing, setIsEditing] = useState(false);
@@ -49,7 +47,7 @@ const UserProfile = ({ role = 'tenant' }) => {
         phone: '',
         location: '',
         bio: '',
-        photo: ''
+        image: ''
     });
     const [originalData, setOriginalData] = useState({});
     const [stats, setStats] = useState({
@@ -61,32 +59,6 @@ const UserProfile = ({ role = 'tenant' }) => {
 
     const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
     const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
-
-    // ✅ Role-based dashboard links
-    const dashboardLinks = {
-        admin: {
-            home: '/dashboard/admin',
-            bookings: '/dashboard/admin/all-bookings',
-            properties: '/dashboard/admin/all-properties',
-            users: '/dashboard/admin/all-users',
-            label: 'Admin Dashboard'
-        },
-        owner: {
-            home: '/dashboard/owner',
-            bookings: '/dashboard/owner/bookings',
-            properties: '/dashboard/owner/my-properties',
-            addProperty: '/dashboard/owner/add-property',
-            label: 'Owner Dashboard'
-        },
-        tenant: {
-            home: '/dashboard/tenant',
-            bookings: '/dashboard/tenant/my-bookings',
-            favorites: '/dashboard/tenant/favorites',
-            label: 'Tenant Dashboard'
-        }
-    };
-
-    const links = dashboardLinks[role] || dashboardLinks.tenant;
 
     // ✅ Upload image to ImgBB
     const uploadImageToImgBB = async (file) => {
@@ -121,7 +93,6 @@ const UserProfile = ({ role = 'tenant' }) => {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // Validation
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
         const isValidType = validTypes.includes(file.type);
         const isValidSize = file.size <= 5 * 1024 * 1024;
@@ -135,11 +106,10 @@ const UserProfile = ({ role = 'tenant' }) => {
             return;
         }
 
-        // Create preview
         const preview = URL.createObjectURL(file);
         setProfileData(prev => ({
             ...prev,
-            photo: preview,
+            image: preview,
             _file: file
         }));
 
@@ -150,12 +120,12 @@ const UserProfile = ({ role = 'tenant' }) => {
 
     // ✅ Remove image
     const handleRemoveImage = () => {
-        if (profileData.photo && profileData.photo.startsWith('blob:')) {
-            URL.revokeObjectURL(profileData.photo);
+        if (profileData.image && profileData.image.startsWith('blob:')) {
+            URL.revokeObjectURL(profileData.image);
         }
         setProfileData(prev => ({
             ...prev,
-            photo: originalData.photo || '',
+            image: originalData.image || '',
             _file: null
         }));
     };
@@ -163,13 +133,16 @@ const UserProfile = ({ role = 'tenant' }) => {
     // ✅ Load user data
     useEffect(() => {
         if (user) {
+            const userImage = user.image || '';
+            console.log('📸 Loading user image:', userImage ? 'exists' : 'empty');
+
             setProfileData({
                 name: user.name || '',
                 email: user.email || '',
                 phone: user.phone || '',
                 location: user.location || '',
                 bio: user.bio || '',
-                photo: user.image || user.photo || '',
+                image: userImage,
                 _file: null
             });
             setOriginalData({
@@ -178,14 +151,14 @@ const UserProfile = ({ role = 'tenant' }) => {
                 phone: user.phone || '',
                 location: user.location || '',
                 bio: user.bio || '',
-                photo: user.image || user.photo || '',
+                image: userImage,
                 _file: null
             });
             fetchUserStats();
         }
     }, [user]);
 
-    // ✅ Fetch user stats based on role
+    // ✅ Fetch user stats
     const fetchUserStats = async () => {
         try {
             const userId = user?.id || user?._id;
@@ -196,7 +169,6 @@ const UserProfile = ({ role = 'tenant' }) => {
                 memberSince: user?.createdAt || new Date().toISOString()
             };
 
-            // Fetch bookings count
             try {
                 const bookingsRes = await fetch(
                     `${API_URL}/api/bookings/my-bookings?tenantId=${userId}&page=1&limit=1`
@@ -205,7 +177,6 @@ const UserProfile = ({ role = 'tenant' }) => {
                 statsData.totalBookings = bookingsData.pagination?.totalItems || 0;
             } catch (e) { }
 
-            // Fetch favorites count (Tenant only)
             if (role === 'tenant') {
                 try {
                     const favRes = await fetch(
@@ -216,7 +187,6 @@ const UserProfile = ({ role = 'tenant' }) => {
                 } catch (e) { }
             }
 
-            // Fetch properties count (Owner only)
             if (role === 'owner') {
                 try {
                     const propsRes = await fetch(
@@ -243,16 +213,27 @@ const UserProfile = ({ role = 'tenant' }) => {
     // ✅ Handle save profile with image upload
     const handleSaveProfile = async () => {
         setLoading(true);
+        let uploadedImageUrl = null;
+
         try {
-            let finalPhotoUrl = profileData.photo;
+            let finalImageUrl = profileData.image;
 
             // ✅ Upload image if a new file is selected
             if (profileData._file) {
                 setUploading(true);
                 setUploadProgress(0);
                 try {
-                    finalPhotoUrl = await uploadImageToImgBB(profileData._file);
+                    const progressInterval = setInterval(() => {
+                        setUploadProgress(prev => Math.min(prev + 10, 90));
+                    }, 200);
+
+                    uploadedImageUrl = await uploadImageToImgBB(profileData._file);
+                    clearInterval(progressInterval);
                     setUploadProgress(100);
+
+                    console.log('✅ Image uploaded successfully:', uploadedImageUrl);
+                    finalImageUrl = uploadedImageUrl;
+
                 } catch (uploadError) {
                     toast.error(`Image upload failed: ${uploadError.message}`);
                     setUploading(false);
@@ -263,13 +244,16 @@ const UserProfile = ({ role = 'tenant' }) => {
             }
 
             const userId = user?.id || user?._id;
+
             const updateData = {
                 name: profileData.name,
                 phone: profileData.phone,
                 location: profileData.location,
                 bio: profileData.bio,
-                photo: finalPhotoUrl
+                image: finalImageUrl
             };
+
+            console.log('📤 Sending update data:', updateData);
 
             const response = await fetch(`${API_URL}/api/user/profile/${userId}`, {
                 method: 'PATCH',
@@ -285,19 +269,46 @@ const UserProfile = ({ role = 'tenant' }) => {
                 throw new Error(data.message || 'Failed to update profile');
             }
 
-            // ✅ Update local state with the uploaded image URL
+            // ✅ Update local state
+            const updatedImage = uploadedImageUrl || finalImageUrl;
+
             setProfileData(prev => ({
                 ...prev,
-                photo: finalPhotoUrl,
+                image: updatedImage,
                 _file: null
             }));
+
             setOriginalData(prev => ({
                 ...prev,
-                photo: finalPhotoUrl
+                image: updatedImage
             }));
 
-            toast.success('Profile updated successfully!');
+            // ✅ Update session using the update function
+            try {
+                if (update && typeof update === 'function') {
+                    await update({
+                        user: {
+                            ...session.user,
+                            image: updatedImage,
+                            name: profileData.name,
+                        }
+                    });
+                    console.log('✅ Session updated successfully');
+                } else {
+                    console.warn('⚠️ Update function not available');
+                }
+            } catch (sessionError) {
+                console.error('❌ Failed to update session:', sessionError);
+                // Session update failed but profile is updated
+            }
+
+            toast.success('✅ Profile updated successfully!');
             setIsEditing(false);
+
+            // ✅ Refresh the page to show updated data
+            setTimeout(() => {
+                window.location.reload();
+            }, 1500);
 
         } catch (error) {
             console.error('Error updating profile:', error);
@@ -310,6 +321,9 @@ const UserProfile = ({ role = 'tenant' }) => {
 
     // ✅ Handle cancel edit
     const handleCancelEdit = () => {
+        if (profileData.image && profileData.image.startsWith('blob:')) {
+            URL.revokeObjectURL(profileData.image);
+        }
         setProfileData(originalData);
         setIsEditing(false);
     };
@@ -481,11 +495,16 @@ const UserProfile = ({ role = 'tenant' }) => {
                         <div className="absolute -bottom-12 left-6">
                             <div className="relative">
                                 <div className="w-24 h-24 rounded-full border-4 border-white bg-white overflow-hidden">
-                                    {profileData.photo ? (
+                                    {profileData.image ? (
                                         <img
-                                            src={profileData.photo}
+                                            src={profileData.image}
                                             alt={profileData.name}
                                             className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                console.error('❌ Image load error:', profileData.image);
+                                                e.target.src = '';
+                                                e.target.alt = 'No image';
+                                            }}
                                         />
                                     ) : (
                                         <div className="w-full h-full bg-blue-100 flex items-center justify-center">
@@ -506,7 +525,7 @@ const UserProfile = ({ role = 'tenant' }) => {
                                                 disabled={uploading}
                                             />
                                         </label>
-                                        {profileData.photo && profileData.photo.startsWith('blob:') && (
+                                        {profileData.image && profileData.image.startsWith('blob:') && (
                                             <button
                                                 onClick={handleRemoveImage}
                                                 className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1 hover:bg-red-600 transition shadow-lg"
@@ -577,7 +596,7 @@ const UserProfile = ({ role = 'tenant' }) => {
                             </div>
                         )}
 
-                        {/* Stats Row - Role based */}
+                        {/* Stats Row */}
                         <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
                             {statsConfig.map((stat, index) => (
                                 <div key={index} className="text-center">
@@ -606,7 +625,6 @@ const UserProfile = ({ role = 'tenant' }) => {
                             Contact Information
                         </h3>
                         <div className="space-y-4">
-                            {/* Email */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Email Address</label>
                                 {isEditing ? (
@@ -630,7 +648,6 @@ const UserProfile = ({ role = 'tenant' }) => {
                                 )}
                             </div>
 
-                            {/* Phone */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
                                 {isEditing ? (
@@ -651,7 +668,6 @@ const UserProfile = ({ role = 'tenant' }) => {
                                 )}
                             </div>
 
-                            {/* Location */}
                             <div>
                                 <label className="block text-sm font-medium text-gray-700 mb-1">Location</label>
                                 {isEditing ? (
@@ -681,7 +697,6 @@ const UserProfile = ({ role = 'tenant' }) => {
                             About Me
                         </h3>
 
-                        {/* Bio */}
                         <div>
                             <label className="block text-sm font-medium text-gray-700 mb-1">Bio</label>
                             {isEditing ? (
@@ -701,7 +716,6 @@ const UserProfile = ({ role = 'tenant' }) => {
                             )}
                         </div>
 
-                        {/* Quick Stats - Role specific */}
                         <div className="mt-4 pt-4 border-t border-gray-100">
                             <div className="grid grid-cols-2 gap-3">
                                 <div className="bg-gray-50 rounded-lg p-3 text-center">
@@ -719,7 +733,7 @@ const UserProfile = ({ role = 'tenant' }) => {
                     </div>
                 </motion.div>
 
-                {/* ✅ Quick Actions - Role based */}
+                {/* ✅ Quick Actions */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
