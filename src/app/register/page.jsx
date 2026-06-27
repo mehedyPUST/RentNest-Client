@@ -202,7 +202,7 @@ export default function SignUpPage() {
             toast.success(`🎉 Account created successfully as ${role}!`);
 
             setTimeout(() => {
-                router.push("/dashboard");
+                router.push("/");
             }, 1200);
 
         } catch (err) {
@@ -221,7 +221,7 @@ export default function SignUpPage() {
         try {
             await authClient.signIn.social({
                 provider: "google",
-                callbackURL: "/dashboard",
+                callbackURL: "/",
             });
 
             toast.dismiss(loadingToast);

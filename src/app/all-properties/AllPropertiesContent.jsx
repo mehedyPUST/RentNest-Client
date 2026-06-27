@@ -4,19 +4,29 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { FaBed, FaBath, FaMapMarkerAlt, FaSearch, FaFilter, FaSort, FaTimes } from 'react-icons/fa';
-import { Home, Loader2, Eye, AlertCircle, Building2, Sparkles } from 'lucide-react';
+import { FaBed, FaBath, FaMapMarkerAlt, FaSearch, FaFilter, FaTimes } from 'react-icons/fa';
+import { Home, Loader2, Eye, AlertCircle, Building2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const AllPropertiesContent = () => {
     const router = useRouter();
     const searchParams = useSearchParams();
 
-    // State for properties and loading
+    // State
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    const [showFilters, setShowFilters] = useState(false);
+    const [searchInput, setSearchInput] = useState('');
 
-    // State for filters
+    // ✅ Pagination State
+    const [pagination, setPagination] = useState({
+        currentPage: 1,
+        totalPages: 1,
+        totalItems: 0,
+        itemsPerPage: 20
+    });
+
+    // Filters
     const [filters, setFilters] = useState({
         search: searchParams.get('search') || '',
         propertyType: searchParams.get('propertyType') || '',
@@ -27,32 +37,37 @@ const AllPropertiesContent = () => {
         sortBy: searchParams.get('sortBy') || 'createdAt',
         sortOrder: searchParams.get('sortOrder') || 'desc',
         location: searchParams.get('location') || '',
+        page: parseInt(searchParams.get('page')) || 1,  // ✅ Page from URL
     });
 
-    // State for filter UI
-    const [showFilters, setShowFilters] = useState(false);
-    const [searchInput, setSearchInput] = useState(filters.search);
-
-    // Available property types from your data
     const propertyTypes = ['Apartment', 'House', 'Condo', 'Villa', 'Townhouse', 'Land'];
 
-    // Fetch properties with filters
-    const fetchProperties = useCallback(async () => {
+    // ✅ Fetch properties with pagination
+    const fetchProperties = useCallback(async (page = 1) => {
         try {
             setLoading(true);
             setError(null);
 
-            // Build query string
+            // Update page in filters
+            setFilters(prev => ({ ...prev, page }));
+
             const queryParams = new URLSearchParams();
 
-            // Only add non-empty values
-            Object.entries(filters).forEach(([key, value]) => {
-                if (value && value.trim() !== '') {
+            // Add all filters
+            Object.entries({ ...filters, page }).forEach(([key, value]) => {
+                if (value && value.toString().trim() !== '') {
+                    // Skip default sort values
+                    if (key === 'sortBy' && value === 'createdAt') return;
+                    if (key === 'sortOrder' && value === 'desc') return;
                     queryParams.append(key, value);
                 }
             });
 
+            // ✅ Add limit
+            queryParams.append('limit', pagination.itemsPerPage);
+
             const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties?${queryParams.toString()}`;
+            console.log('📤 Fetching:', url);
 
             const res = await fetch(url, { cache: 'no-store' });
 
@@ -63,64 +78,62 @@ const AllPropertiesContent = () => {
 
             const data = await res.json();
 
-            // Handle different response formats
             let props = Array.isArray(data) ? data : data?.properties || [];
-
-            // Filter only approved properties (backend should handle this, but double-check)
-            const approvedProps = props.filter(
-                (property) => property.status?.toLowerCase() === 'approved'
-            );
+            const approvedProps = props.filter(p => p.status?.toLowerCase() === 'approved');
 
             setProperties(approvedProps);
 
-            // Update URL with current filters
+            // ✅ Update pagination
+            if (data.pagination) {
+                setPagination({
+                    currentPage: data.pagination.currentPage || page,
+                    totalPages: data.pagination.totalPages || 1,
+                    totalItems: data.pagination.totalItems || 0,
+                    itemsPerPage: data.pagination.itemsPerPage || 20
+                });
+            }
+
+            // ✅ Update URL with page
             const newQueryString = queryParams.toString();
             const newUrl = newQueryString
                 ? `/all-properties?${newQueryString}`
                 : '/all-properties';
 
-            // Only update URL if different from current
-            if (typeof window !== 'undefined' && window.location.pathname + window.location.search !== newUrl) {
+            if (window.location.pathname + window.location.search !== newUrl) {
                 router.replace(newUrl, { scroll: false });
             }
 
         } catch (err) {
+            console.error('❌ Error fetching properties:', err);
             setError(err.message);
             setProperties([]);
         } finally {
             setLoading(false);
         }
-    }, [filters, router]);
+    }, [filters, router, pagination.itemsPerPage]);
 
-    // Fetch on mount and filter changes
-    useEffect(() => {
-        fetchProperties();
-    }, [fetchProperties]);
-
-    // Handle search input with debounce
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            if (searchInput !== filters.search) {
-                setFilters(prev => ({ ...prev, search: searchInput }));
-            }
-        }, 500);
-
-        return () => clearTimeout(delayDebounceFn);
-    }, [searchInput, filters.search]);
-
-    // Handle filter changes
-    const handleFilterChange = (e) => {
-        const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value }));
+    // ✅ Handle page change
+    const handlePageChange = (newPage) => {
+        if (newPage >= 1 && newPage <= pagination.totalPages) {
+            fetchProperties(newPage);
+            // Scroll to top
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
     };
 
-    // Apply filters
+    // ✅ Handle filter change
+    const handleFilterChange = (e) => {
+        const { name, value } = e.target;
+        setFilters(prev => ({ ...prev, [name]: value, page: 1 })); // Reset to page 1
+    };
+
+    // ✅ Apply filters
     const applyFilters = () => {
-        fetchProperties();
+        fetchProperties(1);
         setShowFilters(false);
     };
 
-    // Reset all filters
+    // ✅ Reset filters
     const resetFilters = () => {
         setFilters({
             search: '',
@@ -132,15 +145,28 @@ const AllPropertiesContent = () => {
             sortBy: 'createdAt',
             sortOrder: 'desc',
             location: '',
+            page: 1
         });
         setSearchInput('');
         setShowFilters(false);
+        fetchProperties(1);
     };
 
-    // Handle view details
-    const handleViewDetails = (id) => {
-        router.push(`/all-properties/${id}`);
-    };
+    // ✅ Search with debounce
+    useEffect(() => {
+        const delayDebounceFn = setTimeout(() => {
+            if (searchInput !== filters.search) {
+                setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
+            }
+        }, 500);
+        return () => clearTimeout(delayDebounceFn);
+    }, [searchInput]);
+
+    // ✅ Fetch on filter change
+    useEffect(() => {
+        fetchProperties(filters.page || 1);
+    }, [filters.search, filters.propertyType, filters.minPrice, filters.maxPrice,
+    filters.bedrooms, filters.bathrooms, filters.sortBy, filters.sortOrder, filters.location]);
 
     // Format price
     const formatPrice = (price) => {
@@ -149,13 +175,11 @@ const AllPropertiesContent = () => {
         return `$${price.toLocaleString()}`;
     };
 
-    // Capitalize first letter
     const capitalizeFirst = (str) => {
         if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1);
     };
 
-    // Count active filters
     const getActiveFilterCount = () => {
         let count = 0;
         if (filters.search) count++;
@@ -165,8 +189,13 @@ const AllPropertiesContent = () => {
         if (filters.bedrooms) count++;
         if (filters.bathrooms) count++;
         if (filters.location) count++;
-        if (filters.sortBy !== 'createdAt' || filters.sortOrder !== 'desc') count++;
+        if (filters.sortBy !== 'createdAt') count++;
+        if (filters.sortOrder !== 'desc') count++;
         return count;
+    };
+
+    const handleViewDetails = (id) => {
+        router.push(`/all-properties/${id}`);
     };
 
     if (loading) {
@@ -183,7 +212,7 @@ const AllPropertiesContent = () => {
                 <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
                 <p className="text-red-500 text-lg">{error}</p>
                 <button
-                    onClick={fetchProperties}
+                    onClick={() => fetchProperties(1)}
                     className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
                 >
                     Try Again
@@ -201,7 +230,6 @@ const AllPropertiesContent = () => {
                     <motion.div
                         className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 shadow-sm mb-6"
                         whileHover={{ scale: 1.05 }}
-                        transition={{ type: "spring", stiffness: 300 }}
                     >
                         <motion.span
                             animate={{ rotate: 360 }}
@@ -223,21 +251,21 @@ const AllPropertiesContent = () => {
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                             viewport={{ once: true }}
-                        ></motion.div>
+                        />
                         <motion.div
                             className="w-2 h-2 bg-blue-600 rounded-full"
                             initial={{ scale: 0 }}
                             whileInView={{ scale: 1 }}
                             transition={{ duration: 0.4, delay: 0.4 }}
                             viewport={{ once: true }}
-                        ></motion.div>
+                        />
                         <motion.div
                             className="w-16 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                             viewport={{ once: true }}
-                        ></motion.div>
+                        />
                     </div>
 
                     <p className="text-gray-600 dark:text-gray-400 max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
@@ -248,14 +276,11 @@ const AllPropertiesContent = () => {
                         <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full">
                             <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                             <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
-                                {properties.length} Verified Properties Available
+                                {pagination.totalItems} Verified Properties Available
                             </span>
                         </div>
                     )}
                 </div>
-
-
-                {/* hffhfh */}
 
                 {/* Search and Filter Bar */}
                 <div className="mb-8">
@@ -525,15 +550,11 @@ const AllPropertiesContent = () => {
                     </div>
                 )}
 
-                {/* Grid */}
+                {/* Properties Grid */}
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                     {properties.map((property) => {
                         const id = property._id?.$oid || property._id || property.id;
-
-                        const image =
-                            property.images?.[0] ||
-                            'https://via.placeholder.com/800x600?text=No+Image';
-
+                        const image = property.images?.[0] || 'https://via.placeholder.com/800x600?text=No+Image';
                         const bedrooms = property.specifications?.bedrooms || 0;
                         const bathrooms = property.specifications?.bathrooms || 0;
 
@@ -553,20 +574,13 @@ const AllPropertiesContent = () => {
                                         src={image}
                                         alt={property.title}
                                         className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
-                                        onError={(e) => {
-                                            e.target.src = 'https://via.placeholder.com/800x600?text=No+Image';
-                                        }}
                                     />
-
-                                    {/* Verified Badge */}
                                     <span className="absolute top-3 left-3 px-3 py-1 text-xs bg-green-600 text-white rounded-full flex items-center gap-1">
                                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                                             <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
                                         </svg>
                                         Verified
                                     </span>
-
-                                    {/* Type */}
                                     <span className="absolute top-3 right-3 px-3 py-1 text-xs bg-black/70 text-white rounded-full capitalize">
                                         {capitalizeFirst(property.propertyType)}
                                     </span>
@@ -614,6 +628,87 @@ const AllPropertiesContent = () => {
                         );
                     })}
                 </div>
+
+                {/* ✅ Pagination Section */}
+                {pagination.totalPages > 1 && (
+                    <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-10 pt-6 border-t border-gray-200 dark:border-gray-800">
+                        <div className="text-sm text-gray-600 dark:text-gray-400">
+                            Showing {(pagination.currentPage - 1) * pagination.itemsPerPage + 1} to{' '}
+                            {Math.min(pagination.currentPage * pagination.itemsPerPage, pagination.totalItems)} of{' '}
+                            {pagination.totalItems} properties
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                            {/* Previous Button */}
+                            <button
+                                onClick={() => handlePageChange(pagination.currentPage - 1)}
+                                disabled={pagination.currentPage === 1}
+                                className="flex items-center gap-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                <ChevronLeft className="w-4 h-4" />
+                                Previous
+                            </button>
+
+                            {/* Page Numbers */}
+                            <div className="flex gap-1">
+                                {(() => {
+                                    const pages = [];
+                                    const total = pagination.totalPages;
+                                    const current = pagination.currentPage;
+
+                                    // Show first page
+                                    if (total <= 7) {
+                                        for (let i = 1; i <= total; i++) {
+                                            pages.push(i);
+                                        }
+                                    } else {
+                                        pages.push(1);
+
+                                        if (current > 3) {
+                                            pages.push('...');
+                                        }
+
+                                        for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
+                                            pages.push(i);
+                                        }
+
+                                        if (current < total - 2) {
+                                            pages.push('...');
+                                        }
+
+                                        pages.push(total);
+                                    }
+
+                                    return pages.map((page, index) => (
+                                        <button
+                                            key={index}
+                                            onClick={() => typeof page === 'number' && handlePageChange(page)}
+                                            disabled={page === '...' || page === pagination.currentPage}
+                                            className={`w-10 h-10 rounded-lg transition ${page === pagination.currentPage
+                                                    ? 'bg-blue-600 text-white'
+                                                    : page === '...'
+                                                        ? 'cursor-default'
+                                                        : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                                }`}
+                                        >
+                                            {page}
+                                        </button>
+                                    ));
+                                })()}
+                            </div>
+
+                            {/* Next Button */}
+                            <button
+                                onClick={() => handlePageChange(pagination.currentPage + 1)}
+                                disabled={pagination.currentPage === pagination.totalPages}
+                                className="flex items-center gap-1 px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                                Next
+                                <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+                    </div>
+                )}
             </div>
         </div>
     );
