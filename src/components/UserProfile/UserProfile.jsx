@@ -1,7 +1,7 @@
 // components/UserProfile/UserProfile.jsx
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/lib/auth-client';
 import { motion } from 'framer-motion';
@@ -25,7 +25,9 @@ import {
     Award,
     Home,
     LogOut,
-    Users
+    Users,
+    CloudUpload,
+    Image as ImageIcon
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Link from 'next/link';
@@ -37,6 +39,10 @@ const UserProfile = ({ role = 'tenant' }) => {
 
     const [isEditing, setIsEditing] = useState(false);
     const [loading, setLoading] = useState(false);
+    const [uploading, setUploading] = useState(false);
+    const [uploadProgress, setUploadProgress] = useState(0);
+    const fileInputRef = useRef(null);
+
     const [profileData, setProfileData] = useState({
         name: '',
         email: '',
@@ -54,6 +60,7 @@ const UserProfile = ({ role = 'tenant' }) => {
     });
 
     const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
+    const IMGBB_API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
 
     // ✅ Role-based dashboard links
     const dashboardLinks = {
@@ -81,6 +88,78 @@ const UserProfile = ({ role = 'tenant' }) => {
 
     const links = dashboardLinks[role] || dashboardLinks.tenant;
 
+    // ✅ Upload image to ImgBB
+    const uploadImageToImgBB = async (file) => {
+        if (!IMGBB_API_KEY) {
+            throw new Error('ImgBB API key is not configured');
+        }
+
+        const formData = new FormData();
+        formData.append('image', file);
+
+        try {
+            const response = await fetch(`https://api.imgbb.com/1/upload?key=${IMGBB_API_KEY}`, {
+                method: 'POST',
+                body: formData
+            });
+
+            const data = await response.json();
+
+            if (data.success) {
+                return data.data.url;
+            } else {
+                throw new Error(data.error?.message || 'Image upload failed');
+            }
+        } catch (error) {
+            console.error('Error uploading image:', error);
+            throw new Error(`Failed to upload image: ${error.message}`);
+        }
+    };
+
+    // ✅ Handle image selection
+    const handleImageSelect = (e) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+
+        // Validation
+        const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
+        const isValidType = validTypes.includes(file.type);
+        const isValidSize = file.size <= 5 * 1024 * 1024;
+
+        if (!isValidType) {
+            toast.error('Only JPEG, JPG, PNG, WEBP, and GIF are allowed.');
+            return;
+        }
+        if (!isValidSize) {
+            toast.error('Image size must be less than 5MB.');
+            return;
+        }
+
+        // Create preview
+        const preview = URL.createObjectURL(file);
+        setProfileData(prev => ({
+            ...prev,
+            photo: preview,
+            _file: file
+        }));
+
+        if (fileInputRef.current) {
+            fileInputRef.current.value = '';
+        }
+    };
+
+    // ✅ Remove image
+    const handleRemoveImage = () => {
+        if (profileData.photo && profileData.photo.startsWith('blob:')) {
+            URL.revokeObjectURL(profileData.photo);
+        }
+        setProfileData(prev => ({
+            ...prev,
+            photo: originalData.photo || '',
+            _file: null
+        }));
+    };
+
     // ✅ Load user data
     useEffect(() => {
         if (user) {
@@ -90,7 +169,8 @@ const UserProfile = ({ role = 'tenant' }) => {
                 phone: user.phone || '',
                 location: user.location || '',
                 bio: user.bio || '',
-                photo: user.image || user.photo || ''
+                photo: user.image || user.photo || '',
+                _file: null
             });
             setOriginalData({
                 name: user.name || '',
@@ -98,7 +178,8 @@ const UserProfile = ({ role = 'tenant' }) => {
                 phone: user.phone || '',
                 location: user.location || '',
                 bio: user.bio || '',
-                photo: user.image || user.photo || ''
+                photo: user.image || user.photo || '',
+                _file: null
             });
             fetchUserStats();
         }
@@ -159,17 +240,43 @@ const UserProfile = ({ role = 'tenant' }) => {
         setProfileData(prev => ({ ...prev, [name]: value }));
     };
 
-    // ✅ Handle save profile
+    // ✅ Handle save profile with image upload
     const handleSaveProfile = async () => {
         setLoading(true);
         try {
+            let finalPhotoUrl = profileData.photo;
+
+            // ✅ Upload image if a new file is selected
+            if (profileData._file) {
+                setUploading(true);
+                setUploadProgress(0);
+                try {
+                    finalPhotoUrl = await uploadImageToImgBB(profileData._file);
+                    setUploadProgress(100);
+                } catch (uploadError) {
+                    toast.error(`Image upload failed: ${uploadError.message}`);
+                    setUploading(false);
+                    setLoading(false);
+                    return;
+                }
+                setUploading(false);
+            }
+
             const userId = user?.id || user?._id;
+            const updateData = {
+                name: profileData.name,
+                phone: profileData.phone,
+                location: profileData.location,
+                bio: profileData.bio,
+                photo: finalPhotoUrl
+            };
+
             const response = await fetch(`${API_URL}/api/user/profile/${userId}`, {
                 method: 'PATCH',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify(profileData),
+                body: JSON.stringify(updateData),
             });
 
             const data = await response.json();
@@ -178,15 +285,26 @@ const UserProfile = ({ role = 'tenant' }) => {
                 throw new Error(data.message || 'Failed to update profile');
             }
 
+            // ✅ Update local state with the uploaded image URL
+            setProfileData(prev => ({
+                ...prev,
+                photo: finalPhotoUrl,
+                _file: null
+            }));
+            setOriginalData(prev => ({
+                ...prev,
+                photo: finalPhotoUrl
+            }));
+
             toast.success('Profile updated successfully!');
             setIsEditing(false);
-            setOriginalData(profileData);
 
         } catch (error) {
             console.error('Error updating profile:', error);
             toast.error(error.message || 'Failed to update profile');
         } finally {
             setLoading(false);
+            setUploading(false);
         }
     };
 
@@ -194,21 +312,6 @@ const UserProfile = ({ role = 'tenant' }) => {
     const handleCancelEdit = () => {
         setProfileData(originalData);
         setIsEditing(false);
-    };
-
-    // ✅ Handle photo upload
-    const handlePhotoUpload = (e) => {
-        const file = e.target.files[0];
-        if (file) {
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setProfileData(prev => ({
-                    ...prev,
-                    photo: reader.result
-                }));
-            };
-            reader.readAsDataURL(file);
-        }
     };
 
     // ✅ Format date
@@ -343,21 +446,22 @@ const UserProfile = ({ role = 'tenant' }) => {
                                     <button
                                         onClick={handleCancelEdit}
                                         className="flex items-center gap-2 px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition"
+                                        disabled={loading || uploading}
                                     >
                                         <X className="w-4 h-4" />
                                         Cancel
                                     </button>
                                     <button
                                         onClick={handleSaveProfile}
-                                        disabled={loading}
+                                        disabled={loading || uploading}
                                         className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition disabled:opacity-50"
                                     >
-                                        {loading ? (
+                                        {(loading || uploading) ? (
                                             <Loader2 className="w-4 h-4 animate-spin" />
                                         ) : (
                                             <Save className="w-4 h-4" />
                                         )}
-                                        Save Changes
+                                        {uploading ? 'Uploading...' : loading ? 'Saving...' : 'Save Changes'}
                                     </button>
                                 </>
                             )}
@@ -390,15 +494,35 @@ const UserProfile = ({ role = 'tenant' }) => {
                                     )}
                                 </div>
                                 {isEditing && (
-                                    <label className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1.5 cursor-pointer hover:bg-blue-700 transition">
-                                        <Camera className="w-4 h-4 text-white" />
-                                        <input
-                                            type="file"
-                                            accept="image/*"
-                                            className="hidden"
-                                            onChange={handlePhotoUpload}
-                                        />
-                                    </label>
+                                    <>
+                                        <label className="absolute bottom-0 right-0 bg-blue-600 rounded-full p-1.5 cursor-pointer hover:bg-blue-700 transition shadow-lg">
+                                            <Camera className="w-4 h-4 text-white" />
+                                            <input
+                                                ref={fileInputRef}
+                                                type="file"
+                                                accept="image/*"
+                                                className="hidden"
+                                                onChange={handleImageSelect}
+                                                disabled={uploading}
+                                            />
+                                        </label>
+                                        {profileData.photo && profileData.photo.startsWith('blob:') && (
+                                            <button
+                                                onClick={handleRemoveImage}
+                                                className="absolute -top-1 -right-1 bg-red-500 rounded-full p-1 hover:bg-red-600 transition shadow-lg"
+                                            >
+                                                <X className="w-3 h-3 text-white" />
+                                            </button>
+                                        )}
+                                    </>
+                                )}
+                                {uploading && (
+                                    <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center">
+                                        <div className="text-center">
+                                            <Loader2 className="w-8 h-8 animate-spin text-white mx-auto" />
+                                            <p className="text-white text-xs mt-1">{Math.round(uploadProgress)}%</p>
+                                        </div>
+                                    </div>
                                 )}
                             </div>
                         </div>
@@ -416,6 +540,7 @@ const UserProfile = ({ role = 'tenant' }) => {
                                         onChange={handleInputChange}
                                         className="text-2xl font-bold text-gray-900 bg-gray-50 border border-gray-200 rounded-lg px-3 py-1 w-full max-w-md focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="Your name"
+                                        disabled={loading}
                                     />
                                 ) : (
                                     <h2 className="text-2xl font-bold text-gray-900">{profileData.name}</h2>
@@ -438,6 +563,19 @@ const UserProfile = ({ role = 'tenant' }) => {
                                 <span>Joined {formatDate(stats.memberSince)}</span>
                             </div>
                         </div>
+
+                        {/* Upload Progress Bar */}
+                        {uploading && (
+                            <div className="mt-4">
+                                <div className="w-full bg-gray-200 rounded-full h-2">
+                                    <div
+                                        className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                        style={{ width: `${uploadProgress}%` }}
+                                    ></div>
+                                </div>
+                                <p className="text-xs text-gray-500 mt-1">Uploading image... {Math.round(uploadProgress)}%</p>
+                            </div>
+                        )}
 
                         {/* Stats Row - Role based */}
                         <div className="grid grid-cols-3 gap-4 mt-6 pt-6 border-t border-gray-100">
@@ -479,12 +617,16 @@ const UserProfile = ({ role = 'tenant' }) => {
                                         onChange={handleInputChange}
                                         className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="your@email.com"
+                                        disabled
                                     />
                                 ) : (
                                     <p className="text-gray-900 flex items-center gap-2">
                                         <Mail className="w-4 h-4 text-gray-400" />
                                         {profileData.email}
                                     </p>
+                                )}
+                                {isEditing && (
+                                    <p className="text-xs text-gray-400 mt-1">Email cannot be changed</p>
                                 )}
                             </div>
 
@@ -499,6 +641,7 @@ const UserProfile = ({ role = 'tenant' }) => {
                                         onChange={handleInputChange}
                                         className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="+1 (555) 000-0000"
+                                        disabled={loading}
                                     />
                                 ) : (
                                     <p className="text-gray-900 flex items-center gap-2">
@@ -519,6 +662,7 @@ const UserProfile = ({ role = 'tenant' }) => {
                                         onChange={handleInputChange}
                                         className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                                         placeholder="City, Country"
+                                        disabled={loading}
                                     />
                                 ) : (
                                     <p className="text-gray-900 flex items-center gap-2">
@@ -548,6 +692,7 @@ const UserProfile = ({ role = 'tenant' }) => {
                                     rows="4"
                                     className="w-full px-3 py-2 bg-gray-50 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
                                     placeholder="Tell us about yourself..."
+                                    disabled={loading}
                                 />
                             ) : (
                                 <p className="text-gray-700 leading-relaxed">
