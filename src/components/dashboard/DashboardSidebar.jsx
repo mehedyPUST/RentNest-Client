@@ -160,12 +160,9 @@ import { usePathname } from "next/navigation";
 import {
     House,
     Search,
-    Bell,
     PlusCircle,
     FileText,
-    Mail,
     User,
-    Settings,
     CalendarCheck,
     Heart,
     LayoutDashboard,
@@ -173,7 +170,6 @@ import {
     Building,
     BookOpen,
     CreditCard,
-    UserCog
 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
 
@@ -186,11 +182,17 @@ export default function DashboardSidebar() {
 
     if (isPending) {
         return (
-            <aside className="hidden w-64 shrink-0 border-r border-default p-4 lg:block">
-                <div className="flex items-center justify-center h-32">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <>
+                {/* Loading state eo mobile header dekhano */}
+                <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-gray-800 border-b z-40 flex items-center px-4">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
                 </div>
-            </aside>
+                <aside className="hidden lg:flex lg:flex-col w-64 shrink-0 border-r p-4 h-screen sticky top-0">
+                    <div className="flex items-center justify-center h-32">
+                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                </aside>
+            </>
         );
     }
 
@@ -246,18 +248,24 @@ export default function DashboardSidebar() {
 
     return (
         <>
-            {/* Mobile Header Bar */}
+            {/* Mobile Header Bar - Always visible on mobile */}
             <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-gray-800 border-b border-default flex items-center px-4 z-40 shadow-sm">
                 <Button
                     variant="light"
                     isIconOnly
                     onPress={() => setIsOpen(true)}
                     className="mr-3"
+                    aria-label="Open menu"
                 >
                     <Menu className="size-5" />
                 </Button>
                 <div>
-                    <h2 className="text-lg font-semibold capitalize">{userRole} Dashboard</h2>
+                    <h2 className="text-base font-semibold capitalize">{userRole} Dashboard</h2>
+                    {session?.user?.name && (
+                        <p className="text-xs text-gray-500 dark:text-gray-400">
+                            Welcome, {session.user.name}
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -278,18 +286,18 @@ export default function DashboardSidebar() {
             {isOpen && (
                 <div className="lg:hidden fixed inset-0 z-50">
                     {/* Backdrop */}
-                    <div 
-                        className="absolute inset-0 bg-black/50"
+                    <div
+                        className="absolute inset-0 bg-black/50 transition-opacity"
                         onClick={() => setIsOpen(false)}
                     />
                     {/* Drawer Panel */}
-                    <div className="absolute left-0 top-0 bottom-0 w-[280px] max-w-[80vw] bg-white dark:bg-gray-800 shadow-xl">
+                    <div className="absolute left-0 top-0 bottom-0 w-[280px] max-w-[80vw] bg-white dark:bg-gray-800 shadow-xl transform transition-transform">
                         <div className="p-4">
                             <div className="flex items-center justify-between mb-6">
                                 <div>
                                     <h2 className="text-lg font-semibold capitalize">{userRole} Dashboard</h2>
                                     {session?.user?.name && (
-                                        <p className="text-sm text-muted-foreground mt-1">
+                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                             Welcome, {session.user.name}
                                         </p>
                                     )}
@@ -298,6 +306,7 @@ export default function DashboardSidebar() {
                                     isIconOnly
                                     variant="light"
                                     onPress={() => setIsOpen(false)}
+                                    aria-label="Close menu"
                                 >
                                     <X className="size-5" />
                                 </Button>
@@ -310,3 +319,4 @@ export default function DashboardSidebar() {
         </>
     );
 }
+
