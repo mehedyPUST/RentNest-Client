@@ -456,10 +456,10 @@ export default function OwnerDashboardHomePage() {
                         </div>
                     )}
                     <Link
-                        href="/dashboard/owner/bookings"
+                        href="/dashboard/owner/booking-requests"
                         className="mt-4 inline-flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
                     >
-                        View all bookings →
+                        View Booking Requests →
                     </Link>
                 </div>
 
