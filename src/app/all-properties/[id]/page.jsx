@@ -385,8 +385,8 @@ const PropertyDetailsPage = ({ params }) => {
                     onClick={handleBookNow}
                     disabled={isBooked}
                     className={`w-full py-3 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 ${isBooked
-                            ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
-                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 shadow-md shadow-blue-500/30'
+                        ? 'bg-gray-100 text-gray-500 cursor-not-allowed'
+                        : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-90 shadow-md shadow-blue-500/30'
                         }`}
                 >
                     <FaCalendarCheck className="w-5 h-5" />
@@ -394,12 +394,13 @@ const PropertyDetailsPage = ({ params }) => {
                 </button>
 
                 <div className="grid grid-cols-2 gap-3">
+                    {/* Favorite Button */}
                     <button
                         onClick={toggleFavorite}
                         disabled={favoriteLoading}
                         className={`py-3 font-semibold rounded-lg transition-all flex items-center justify-center gap-2 border-2 ${isFavorited
-                                ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
-                                : 'bg-white text-gray-700 border-gray-300 hover:border-red-400 hover:text-red-500'
+                            ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                            : 'bg-white text-gray-700 border-gray-300 hover:border-red-400 hover:text-red-500'
                             }`}
                     >
                         {favoriteLoading ? (
@@ -416,6 +417,7 @@ const PropertyDetailsPage = ({ params }) => {
                         )}
                     </button>
 
+                    {/* Contact Owner Button */}
                     <button
                         onClick={() => {
                             const ownerEmail = property.owner?.email;
@@ -432,16 +434,7 @@ const PropertyDetailsPage = ({ params }) => {
                     </button>
                 </div>
 
-                <button
-                    onClick={() => {
-                        toast.success('Viewing request sent! The owner will contact you shortly.');
-                    }}
-                    className="w-full py-3 bg-white text-green-600 font-semibold rounded-lg border-2 border-green-600 hover:bg-green-50 transition-colors flex items-center justify-center gap-2"
-                >
-                    <FaCalendarAlt className="w-4 h-4" />
-                    Schedule Viewing
-                </button>
-
+                {/* Booked Status Message */}
                 {isBooked && (
                     <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg">
                         <p className="text-sm text-green-700">
