@@ -478,7 +478,7 @@ export default function OwnerDashboardHomePage() {
                             Add New Property
                         </Link>
                         <Link
-                            href="/dashboard/owner/bookings"
+                            href="/dashboard/owner/booking-requests"
                             className="w-full flex items-center gap-3 p-3 rounded-lg bg-green-50 dark:bg-green-950/30 hover:bg-green-100 dark:hover:bg-green-950/50 transition-colors text-green-700 dark:text-green-400 font-medium"
                         >
                             <CalendarCheck className="size-5" />
