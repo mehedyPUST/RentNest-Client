@@ -38,7 +38,6 @@
 // }
 
 
-
 'use client';
 
 import DashboardSidebar from '@/components/dashboard/DashboardSidebar';
@@ -71,7 +70,7 @@ export default function DashboardLayout({ children }) {
     return (
         <div className="flex min-h-screen bg-gray-50 dark:bg-gray-900">
             <DashboardSidebar />
-            <main className="flex-1 pt-14 lg:pt-0 overflow-y-auto"> {/* Add pt-14 for mobile header, pt-0 for desktop */}
+            <main className="flex-1 overflow-y-auto pt-14 lg:pt-0">
                 <div className="p-3 md:p-4">
                     {children}
                 </div>
