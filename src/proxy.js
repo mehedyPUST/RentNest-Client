@@ -1,17 +1,14 @@
 // src/proxy.js
 import { NextResponse } from 'next/server';
 
-// ✅ Protected Routes
 const protectedRoutes = {
     admin: ['/dashboard/admin', '/dashboard/admin/:path*'],
     owner: ['/dashboard/owner', '/dashboard/owner/:path*'],
     tenant: ['/dashboard/tenant', '/dashboard/tenant/:path*'],
 };
 
-// ✅ Public Routes
 const publicRoutes = ['/', '/all-properties', '/login', '/register', '/api/auth'];
 
-// ✅ Check route match
 const matchesPattern = (path, patterns) => {
     return patterns.some(pattern => {
         if (pattern.includes(':path*')) {
@@ -25,17 +22,17 @@ const matchesPattern = (path, patterns) => {
 export async function proxy(request) {
     const { pathname } = request.nextUrl;
 
-    // ✅ Skip API routes
+    // Skip API routes
     if (pathname.startsWith('/api/')) {
         return NextResponse.next();
     }
 
-    // ✅ Skip public routes
+    // Skip public routes
     if (publicRoutes.some(p => pathname === p || pathname.startsWith(p + '/'))) {
         return NextResponse.next();
     }
 
-    // ✅ Check if protected
+    // Check if protected
     const isProtected = Object.values(protectedRoutes).some(routes =>
         matchesPattern(pathname, routes)
     );
@@ -44,50 +41,73 @@ export async function proxy(request) {
         return NextResponse.next();
     }
 
-    // ✅ Get session using Better Auth internal API
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL;
+        // ✅ Better Auth Session Cookie
+        const sessionCookie = request.cookies.get('rentnest_session')?.value;
 
-        // ✅ Call Better Auth get-session API
-        const sessionRes = await fetch(`${baseUrl}/api/auth/get-session`, {
-            headers: {
-                Cookie: request.headers.get('cookie') || '',
-            },
-        });
+        console.log('🔍 Session Cookie:', sessionCookie ? 'exists' : 'not found');
 
-        if (!sessionRes.ok) {
+        if (!sessionCookie) {
             const loginUrl = new URL('/login', request.url);
             loginUrl.searchParams.set('redirect', pathname);
             return NextResponse.redirect(loginUrl);
         }
 
-        const sessionData = await sessionRes.json();
+        // ✅ Parse session
+        let user = null;
+        let userRole = 'tenant';
 
-        if (!sessionData?.user) {
+        try {
+            const sessionData = JSON.parse(sessionCookie);
+            user = sessionData?.user;
+            userRole = user?.role?.toLowerCase() || 'tenant';
+        } catch {
+            try {
+                const decoded = Buffer.from(sessionCookie, 'base64').toString('utf-8');
+                const sessionData = JSON.parse(decoded);
+                user = sessionData?.user;
+                userRole = user?.role?.toLowerCase() || 'tenant';
+            } catch {
+                console.log('❌ Failed to parse session');
+                const loginUrl = new URL('/login', request.url);
+                loginUrl.searchParams.set('redirect', pathname);
+                return NextResponse.redirect(loginUrl);
+            }
+        }
+
+        if (!user) {
+            console.log('❌ No user in session');
             const loginUrl = new URL('/login', request.url);
             loginUrl.searchParams.set('redirect', pathname);
             return NextResponse.redirect(loginUrl);
         }
 
-        const userRole = sessionData.user.role?.toLowerCase() || 'tenant';
+        console.log('✅ User:', user.email, 'Role:', userRole);
 
-        // ✅ Role-based access
+        // ✅ Role-based access - সঠিক চেক
         const isAdminRoute = matchesPattern(pathname, protectedRoutes.admin);
         const isOwnerRoute = matchesPattern(pathname, protectedRoutes.owner);
         const isTenantRoute = matchesPattern(pathname, protectedRoutes.tenant);
 
+        // ✅ Admin routes - শুধু Admin
         if (isAdminRoute && userRole !== 'admin') {
+            console.log('❌ Access denied: Admin role required');
             return NextResponse.redirect(new URL('/dashboard', request.url));
         }
 
+        // ✅ Owner routes - Owner + Admin (Admin সব দেখতে পারে)
         if (isOwnerRoute && userRole !== 'owner' && userRole !== 'admin') {
+            console.log('❌ Access denied: Owner role required');
             return NextResponse.redirect(new URL('/dashboard', request.url));
         }
 
+        // ✅ Tenant routes - Tenant + Owner + Admin (সবাই দেখতে পারে)
         if (isTenantRoute && userRole !== 'tenant' && userRole !== 'owner' && userRole !== 'admin') {
+            console.log('❌ Access denied: Tenant role required');
             return NextResponse.redirect(new URL('/dashboard', request.url));
         }
 
+        console.log('✅ Access granted to:', pathname);
         return NextResponse.next();
 
     } catch (error) {
