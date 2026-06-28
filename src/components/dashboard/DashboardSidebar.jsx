@@ -1,162 +1,9 @@
-// "use client";
+'use client';
 
-// import { useState } from "react";
-// import { Button, Drawer } from "@heroui/react";
-// import { Menu, X } from "lucide-react";
-// import Link from "next/link";
-// import { usePathname } from "next/navigation";
-// import {
-//     House,
-//     Search,
-//     Bell,
-//     PlusCircle,
-//     FileText,
-//     Mail,
-//     User,
-//     Settings,
-//     CalendarCheck,
-//     Heart,
-//     LayoutDashboard,
-//     Users,
-//     Building,
-//     BookOpen,
-//     CreditCard,
-//     UserCog
-// } from "lucide-react";
-// import { useSession } from "@/lib/auth-client";
-
-// export default function DashboardSidebar() {
-//     const pathname = usePathname();
-//     const { data: session, isPending } = useSession();
-//     const [isOpen, setIsOpen] = useState(false);
-
-//     const userRole = session?.user?.role?.toLowerCase() || 'tenant';
-
-//     if (isPending) {
-//         return (
-//             <aside className="hidden w-64 shrink-0 border-r border-default p-4 lg:block">
-//                 <div className="flex items-center justify-center h-32">
-//                     <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-//                 </div>
-//             </aside>
-//         );
-//     }
-
-//     let navItems = [];
-
-//     if (userRole === 'tenant') {
-//         navItems = [
-//             { icon: House, href: '/dashboard/tenant', label: "Home" },
-//             { icon: CalendarCheck, href: '/dashboard/tenant/my-bookings', label: "My Bookings" },
-//             { icon: Heart, href: '/dashboard/tenant/favorites', label: "Favorites" },
-//             { icon: User, href: '/dashboard/tenant/profile', label: "Profile" },
-//         ];
-//     } else if (userRole === 'owner') {
-//         navItems = [
-//             { icon: House, href: '/dashboard/owner', label: "Home" },
-//             { icon: Search, href: '/dashboard/owner/my-properties', label: "My Properties" },
-//             { icon: PlusCircle, href: '/dashboard/owner/add-property', label: "Add a New Property" },
-//             { icon: FileText, href: '/dashboard/owner/booking-requests', label: "Booking Requests" },
-//             { icon: User, href: '/dashboard/owner/profile', label: "Profile" },
-//         ];
-//     } else if (userRole === 'admin') {
-//         navItems = [
-//             { icon: LayoutDashboard, href: '/dashboard/admin', label: "Dashboard Home" },
-//             { icon: Users, href: '/dashboard/admin/all-users', label: "All Users" },
-//             { icon: Building, href: '/dashboard/admin/all-properties', label: "All Properties" },
-//             { icon: BookOpen, href: '/dashboard/admin/all-bookings', label: "All Bookings" },
-//             { icon: CreditCard, href: '/dashboard/admin/transactions', label: "Transactions" },
-//             { icon: User, href: '/dashboard/admin/profile', label: "Profile" },
-//         ];
-//     }
-
-//     const navContent = (
-//         <nav className="flex flex-col gap-1">
-//             {navItems.map((item) => {
-//                 const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-//                 return (
-//                     <Link
-//                         href={item.href}
-//                         key={item.label}
-//                         onClick={() => setIsOpen(false)}
-//                         className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${isActive
-//                             ? "bg-primary text-primary-foreground hover:bg-primary/90"
-//                             : "text-foreground hover:bg-default"
-//                             }`}
-//                     >
-//                         <item.icon className="size-5 shrink-0" />
-//                         <span className="truncate">{item.label}</span>
-//                     </Link>
-//                 );
-//             })}
-//         </nav>
-//     );
-
-//     return (
-//         <>
-//             {/* Desktop Sidebar */}
-//             <aside className="hidden w-64 shrink-0 border-r border-default p-4 lg:block h-screen sticky top-0">
-//                 <div className="mb-6 px-3">
-//                     <h2 className="text-lg font-semibold capitalize">{userRole} Dashboard</h2>
-//                     {session?.user?.name && (
-//                         <p className="text-sm text-muted-foreground mt-1">
-//                             Welcome, {session.user.name}
-//                         </p>
-//                     )}
-//                 </div>
-//                 {navContent}
-//             </aside>
-
-//             {/* Mobile Drawer Trigger - এখন আর সাইডবারের সাথে ওভারল্যাপ করবে না */}
-//             <div className="lg:hidden fixed top-4 left-4 z-50">
-//                 <Button
-//                     variant="light"
-//                     className="flex items-center gap-2 bg-white shadow-md"
-//                     onPress={() => setIsOpen(true)}
-//                 >
-//                     <Menu className="size-5" />
-//                     <span className="text-sm">Menu</span>
-//                 </Button>
-//             </div>
-
-//             {/* Mobile Drawer */}
-//             <Drawer isOpen={isOpen} onOpenChange={setIsOpen} placement="left" size="xs">
-//                 <Drawer.Content>
-//                     <div className="p-4 min-w-[280px]">
-//                         <div className="flex items-center justify-between mb-6">
-//                             <div>
-//                                 <h2 className="text-lg font-semibold capitalize">{userRole} Dashboard</h2>
-//                                 {session?.user?.name && (
-//                                     <p className="text-sm text-muted-foreground mt-1">
-//                                         Welcome, {session.user.name}
-//                                     </p>
-//                                 )}
-//                             </div>
-//                             <Button
-//                                 isIconOnly
-//                                 variant="light"
-//                                 onPress={() => setIsOpen(false)}
-//                             >
-//                                 <X className="size-5" />
-//                             </Button>
-//                         </div>
-//                         {navContent}
-//                     </div>
-//                 </Drawer.Content>
-//             </Drawer>
-//         </>
-//     );
-// }
-
-
-
-"use client";
-
-import { useState } from "react";
-import { Button } from "@heroui/react";
-import { Menu, X } from "lucide-react";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { useState, useEffect } from 'react';
+import { X, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import Link from 'next/link';
+import { usePathname, useRouter } from 'next/navigation';
 import {
     House,
     Search,
@@ -172,29 +19,28 @@ import {
     CreditCard,
 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
+import { signOut } from "@/lib/auth-client"; // ✅ আলাদা ইমপোর্ট
 
-export default function DashboardSidebar() {
+export default function DashboardSidebar({ isOpen, setIsOpen, isMobile }) {
     const pathname = usePathname();
-    const { data: session, isPending } = useSession();
-    const [isOpen, setIsOpen] = useState(false);
+    const router = useRouter();
+    const { data: session } = useSession();
+    const [isCollapsed, setIsCollapsed] = useState(false);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
 
     const userRole = session?.user?.role?.toLowerCase() || 'tenant';
 
-    if (isPending) {
-        return (
-            <>
-                {/* Loading state eo mobile header dekhano */}
-                <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-gray-800 border-b z-40 flex items-center px-4">
-                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-primary"></div>
-                </div>
-                <aside className="hidden lg:flex lg:flex-col w-64 shrink-0 border-r p-4 h-screen sticky top-0">
-                    <div className="flex items-center justify-center h-32">
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                    </div>
-                </aside>
-            </>
-        );
-    }
+    // ✅ লগআউট হ্যান্ডেল
+    const handleLogout = async () => {
+        try {
+            setIsLoggingOut(true);
+            await signOut();
+            router.push('/login');
+        } catch (error) {
+            console.error('Logout error:', error);
+            setIsLoggingOut(false);
+        }
+    };
 
     let navItems = [];
 
@@ -224,94 +70,198 @@ export default function DashboardSidebar() {
         ];
     }
 
-    const navContent = (
-        <nav className="flex flex-col gap-1">
-            {navItems.map((item) => {
-                const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
-                return (
-                    <Link
-                        href={item.href}
-                        key={item.label}
-                        onClick={() => setIsOpen(false)}
-                        className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors ${isActive
-                            ? "bg-primary text-primary-foreground hover:bg-primary/90"
-                            : "text-foreground hover:bg-default"
-                            }`}
+    // ✅ সাইডবার কন্টেন্ট
+    const SidebarContent = () => (
+        <>
+            {/* হেডার - শুধু লোগো */}
+            <div className={`p-4 border-b border-gray-200 dark:border-gray-800 ${isCollapsed ? 'text-center' : ''}`}>
+                <Link href="/" className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
+                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
+                        <span className="text-white font-bold text-lg">RN</span>
+                    </div>
+                    {!isCollapsed && (
+                        <span className="text-xl font-bold text-gray-900 dark:text-white">
+                            Rent<span className="text-emerald-600">Nest</span>
+                        </span>
+                    )}
+                </Link>
+            </div>
+
+            {/* নেভিগেশন */}
+            <div className="flex-1 overflow-y-auto p-3">
+                <nav className="space-y-1">
+                    {navItems.map((item) => {
+                        const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+                        return (
+                            <Link
+                                href={item.href}
+                                key={item.label}
+                                className={`
+                                    flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
+                                    ${isActive
+                                        ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-medium'
+                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50'
+                                    }
+                                    ${isCollapsed ? 'justify-center px-2' : ''}
+                                    group relative
+                                `}
+                            >
+                                <item.icon className={`size-5 shrink-0 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : ''}`} />
+
+                                {!isCollapsed && (
+                                    <span className="truncate">{item.label}</span>
+                                )}
+
+                                {isCollapsed && (
+                                    <div className="absolute left-full ml-2 px-2 py-1 bg-gray-900 text-white text-xs rounded-md opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-50">
+                                        {item.label}
+                                    </div>
+                                )}
+                            </Link>
+                        );
+                    })}
+                </nav>
+            </div>
+
+            {/* কল্যাপস + লগআউট */}
+            <div className="p-3 border-t border-gray-200 dark:border-gray-800 space-y-2">
+                {!isMobile && (
+                    <button
+                        onClick={() => setIsCollapsed(!isCollapsed)}
+                        className="w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800/50 transition-colors text-sm"
                     >
-                        <item.icon className="size-5 shrink-0" />
-                        <span className="truncate">{item.label}</span>
-                    </Link>
-                );
-            })}
-        </nav>
+                        {isCollapsed ? (
+                            <ChevronRight className="size-4" />
+                        ) : (
+                            <>
+                                <ChevronLeft className="size-4" />
+                                <span>Collapse</span>
+                            </>
+                        )}
+                    </button>
+                )}
+
+                {/* লগআউট বাটন */}
+                <button
+                    onClick={handleLogout}
+                    disabled={isLoggingOut}
+                    className={`
+                        w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors
+                        ${isLoggingOut
+                            ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                            : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30'
+                        }
+                        ${isCollapsed ? 'justify-center' : ''}
+                    `}
+                >
+                    {isLoggingOut ? (
+                        <>
+                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent"></div>
+                            {!isCollapsed && <span>Logging out...</span>}
+                        </>
+                    ) : (
+                        <>
+                            <LogOut className="size-4" />
+                            {!isCollapsed && <span>Logout</span>}
+                        </>
+                    )}
+                </button>
+            </div>
+        </>
     );
 
     return (
         <>
-            {/* Mobile Header Bar - Always visible on mobile */}
-            <div className="lg:hidden fixed top-0 left-0 right-0 h-14 bg-white dark:bg-gray-800 border-b border-default flex items-center px-4 z-40 shadow-sm">
-                <Button
-                    variant="light"
-                    isIconOnly
-                    onPress={() => setIsOpen(true)}
-                    className="mr-3"
-                    aria-label="Open menu"
-                >
-                    <Menu className="size-5" />
-                </Button>
-                <div>
-                    <h2 className="text-base font-semibold capitalize">{userRole} Dashboard</h2>
-                    {session?.user?.name && (
-                        <p className="text-xs text-gray-500 dark:text-gray-400">
-                            Welcome, {session.user.name}
-                        </p>
-                    )}
-                </div>
-            </div>
-
-            {/* Desktop Sidebar */}
-            <aside className="hidden lg:flex lg:flex-col w-64 shrink-0 border-r border-default p-4 h-screen sticky top-0 overflow-y-auto">
-                <div className="mb-6 px-3">
-                    <h2 className="text-lg font-semibold capitalize">{userRole} Dashboard</h2>
-                    {session?.user?.name && (
-                        <p className="text-sm text-muted-foreground mt-1">
-                            Welcome, {session.user.name}
-                        </p>
-                    )}
-                </div>
-                {navContent}
+            {/* ডেস্কটপ সাইডবার */}
+            <aside
+                className={`
+                    hidden lg:flex flex-col h-screen sticky top-0 border-r border-gray-200 dark:border-gray-800 
+                    bg-white dark:bg-gray-950 transition-all duration-300 shrink-0
+                    ${isCollapsed ? 'w-16' : 'w-64'}
+                `}
+            >
+                <SidebarContent />
             </aside>
 
-            {/* Mobile Drawer */}
-            {isOpen && (
-                <div className="lg:hidden fixed inset-0 z-50">
-                    {/* Backdrop */}
+            {/* মোবাইল সাইডবার */}
+            {isMobile && isOpen && (
+                <div className="fixed inset-0 z-50 lg:hidden">
                     <div
-                        className="absolute inset-0 bg-black/50 transition-opacity"
+                        className="absolute inset-0 bg-black/50 backdrop-blur-sm"
                         onClick={() => setIsOpen(false)}
                     />
-                    {/* Drawer Panel */}
-                    <div className="absolute left-0 top-0 bottom-0 w-[280px] max-w-[80vw] bg-white dark:bg-gray-800 shadow-xl transform transition-transform">
-                        <div className="p-4">
-                            <div className="flex items-center justify-between mb-6">
-                                <div>
-                                    <h2 className="text-lg font-semibold capitalize">{userRole} Dashboard</h2>
-                                    {session?.user?.name && (
-                                        <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                                            Welcome, {session.user.name}
-                                        </p>
-                                    )}
-                                </div>
-                                <Button
-                                    isIconOnly
-                                    variant="light"
-                                    onPress={() => setIsOpen(false)}
-                                    aria-label="Close menu"
+                    <div className="absolute top-0 left-0 h-full w-72 bg-white dark:bg-gray-950 shadow-2xl">
+                        <div className="flex flex-col h-full">
+                            {/* মোবাইল হেডার */}
+                            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+                                <Link href="/dashboard" className="flex items-center gap-3">
+                                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                        <span className="text-white font-bold text-lg">RN</span>
+                                    </div>
+                                    <span className="text-xl font-bold text-gray-900 dark:text-white">
+                                        Rent<span className="text-emerald-600">Nest</span>
+                                    </span>
+                                </Link>
+                                <button
+                                    onClick={() => setIsOpen(false)}
+                                    className="p-2 hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg transition-colors"
                                 >
-                                    <X className="size-5" />
-                                </Button>
+                                    <X className="size-5 text-gray-700 dark:text-gray-300" />
+                                </button>
                             </div>
-                            {navContent}
+
+                            {/* মোবাইল নেভিগেশন */}
+                            <div className="flex-1 overflow-y-auto p-3">
+                                <nav className="space-y-1">
+                                    {navItems.map((item) => {
+                                        const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
+                                        return (
+                                            <Link
+                                                href={item.href}
+                                                key={item.label}
+                                                onClick={() => setIsOpen(false)}
+                                                className={`
+                                                    flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors
+                                                    ${isActive
+                                                        ? 'bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 font-medium'
+                                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800/50'
+                                                    }
+                                                `}
+                                            >
+                                                <item.icon className={`size-5 shrink-0 ${isActive ? 'text-emerald-600 dark:text-emerald-400' : ''}`} />
+                                                <span>{item.label}</span>
+                                            </Link>
+                                        );
+                                    })}
+                                </nav>
+                            </div>
+
+                            {/* মোবাইল লগআউট */}
+                            <div className="p-4 border-t border-gray-200 dark:border-gray-800">
+                                <button
+                                    onClick={handleLogout}
+                                    disabled={isLoggingOut}
+                                    className={`
+                                        w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm transition-colors
+                                        ${isLoggingOut
+                                            ? 'text-gray-400 dark:text-gray-500 cursor-not-allowed'
+                                            : 'text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950/30'
+                                        }
+                                    `}
+                                >
+                                    {isLoggingOut ? (
+                                        <>
+                                            <div className="animate-spin rounded-full h-4 w-4 border-2 border-red-600 border-t-transparent"></div>
+                                            <span>Logging out...</span>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <LogOut className="size-5" />
+                                            <span>Logout</span>
+                                        </>
+                                    )}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -319,4 +269,3 @@ export default function DashboardSidebar() {
         </>
     );
 }
-

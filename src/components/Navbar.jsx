@@ -9,19 +9,18 @@ import { authClient } from '@/lib/auth-client';
 import toast from 'react-hot-toast';
 
 const Navbar = () => {
-
     const pathname = usePathname();
-    // if (pathname.includes("dashboard")) {
-    //     return null
-    // }
 
+    // ✅ সব হুক আগে কল করতে হবে
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-
-
     const { data: session } = authClient.useSession();
     const user = session?.user;
-    // console.log(user, 'user from nav')
     const isLoggedIn = !!user;
+
+    // ✅ কন্ডিশনাল রিটার্ন সব হুকের পরে
+    if (pathname?.includes("dashboard")) {
+        return null;
+    }
 
     const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
@@ -39,21 +38,17 @@ const Navbar = () => {
         window.location.href = '/login';
     };
 
-    // Check if a link is active
     const isActive = (path) => pathname === path;
 
-    // Get dashboard path based on user role
     const getDashboardPath = () => {
         if (!user) return '/dashboard';
         const role = user?.role?.toLowerCase();
         if (role === 'admin') return '/dashboard/admin';
         if (role === 'owner') return '/dashboard/owner';
         if (role === 'tenant') return '/dashboard/tenant';
-        // if (role === 'tenant') return '/dashboard';
         return '/dashboard';
     };
 
-    // Get dashboard label based on user role
     const getDashboardLabel = () => {
         if (!user) return 'Dashboard';
         const role = user?.role?.toLowerCase();

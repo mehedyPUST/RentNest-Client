@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import AccessDenied from '@/components/AccessDenied';
 
 const AdminDashboardHomePage = () => {
     const { data: session, status } = useSession();
@@ -45,9 +46,6 @@ const AdminDashboardHomePage = () => {
 
     const API_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
 
-    // ✅ Fetch dashboard data
-    // app/dashboard/admin/page.jsx
-
     const fetchDashboardData = async () => {
         if (!user) {
             setLoading(false);
@@ -58,7 +56,6 @@ const AdminDashboardHomePage = () => {
         setError(null);
 
         try {
-            // ✅ Fetch admin stats
             const statsRes = await fetch(`${API_URL}/api/admin/stats`, {
                 cache: 'no-store'
             });
@@ -82,7 +79,6 @@ const AdminDashboardHomePage = () => {
                 });
             }
 
-            // ✅ Fetch recent bookings - /api/bookings?isAdmin=true&limit=5
             try {
                 const activitiesRes = await fetch(`${API_URL}/api/bookings?isAdmin=true&limit=5`, {
                     cache: 'no-store'
@@ -112,15 +108,15 @@ const AdminDashboardHomePage = () => {
         }
     };
 
+    // ✅ Fixed useEffect
     useEffect(() => {
-        if (user) {
-            fetchDashboardData();
-        } else {
+        if (!user) {
             setLoading(false);
+            return;
         }
+        fetchDashboardData();
     }, [user]);
 
-    // Format date
     const formatDate = (date) => {
         if (!date) return 'N/A';
         return new Date(date).toLocaleDateString('en-US', {
@@ -130,7 +126,6 @@ const AdminDashboardHomePage = () => {
         });
     };
 
-    // Format currency
     const formatCurrency = (amount) => {
         if (!amount) return '$0';
         return new Intl.NumberFormat('en-US', {
@@ -139,7 +134,6 @@ const AdminDashboardHomePage = () => {
         }).format(amount);
     };
 
-    // Get status badge
     const getStatusBadge = (status) => {
         const statusMap = {
             'pending': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
@@ -184,20 +178,9 @@ const AdminDashboardHomePage = () => {
         );
     }
 
-    // Check if user is admin
+    // ✅ Check if user is admin
     if (user.role?.toLowerCase() !== 'admin') {
-        return (
-            <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-                <div className="text-center bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
-                    <div className="text-6xl mb-4">⛔</div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Access Denied</h2>
-                    <p className="text-gray-600">You do not have permission to access the admin dashboard.</p>
-                    <Link href="/dashboard" className="mt-6 inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                        Go to Dashboard
-                    </Link>
-                </div>
-            </div>
-        );
+        return <AccessDenied role="admin" />;
     }
 
     return (
@@ -228,7 +211,7 @@ const AdminDashboardHomePage = () => {
                     </div>
                 </motion.div>
 
-                {/* Stats Cards - এখন Revenue দেখাবে */}
+                {/* Stats Cards */}
                 <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.9 }}

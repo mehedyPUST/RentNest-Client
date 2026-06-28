@@ -23,81 +23,80 @@ import {
     ChevronRight,
 } from 'lucide-react';
 
+// কুইক লিংক ডাটা
+const quickLinks = [
+    { href: "/", label: "Home" },
+    { href: "/properties", label: "Properties" },
+    { href: "/about", label: "About Us" },
+    { href: "/contact", label: "Contact" },
+    { href: "/blog", label: "Blog" },
+];
+
+// সাপোর্ট লিংক ডাটা
+const supportLinks = [
+    { href: "/faq", label: "Help Center" },
+    { href: "/privacy", label: "Privacy Policy" },
+    { href: "/terms", label: "Terms of Service" },
+    { href: "/sitemap", label: "Sitemap" },
+    { href: "/cookies", label: "Cookie Policy" },
+];
+
+// সোশ্যাল মিডিয়া লিংক ডাটা
+const socialLinks = [
+    { href: "#", icon: FaTwitter, label: "Twitter", color: "hover:bg-[#1DA1F2]" },
+    { href: "#", icon: FaFacebookF, label: "Facebook", color: "hover:bg-[#1877F2]" },
+    { href: "#", icon: FaInstagram, label: "Instagram", color: "hover:bg-[#E4405F]" },
+    { href: "#", icon: FaLinkedinIn, label: "LinkedIn", color: "hover:bg-[#0A66C2]" },
+    { href: "#", icon: FaGithub, label: "GitHub", color: "hover:bg-[#181717]" },
+    { href: "#", icon: FaYoutube, label: "YouTube", color: "hover:bg-[#FF0000]" },
+    { href: "#", icon: FaPinterest, label: "Pinterest", color: "hover:bg-[#E60023]" },
+];
+
+// অ্যানিমেশন ভেরিয়েন্টস
+const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+        opacity: 1,
+        transition: {
+            staggerChildren: 0.1,
+            delayChildren: 0.2,
+        },
+    },
+};
+
+const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: {
+        opacity: 1,
+        y: 0,
+        transition: {
+            duration: 0.5,
+            ease: "easeOut",
+        },
+    },
+};
+
 const Footer = () => {
-
-
+    // ✅ সব হুক আগে কল করতে হবে
     const [currentYear, setCurrentYear] = useState(null);
     const [isMounted, setIsMounted] = useState(false);
     const pathname = usePathname();
-
-
-    // if (pathname.includes("dashboard")) {
-    //     return null
-    // }
-
-
-
 
     useEffect(() => {
         setIsMounted(true);
         setCurrentYear(new Date().getFullYear());
     }, []);
 
-    const quickLinks = [
-        { href: "/", label: "Home" },
-        { href: "/properties", label: "Properties" },
-        { href: "/about", label: "About Us" },
-        { href: "/contact", label: "Contact" },
-        { href: "/blog", label: "Blog" },
-    ];
-
-    const supportLinks = [
-        { href: "/faq", label: "Help Center" },
-        { href: "/privacy", label: "Privacy Policy" },
-        { href: "/terms", label: "Terms of Service" },
-        { href: "/sitemap", label: "Sitemap" },
-        { href: "/cookies", label: "Cookie Policy" },
-    ];
-
-    const socialLinks = [
-        { href: "#", icon: FaTwitter, label: "Twitter", color: "hover:bg-[#1DA1F2]" },
-        { href: "#", icon: FaFacebookF, label: "Facebook", color: "hover:bg-[#1877F2]" },
-        { href: "#", icon: FaInstagram, label: "Instagram", color: "hover:bg-[#E4405F]" },
-        { href: "#", icon: FaLinkedinIn, label: "LinkedIn", color: "hover:bg-[#0A66C2]" },
-        { href: "#", icon: FaGithub, label: "GitHub", color: "hover:bg-[#181717]" },
-        { href: "#", icon: FaYoutube, label: "YouTube", color: "hover:bg-[#FF0000]" },
-        { href: "#", icon: FaPinterest, label: "Pinterest", color: "hover:bg-[#E60023]" },
-    ];
+    // ✅ কন্ডিশনাল রিটার্ন হুকের পরে
+    if (pathname?.includes("dashboard")) {
+        return null;
+    }
 
     const isActive = (path) => pathname === path;
 
-    const containerVariants = {
-        hidden: { opacity: 0 },
-        visible: {
-            opacity: 1,
-            transition: {
-                staggerChildren: 0.1,
-                delayChildren: 0.2,
-            },
-        },
-    };
-
-    const itemVariants = {
-        hidden: { opacity: 0, y: 20 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.5,
-                ease: "easeOut",
-            },
-        },
-    };
-
     return (
         <footer className="relative bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 border-t border-slate-200/50 dark:border-gray-800/50 mt-auto overflow-hidden">
-
-            {/* Decorative Background Elements */}
+            {/* ডেকোরেটিভ ব্যাকগ্রাউন্ড এলিমেন্ট */}
             <div className="absolute inset-0 pointer-events-none">
                 <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-br from-blue-400/5 to-purple-400/5 rounded-full blur-3xl"></div>
                 <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-tr from-indigo-400/5 to-pink-400/5 rounded-full blur-3xl"></div>
@@ -105,8 +104,7 @@ const Footer = () => {
             </div>
 
             <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-16 lg:py-20">
-
-                {/* Main Footer Grid */}
+                {/* মেইন ফুটার গ্রিড */}
                 <motion.div
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12"
                     variants={containerVariants}
@@ -114,7 +112,7 @@ const Footer = () => {
                     whileInView="visible"
                     viewport={{ once: true }}
                 >
-                    {/* Brand Section - 4 columns */}
+                    {/* ব্র্যান্ড সেকশন - ৪ কলাম */}
                     <motion.div
                         variants={itemVariants}
                         className="lg:col-span-4 space-y-5"
@@ -138,7 +136,7 @@ const Footer = () => {
                             for rent and sale across the country.
                         </p>
 
-                        {/* Social Links */}
+                        {/* সোশ্যাল মিডিয়া লিংক */}
                         <div className="flex flex-wrap gap-2 pt-2">
                             {socialLinks.map(({ href, icon: Icon, label, color }) => (
                                 <motion.a
@@ -155,7 +153,7 @@ const Footer = () => {
                         </div>
                     </motion.div>
 
-                    {/* Quick Links - 2 columns */}
+                    {/* কুইক লিংক - ২ কলাম */}
                     <motion.div
                         variants={itemVariants}
                         className="lg:col-span-2"
@@ -178,7 +176,7 @@ const Footer = () => {
                         </ul>
                     </motion.div>
 
-                    {/* Support - 2 columns */}
+                    {/* সাপোর্ট - ২ কলাম */}
                     <motion.div
                         variants={itemVariants}
                         className="lg:col-span-2"
@@ -201,7 +199,7 @@ const Footer = () => {
                         </ul>
                     </motion.div>
 
-                    {/* Contact Info - 4 columns */}
+                    {/* কন্টাক্ট ইনফো - ৪ কলাম */}
                     <motion.div
                         variants={itemVariants}
                         className="lg:col-span-4"
@@ -244,7 +242,7 @@ const Footer = () => {
                     </motion.div>
                 </motion.div>
 
-                {/* Elegant Divider */}
+                {/* ডিভাইডার */}
                 <motion.div
                     className="relative my-12"
                     initial={{ opacity: 0, y: 10 }}
@@ -275,7 +273,7 @@ const Footer = () => {
                     </div>
                 </motion.div>
 
-                {/* Bottom Bar */}
+                {/* বটম বার */}
                 <motion.div
                     className="flex flex-col sm:flex-row justify-between items-center gap-4 text-sm"
                     initial={{ opacity: 0 }}

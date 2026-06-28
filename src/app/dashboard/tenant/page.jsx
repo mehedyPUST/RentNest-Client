@@ -30,6 +30,7 @@ import {
 import { FaBed, FaBath, FaMapMarkerAlt } from 'react-icons/fa';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
+import AccessDenied from '@/components/AccessDenied';
 
 const TenantDashboardHomePage = () => {
     const router = useRouter();
@@ -73,7 +74,6 @@ const TenantDashboardHomePage = () => {
         try {
             const tenantId = user?.id || user?._id;
 
-            // ✅ Fetch bookings
             try {
                 const bookingsRes = await fetch(
                     `${API_URL}/api/bookings/my-bookings?tenantId=${tenantId}&page=1&limit=5`,
@@ -94,15 +94,11 @@ const TenantDashboardHomePage = () => {
                             ).length,
                         }));
                     }
-                } else {
-                    console.warn('Failed to fetch bookings:', bookingsRes.status);
-                    // Use fallback empty data
                 }
             } catch (err) {
                 console.warn('Error fetching bookings:', err);
             }
 
-            // ✅ Fetch favorites
             try {
                 const favRes = await fetch(
                     `${API_URL}/api/favorites/my-favorites?tenantId=${tenantId}&page=1&limit=3`,
@@ -118,8 +114,6 @@ const TenantDashboardHomePage = () => {
                             favorites: favData.favorites?.length || 0
                         }));
                     }
-                } else {
-                    console.warn('Failed to fetch favorites:', favRes.status);
                 }
             } catch (err) {
                 console.warn('Error fetching favorites:', err);
@@ -134,14 +128,12 @@ const TenantDashboardHomePage = () => {
         }
     };
 
-    // ✅ Format price
     const formatPrice = (price) => {
         if (!price) return 'N/A';
         if (price >= 1000000) return `$${(price / 1000000).toFixed(1)}M`;
         return `$${price.toLocaleString()}`;
     };
 
-    // ✅ Format date
     const formatDate = (date) => {
         if (!date) return 'N/A';
         return new Date(date).toLocaleDateString('en-US', {
@@ -151,7 +143,6 @@ const TenantDashboardHomePage = () => {
         });
     };
 
-    // ✅ Get status badge
     const getStatusBadge = (status) => {
         const statusMap = {
             'pending': { bg: 'bg-yellow-100', text: 'text-yellow-800', label: 'Pending' },
@@ -168,7 +159,6 @@ const TenantDashboardHomePage = () => {
         );
     };
 
-    // ✅ Quick actions
     const quickActions = [
         {
             title: 'Browse Properties',
@@ -231,6 +221,12 @@ const TenantDashboardHomePage = () => {
         );
     }
 
+    // ✅ ✅ ✅ Role Check - এটা যোগ করুন
+    if (user.role?.toLowerCase() !== 'tenant') {
+        return <AccessDenied role="tenant" />;
+    }
+
+    // ✅ Main Render - আপনার পুরো কন্টেন্ট এখানে আছে
     return (
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

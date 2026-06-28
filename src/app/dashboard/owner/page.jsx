@@ -333,8 +333,8 @@ export default function OwnerDashboardHomePage() {
                         <button
                             onClick={() => setTimeFrame('6')}
                             className={`px-3 py-1 rounded-lg text-sm font-medium transition ${timeFrame === '6'
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                                 }`}
                         >
                             6M
@@ -342,8 +342,8 @@ export default function OwnerDashboardHomePage() {
                         <button
                             onClick={() => setTimeFrame('12')}
                             className={`px-3 py-1 rounded-lg text-sm font-medium transition ${timeFrame === '12'
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                                 }`}
                         >
                             12M
@@ -351,8 +351,8 @@ export default function OwnerDashboardHomePage() {
                         <button
                             onClick={() => setTimeFrame('24')}
                             className={`px-3 py-1 rounded-lg text-sm font-medium transition ${timeFrame === '24'
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
+                                ? 'bg-emerald-600 text-white'
+                                : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-700'
                                 }`}
                         >
                             24M
@@ -426,10 +426,10 @@ export default function OwnerDashboardHomePage() {
                                     onClick={() => router.push(`/dashboard/owner/bookings/${booking._id}`)}
                                 >
                                     <div className={`w-2 h-2 rounded-full ${booking.bookingStatus === 'confirmed' || booking.bookingStatus === 'approved'
-                                            ? 'bg-green-500'
-                                            : booking.bookingStatus === 'pending'
-                                                ? 'bg-yellow-500'
-                                                : 'bg-red-500'
+                                        ? 'bg-green-500'
+                                        : booking.bookingStatus === 'pending'
+                                            ? 'bg-yellow-500'
+                                            : 'bg-red-500'
                                         }`}></div>
                                     <div className="flex-1">
                                         <p className="text-sm text-gray-700 dark:text-gray-300">
@@ -440,10 +440,10 @@ export default function OwnerDashboardHomePage() {
                                         </p>
                                     </div>
                                     <span className={`text-xs px-2 py-1 rounded-full ${booking.bookingStatus === 'confirmed' || booking.bookingStatus === 'approved'
-                                            ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
-                                            : booking.bookingStatus === 'pending'
-                                                ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
-                                                : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+                                        ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                                        : booking.bookingStatus === 'pending'
+                                            ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
+                                            : 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
                                         }`}>
                                         {booking.bookingStatus || 'Pending'}
                                     </span>
