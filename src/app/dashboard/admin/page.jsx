@@ -44,7 +44,7 @@ const AdminDashboardHomePage = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    const API_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
+    const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
     const fetchDashboardData = async () => {
         if (!user) {
