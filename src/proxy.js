@@ -46,7 +46,7 @@ export async function proxy(request) {
 
     // ✅ Get session using Better Auth internal API
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000';
+        const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL;
 
         // ✅ Call Better Auth get-session API
         const sessionRes = await fetch(`${baseUrl}/api/auth/get-session`, {
