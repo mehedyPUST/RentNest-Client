@@ -5,6 +5,7 @@ import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
+import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 import {
     FaBed, FaBath, FaRulerCombined, FaMapMarkerAlt,
     FaCalendarAlt, FaUser, FaEnvelope, FaTag,
@@ -21,7 +22,8 @@ import EditPropertyModal from '@/components/EditPropertyModal';
 const OwnerPropertyDetailsPage = () => {
     const params = useParams();
     const router = useRouter();
-    const { data: session } = useSession();
+    const { data: session, status } = useSession(); // ✅ status যোগ করা হয়েছে
+    const user = session?.user;
     const id = params?.id;
 
     const [property, setProperty] = useState(null);
@@ -194,7 +196,8 @@ const OwnerPropertyDetailsPage = () => {
         }
     };
 
-    if (loading) {
+    // ✅ Loading state
+    if (status === 'loading' || loading) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center">
                 <div className="text-center">
@@ -203,6 +206,27 @@ const OwnerPropertyDetailsPage = () => {
                 </div>
             </div>
         );
+    }
+
+    // ✅ Not authenticated
+    if (!user) {
+        return (
+            <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
+                <div className="text-center bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
+                    <div className="text-6xl mb-4">🔒</div>
+                    <h2 className="text-xl font-bold text-gray-900 mb-2">Please Login</h2>
+                    <p className="text-gray-600">You need to be logged in to view this page.</p>
+                    <Link href="/login" className="mt-6 inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        Go to Login
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    // ✅ ✅ ✅ Role Check - Owner (AccessDenied যোগ করা)
+    if (user.role?.toLowerCase() !== 'owner') {
+        return <AccessDenied role="owner" />;
     }
 
     if (error || !property) {
@@ -625,7 +649,7 @@ const OwnerPropertyDetailsPage = () => {
                                         </>
                                     )}
 
-                                    {/* ✅ Action Buttons - শুধু Edit & Delete */}
+                                    {/* ✅ Action Buttons */}
                                     <div className="space-y-3 pt-4 border-t border-gray-100">
                                         {isRejected ? (
                                             <>
@@ -662,7 +686,6 @@ const OwnerPropertyDetailsPage = () => {
                                                 </button>
                                             </>
                                         ) : (
-                                            // ✅ Approved
                                             <>
                                                 <button
                                                     onClick={handleEditResubmit}

@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from '@/lib/auth-client';
+import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 import { motion } from 'framer-motion';
 import {
     CheckCircle,
@@ -30,7 +31,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 const BookingRequestsPage = () => {
-    const { data: session } = useSession();
+    const { data: session, status } = useSession(); // ✅ status যোগ করা হয়েছে
     const user = session?.user;
 
     const [bookings, setBookings] = useState([]);
@@ -55,7 +56,7 @@ const BookingRequestsPage = () => {
         isOpen: false,
         id: null,
         title: '',
-        action: '', // 'approve', 'reject', 'reject_modal'
+        action: '',
         message: '',
         confirmText: '',
         confirmColor: '',
@@ -135,7 +136,7 @@ const BookingRequestsPage = () => {
         });
     };
 
-    // ✅ Handle Approve (works for pending and rejected)
+    // ✅ Handle Approve
     const handleApprove = async (bookingId) => {
         setProcessingId(bookingId);
         try {
@@ -162,7 +163,7 @@ const BookingRequestsPage = () => {
         }
     };
 
-    // ✅ Handle Reject (works for pending and approved)
+    // ✅ Handle Reject
     const handleReject = async (bookingId, reason) => {
         setProcessingId(bookingId);
         try {
@@ -285,8 +286,8 @@ const BookingRequestsPage = () => {
         }
     }, [user]);
 
-    // Loading state
-    if (loading) {
+    // ✅ Loading state
+    if (status === 'loading' || loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
@@ -295,6 +296,27 @@ const BookingRequestsPage = () => {
                 </div>
             </div>
         );
+    }
+
+    // ✅ Not authenticated
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh] px-4">
+                <div className="text-center bg-white dark:bg-gray-900 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 max-w-md">
+                    <div className="text-5xl mb-4">🔒</div>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Please Login</h2>
+                    <p className="text-gray-600 dark:text-gray-400">You need to be logged in to view this page.</p>
+                    <Link href="/login" className="mt-4 inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        Go to Login
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    // ✅ ✅ ✅ Role Check - Owner (AccessDenied যোগ করা)
+    if (user.role?.toLowerCase() !== 'owner') {
+        return <AccessDenied role="owner" />;
     }
 
     // Error state
@@ -486,7 +508,7 @@ const BookingRequestsPage = () => {
                                                 <Eye className="w-4 h-4" />
                                             </button>
 
-                                            {/* ✅ Approve Button - Pending + Rejected */}
+                                            {/* Approve Button - Pending + Rejected */}
                                             {(isPending || isRejected) && (
                                                 <button
                                                     onClick={() => openConfirmModal(
@@ -510,7 +532,7 @@ const BookingRequestsPage = () => {
                                                 </button>
                                             )}
 
-                                            {/* ✅ Reject Button - Pending + Approved */}
+                                            {/* Reject Button - Pending + Approved */}
                                             {(isPending || isApproved) && (
                                                 <button
                                                     onClick={() => {
@@ -593,7 +615,7 @@ const BookingRequestsPage = () => {
                 </div>
             )}
 
-            {/* ✅ Confirmation Modal (Approve / Reject) */}
+            {/* Confirmation Modal (Approve / Reject) */}
             {confirmModal.isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6">

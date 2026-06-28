@@ -3,6 +3,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSession } from '@/lib/auth-client';
+import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 import { Pencil, Trash2, Eye, Plus, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
@@ -10,29 +11,24 @@ import EditPropertyModal from '@/components/EditPropertyModal';
 
 const MyProperties = () => {
     const { data: session, status } = useSession();
+    const user = session?.user;
+    const userId = user?.id || user?._id;
+
     const [properties, setProperties] = useState([]);
     const [loading, setLoading] = useState(true);
     const [deletingId, setDeletingId] = useState(null);
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState(null);
 
-    const user = session?.user;
-    const userId = user?.id || user?._id;
-
-    console.log('👤 Session user:', { userId });
-
     useEffect(() => {
         const fetchMyProperties = async () => {
             if (!userId) {
-                console.log('⚠️ No user found, skipping fetch');
                 setLoading(false);
                 return;
             }
 
             try {
                 setLoading(true);
-                console.log('📤 Fetching owner properties for userId:', userId);
-
                 const res = await fetch(
                     `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties/user/${userId}`,
                     { cache: 'no-store' }
@@ -43,8 +39,6 @@ const MyProperties = () => {
                 }
 
                 const data = await res.json();
-                console.log('📥 Properties response:', data);
-
                 const allProperties = data?.properties || (Array.isArray(data) ? data : []);
                 setProperties(allProperties);
 
@@ -73,7 +67,6 @@ const MyProperties = () => {
             const uId = updatedProperty._id?.$oid || updatedProperty._id;
             return pId === uId ? updatedProperty : p;
         }));
-        // toast.success('Property updated successfully!');
     };
 
     // Delete property
@@ -126,7 +119,7 @@ const MyProperties = () => {
         return new Intl.NumberFormat('en-US').format(price);
     };
 
-    // Loading state
+    // ✅ Loading state
     if (status === 'loading' || loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -138,8 +131,8 @@ const MyProperties = () => {
         );
     }
 
-    // Not logged in
-    if (!userId) {
+    // ✅ Not authenticated
+    if (!user) {
         return (
             <div className="flex items-center justify-center min-h-[60vh] px-4">
                 <div className="text-center bg-white dark:bg-gray-900 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 max-w-md">
@@ -155,6 +148,11 @@ const MyProperties = () => {
                 </div>
             </div>
         );
+    }
+
+    // ✅ ✅ ✅ Role Check - Owner (AccessDenied যোগ করা)
+    if (user.role?.toLowerCase() !== 'owner') {
+        return <AccessDenied role="owner" />;
     }
 
     return (
@@ -291,7 +289,7 @@ const MyProperties = () => {
                                                 {/* Actions */}
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center justify-center gap-2">
-                                                        {/* ✅ Edit Button - Opens Modal */}
+                                                        {/* Edit Button - Opens Modal */}
                                                         <button
                                                             onClick={() => handleEditClick(property)}
                                                             className="p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -351,7 +349,7 @@ const MyProperties = () => {
                 )}
             </div>
 
-            {/* ✅ Edit Property Modal */}
+            {/* Edit Property Modal */}
             <EditPropertyModal
                 isOpen={editModalOpen}
                 onClose={() => {

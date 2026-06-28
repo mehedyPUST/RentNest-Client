@@ -1,8 +1,10 @@
+// app/dashboard/tenant/favorites/page.jsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { authClient } from '@/lib/auth-client';
+import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 import { FaHeart, FaMapMarkerAlt, FaBed, FaBath, FaTrash, FaArrowLeft } from 'react-icons/fa';
 import { Loader2, Home, AlertCircle } from 'lucide-react';
 import Link from 'next/link';
@@ -20,7 +22,8 @@ const TenantsFavoritesPage = () => {
     const [error, setError] = useState(null);
     const [removingId, setRemovingId] = useState(null);
     const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
-    // ফেবারিট ডেটা লোড করুন
+
+    // Fetch favorites
     useEffect(() => {
         if (userId) {
             fetchFavorites();
@@ -59,7 +62,7 @@ const TenantsFavoritesPage = () => {
         }
     };
 
-    // ফেবারিট রিমুভ করুন
+    // Remove favorite
     const removeFavorite = async (propertyId) => {
         if (!userId) {
             toast.error('Please login first');
@@ -69,14 +72,13 @@ const TenantsFavoritesPage = () => {
         setRemovingId(propertyId);
         try {
             const res = await fetch(
-                `http://localhost:5000/api/favorites/${propertyId}?tenantId=${userId}`,
+                `${API_URL}/api/favorites/${propertyId}?tenantId=${userId}`,
                 { method: 'DELETE' }
             );
 
             const data = await res.json();
 
             if (res.ok) {
-                // লিস্ট থেকে রিমুভ করুন
                 setFavorites(favorites.filter(fav => fav.propertyId !== propertyId));
                 toast.success('Removed from favorites');
             } else {
@@ -102,7 +104,7 @@ const TenantsFavoritesPage = () => {
         router.push(`/all-properties/${propertyId}`);
     };
 
-    // Loading State
+    // ✅ Loading State
     if (isPending || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
@@ -114,8 +116,8 @@ const TenantsFavoritesPage = () => {
         );
     }
 
-    // Not Logged In
-    if (!userId) {
+    // ✅ Not Logged In
+    if (!user) {
         return (
             <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
                 <div className="text-center bg-white rounded-2xl shadow-xl p-8 max-w-md">
@@ -133,6 +135,11 @@ const TenantsFavoritesPage = () => {
                 </div>
             </div>
         );
+    }
+
+    // ✅ ✅ ✅ Role Check - Tenant (AccessDenied যোগ করা)
+    if (user.role?.toLowerCase() !== 'tenant') {
+        return <AccessDenied role="tenant" />;
     }
 
     return (

@@ -3,6 +3,7 @@
 import { createProperty } from '@/lib/actions/properties';
 import { useSession } from '@/lib/auth-client';
 import React, { useState, useRef, useEffect } from 'react';
+import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 
 export default function AddPropertyForm() {
     const propertyTypes = ["Apartment", "House", "Villa", "Commercial Space"];
@@ -12,13 +13,9 @@ export default function AddPropertyForm() {
         "24/7 Security", "Air Conditioning", "Power Backup", "Elevator"
     ];
 
-    // Get user session
     const { data: session, status } = useSession();
-
-    // FIX: user কে সঠিকভাবে ডিফাইন করুন
     const user = session?.user ?? null;
 
-    // States for Form Fields
     const [title, setTitle] = useState("");
     const [description, setDescription] = useState("");
     const [location, setLocation] = useState("");
@@ -32,7 +29,6 @@ export default function AddPropertyForm() {
     const [extraFeatures, setExtraFeatures] = useState(["Pet Friendly", "Garden Access"]);
     const [newFeature, setNewFeature] = useState("");
 
-    // Image upload states
     const [selectedImages, setSelectedImages] = useState([]);
     const [imagePreviews, setImagePreviews] = useState([]);
     const [uploading, setUploading] = useState(false);
@@ -40,7 +36,6 @@ export default function AddPropertyForm() {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const fileInputRef = useRef(null);
 
-    // Handle Amenities Checkbox
     const handleAmenityChange = (amenity) => {
         if (selectedAmenities.includes(amenity)) {
             setSelectedAmenities(selectedAmenities.filter(item => item !== amenity));
@@ -49,7 +44,6 @@ export default function AddPropertyForm() {
         }
     };
 
-    // Extra Features Add/Remove
     const handleAddFeature = (e) => {
         if (e) e.preventDefault();
         if (newFeature.trim() && !extraFeatures.includes(newFeature)) {
@@ -62,7 +56,6 @@ export default function AddPropertyForm() {
         setExtraFeatures(extraFeatures.filter(f => f !== featureToRemove));
     };
 
-    // Image upload handlers
     const handleImageSelect = (e) => {
         const files = Array.from(e.target.files);
         if (files.length === 0) return;
@@ -121,7 +114,6 @@ export default function AddPropertyForm() {
         handleImageSelect(mockEvent);
     };
 
-    // Upload images to ImgBB
     const uploadImagesToImgBB = async (files) => {
         const uploadedUrls = [];
         const API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
@@ -159,7 +151,6 @@ export default function AddPropertyForm() {
         return uploadedUrls;
     };
 
-    // Reset form
     const resetForm = () => {
         setTitle("");
         setDescription("");
@@ -179,18 +170,15 @@ export default function AddPropertyForm() {
         }
     };
 
-    // Check if user has permission to add property (Admin or Owner)
     const hasPermission = () => {
         if (!user) return false;
         const role = user.role?.toLowerCase();
         return role === 'admin' || role === 'owner';
     };
 
-    // FORM SUBMIT HANDLER
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        // Check permission again before submission
         if (!hasPermission()) {
             alert('You do not have permission to add properties. Only Admin and Owner roles can add properties.');
             return;
@@ -201,7 +189,6 @@ export default function AddPropertyForm() {
             return;
         }
 
-        // Check if user is authenticated
         if (!user) {
             alert('Please login to add a property');
             return;
@@ -266,7 +253,7 @@ export default function AddPropertyForm() {
         }
     };
 
-    // Show loading while session is loading
+    // ✅ Loading state
     if (status === 'loading') {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -275,7 +262,7 @@ export default function AddPropertyForm() {
         );
     }
 
-    // Check if user is authenticated
+    // ✅ Not authenticated
     if (!user) {
         return (
             <div className="max-w-4xl mx-auto p-8 text-center">
@@ -297,34 +284,9 @@ export default function AddPropertyForm() {
         );
     }
 
-    // Check if user has permission (Admin or Owner)
+    // ✅ ✅ ✅ Role Check - Admin or Owner (AccessDenied যোগ করা)
     if (!hasPermission()) {
-        return (
-            <div className="max-w-4xl mx-auto p-8 text-center">
-                <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl p-8">
-                    <div className="flex justify-center mb-4">
-                        <svg className="w-16 h-16 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-                        </svg>
-                    </div>
-                    <h2 className="text-2xl font-bold text-red-800 dark:text-red-400 mb-4">
-                        Access Denied
-                    </h2>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4">
-                        You do not have permission to add properties. Only users with <strong>Admin</strong> or <strong>Owner</strong> roles can add properties.
-                    </p>
-                    <p className="text-sm text-gray-500 dark:text-gray-500">
-                        Your current role: <span className="font-semibold capitalize">{user?.role || 'User'}</span>
-                    </p>
-                    <a
-                        href="/dashboard"
-                        className="inline-block mt-4 px-6 py-3 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
-                    >
-                        Go to Dashboard
-                    </a>
-                </div>
-            </div>
-        );
+        return <AccessDenied role={user?.role || 'owner'} />;
     }
 
     return (
@@ -481,7 +443,6 @@ export default function AddPropertyForm() {
 
                 {/* SECTION 3: Amenities & Media */}
                 <div className="bg-white dark:bg-gray-950 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-800 space-y-2.5">
-                    {/* Amenities */}
                     <div className="space-y-1">
                         <label className="text-xs font-semibold text-gray-800 dark:text-gray-200 block">Amenities</label>
                         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-1.5">
@@ -500,7 +461,6 @@ export default function AddPropertyForm() {
                         </div>
                     </div>
 
-                    {/* Extra Features */}
                     <div className="space-y-1">
                         <label className="text-xs font-semibold text-gray-800 dark:text-gray-200 block">Extra Features</label>
                         <div className="flex gap-1.5 max-w-md">
@@ -547,7 +507,6 @@ export default function AddPropertyForm() {
                         </div>
                     </div>
 
-                    {/* Image Upload Area */}
                     <div className="space-y-1">
                         <label className="text-xs font-semibold text-gray-800 dark:text-gray-200 block">Property Images</label>
 

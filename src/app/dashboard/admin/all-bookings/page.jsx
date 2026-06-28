@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from '@/lib/auth-client';
+import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 import {
     Calendar,
     Search,
@@ -49,7 +50,6 @@ const AllBookingsPageAdmin = () => {
         setError(null);
 
         try {
-            // ✅ Admin এর জন্য isAdmin=true পাঠান
             let url = `${API_URL}/api/bookings?isAdmin=true&page=${page}&limit=${itemsPerPage}`;
 
             if (status && status !== 'all' && status !== 'undefined') {
@@ -188,7 +188,7 @@ const AllBookingsPageAdmin = () => {
     // Calculate total pages
     const totalPages = Math.ceil(totalItems / itemsPerPage) || 1;
 
-    // Loading state
+    // ✅ Loading state
     if (status === 'loading' || loading) {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -200,7 +200,7 @@ const AllBookingsPageAdmin = () => {
         );
     }
 
-    // Not authenticated
+    // ✅ Not authenticated
     if (!user) {
         return (
             <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
@@ -216,20 +216,9 @@ const AllBookingsPageAdmin = () => {
         );
     }
 
-    // Check if user is admin
+    // ✅ ✅ ✅ Role Check - Admin (AccessDenied যোগ করা)
     if (user.role?.toLowerCase() !== 'admin') {
-        return (
-            <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-                <div className="text-center bg-white p-8 rounded-2xl shadow-lg max-w-md w-full">
-                    <div className="text-6xl mb-4">⛔</div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Access Denied</h2>
-                    <p className="text-gray-600">You do not have permission to view bookings.</p>
-                    <Link href="/dashboard" className="mt-6 inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                        Go to Dashboard
-                    </Link>
-                </div>
-            </div>
-        );
+        return <AccessDenied role="admin" />;
     }
 
     return (

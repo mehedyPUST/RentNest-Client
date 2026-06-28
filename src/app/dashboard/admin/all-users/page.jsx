@@ -1,9 +1,14 @@
-// app/dashboard/admin/all-users/page.js
+// app/dashboard/admin/all-users/page.jsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useSession } from '@/lib/auth-client';
+import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 
 const AllUsersPage = () => {
+    const { data: session, status } = useSession();
+    const user = session?.user;
+
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -81,12 +86,34 @@ const AllUsersPage = () => {
         }
     };
 
-    if (loading) {
+    // ✅ Loading state
+    if (status === 'loading' || loading) {
         return (
             <div className="flex justify-center items-center h-64">
                 <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600"></div>
             </div>
         );
+    }
+
+    // ✅ Not authenticated
+    if (!user) {
+        return (
+            <div className="flex items-center justify-center min-h-[60vh] px-4">
+                <div className="text-center bg-white dark:bg-gray-900 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 max-w-md">
+                    <div className="text-5xl mb-4">🔒</div>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Please Login</h2>
+                    <p className="text-gray-600 dark:text-gray-400">You need to be logged in to view this page.</p>
+                    <Link href="/login" className="mt-4 inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        Go to Login
+                    </Link>
+                </div>
+            </div>
+        );
+    }
+
+    // ✅ ✅ ✅ Role Check - Admin (AccessDenied যোগ করা)
+    if (user.role?.toLowerCase() !== 'admin') {
+        return <AccessDenied role="admin" />;
     }
 
     if (error) {
@@ -190,18 +217,18 @@ const AllUsersPage = () => {
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${user.role?.toLowerCase() === 'admin'
-                                                        ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
-                                                        : user.role?.toLowerCase() === 'owner'
-                                                            ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
-                                                            : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                    ? 'bg-purple-100 text-purple-700 dark:bg-purple-900/30 dark:text-purple-400'
+                                                    : user.role?.toLowerCase() === 'owner'
+                                                        ? 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400'
+                                                        : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                                     }`}>
                                                     {user.role || 'tenant'}
                                                 </span>
                                             </td>
                                             <td className="px-4 py-3">
                                                 <span className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${user.isBlocked
-                                                        ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
-                                                        : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
+                                                    ? 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400'
+                                                    : 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                                                     }`}>
                                                     {user.isBlocked ? 'Blocked' : 'Active'}
                                                 </span>

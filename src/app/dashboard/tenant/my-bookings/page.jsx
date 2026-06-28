@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/lib/auth-client';
+import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 import {
     FaHome, FaCalendarAlt, FaMapMarkerAlt, FaDollarSign,
     FaCheckCircle, FaClock, FaTimesCircle, FaEye, FaTrash,
@@ -295,6 +296,11 @@ const MyBookings = () => {
         );
     }
 
+    // ✅ ✅ ✅ Role Check - Tenant (AccessDenied যোগ করা)
+    if (user.role?.toLowerCase() !== 'tenant') {
+        return <AccessDenied role="tenant" />;
+    }
+
     // ✅ Error state
     if (error) {
         return (
@@ -572,7 +578,7 @@ const MyBookings = () => {
                                         </div>
                                     </div>
 
-                                    {/* ✅ Rejection Reason - এখানে যোগ করুন */}
+                                    {/* ✅ Rejection Reason */}
                                     {booking.bookingStatus === 'rejected' && (
                                         <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
                                             <div className="flex items-start gap-3">

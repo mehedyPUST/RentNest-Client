@@ -4,6 +4,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/lib/auth-client';
+import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 import { motion } from 'framer-motion';
 import {
     User,
@@ -31,7 +32,6 @@ import Link from 'next/link';
 
 const UserProfile = ({ role = 'tenant' }) => {
     const router = useRouter();
-    // ✅ সঠিকভাবে update ফাংশন নিন
     const { data: session, status, update } = useSession();
     const user = session?.user || null;
 
@@ -426,6 +426,11 @@ const UserProfile = ({ role = 'tenant' }) => {
         );
     }
 
+    // ✅ ✅ ✅ Role Check - যোগ করা হয়েছে
+    if (user.role?.toLowerCase() !== role) {
+        return <AccessDenied role={role} />;
+    }
+
     const statsConfig = getStatsConfig();
     const quickActions = getQuickActions();
 
@@ -433,7 +438,7 @@ const UserProfile = ({ role = 'tenant' }) => {
         <div className="min-h-screen bg-gray-50 py-8">
             <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
 
-                {/* ✅ Page Header */}
+                {/* Page Header */}
                 <motion.div
                     initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -483,7 +488,7 @@ const UserProfile = ({ role = 'tenant' }) => {
                     </div>
                 </motion.div>
 
-                {/* ✅ Profile Card */}
+                {/* Profile Card */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -611,7 +616,7 @@ const UserProfile = ({ role = 'tenant' }) => {
                     </div>
                 </motion.div>
 
-                {/* ✅ Profile Details */}
+                {/* Profile Details */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
@@ -733,7 +738,7 @@ const UserProfile = ({ role = 'tenant' }) => {
                     </div>
                 </motion.div>
 
-                {/* ✅ Quick Actions */}
+                {/* Quick Actions */}
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}

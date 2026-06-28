@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/lib/auth-client';
+import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 import { motion } from 'framer-motion';
 import {
     Building2,
@@ -189,20 +190,9 @@ export default function OwnerDashboardHomePage() {
         );
     }
 
-    // ✅ Check if user is owner
+    // ✅ ✅ ✅ Role Check - Owner (AccessDenied যোগ করা)
     if (user.role?.toLowerCase() !== 'owner') {
-        return (
-            <div className="flex items-center justify-center min-h-[60vh] px-4">
-                <div className="text-center bg-white dark:bg-gray-900 p-8 rounded-xl shadow-sm border border-gray-200 dark:border-gray-700 max-w-md">
-                    <div className="text-5xl mb-4">⛔</div>
-                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h2>
-                    <p className="text-gray-600 dark:text-gray-400">You do not have permission to view this dashboard.</p>
-                    <Link href="/dashboard" className="mt-4 inline-block px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
-                        Go to Dashboard
-                    </Link>
-                </div>
-            </div>
-        );
+        return <AccessDenied role="owner" />;
     }
 
     const chartData = getFilteredData();

@@ -4,6 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/lib/auth-client';
+import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 import { motion } from 'framer-motion';
 import {
     FaArrowLeft,
@@ -261,6 +262,11 @@ const BookingDetailsClient = ({ bookingId }) => {
                 </div>
             </div>
         );
+    }
+
+    // ✅ ✅ ✅ Role Check - Tenant (AccessDenied যোগ করা)
+    if (user.role?.toLowerCase() !== 'tenant') {
+        return <AccessDenied role="tenant" />;
     }
 
     // ✅ Error state
