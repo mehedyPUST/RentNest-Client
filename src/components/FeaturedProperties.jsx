@@ -19,7 +19,6 @@ const FeaturedProperties = () => {
                 setLoading(true);
                 setError(null);
 
-                // ✅ Featured endpoint টা না থাকলে main endpoint ব্যবহার করুন
                 const res = await fetch(
                     `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties?status=approved&limit=6&sortBy=createdAt`,
                     { cache: 'no-store' }
@@ -32,7 +31,6 @@ const FeaturedProperties = () => {
                 const data = await res.json();
                 console.log('📥 Featured Properties Response:', data);
 
-                // ✅ ডেটা পার্স করুন
                 let featuredProps = [];
                 if (data.success && data.properties) {
                     featuredProps = data.properties;
@@ -68,7 +66,6 @@ const FeaturedProperties = () => {
         return `$${price.toLocaleString()}`;
     };
 
-    // Capitalize first letter
     const capitalizeFirst = (str) => {
         if (!str) return '';
         return str.charAt(0).toUpperCase() + str.slice(1);
@@ -174,15 +171,15 @@ const FeaturedProperties = () => {
     // Loading State
     if (loading) {
         return (
-            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
+                <div className="w-full px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
                         <motion.div
                             animate={{ rotate: 360 }}
                             transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
                             className="inline-block"
                         >
-                            <Loader2 className="w-12 h-12 text-blue-600" />
+                            <Loader2 className="w-12 h-12 text-emerald-600" />
                         </motion.div>
                         <p className="mt-4 text-gray-600 dark:text-gray-400">Loading properties...</p>
                     </div>
@@ -194,8 +191,8 @@ const FeaturedProperties = () => {
     // Error State
     if (error) {
         return (
-            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
+                <div className="w-full px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
                         <div className="text-6xl mb-4">🏠</div>
                         <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
@@ -206,7 +203,7 @@ const FeaturedProperties = () => {
                         </p>
                         <button
                             onClick={() => window.location.reload()}
-                            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                            className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
                         >
                             Try Again
                         </button>
@@ -219,8 +216,8 @@ const FeaturedProperties = () => {
     // Empty State
     if (properties.length === 0) {
         return (
-            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
+                <div className="w-full px-4 sm:px-6 lg:px-8">
                     <div className="text-center">
                         <div className="text-6xl mb-4">🔍</div>
                         <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
@@ -236,8 +233,8 @@ const FeaturedProperties = () => {
     }
 
     return (
-        <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
 
                 {/* Section Header */}
                 <motion.div
@@ -256,32 +253,32 @@ const FeaturedProperties = () => {
                             animate={{ rotate: 360 }}
                             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                         >
-                            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         </motion.span>
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Featured Properties</span>
                     </motion.div>
 
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-                        Handpicked <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Properties</span>
+                        Handpicked <span className="bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">Properties</span>
                     </h2>
 
                     <div className="flex items-center justify-center gap-3 mb-6">
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                             viewport={{ once: true }}
                         ></motion.div>
                         <motion.div
-                            className="w-2 h-2 bg-blue-600 rounded-full"
+                            className="w-2 h-2 bg-emerald-600 rounded-full"
                             initial={{ scale: 0 }}
                             whileInView={{ scale: 1 }}
                             transition={{ duration: 0.4, delay: 0.4 }}
                             viewport={{ once: true }}
                         ></motion.div>
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-700 to-emerald-800 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
@@ -432,7 +429,7 @@ const FeaturedProperties = () => {
                                     >
                                         <button
                                             onClick={() => handleViewDetails(propertyId)}
-                                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-xl transition-all duration-300 shadow-md shadow-blue-500/30 hover:shadow-lg hover:shadow-blue-500/40"
+                                            className="w-full inline-flex items-center justify-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold rounded-xl transition-all duration-300 shadow-md shadow-emerald-500/30 hover:shadow-lg hover:shadow-emerald-500/40"
                                         >
                                             <Home className="w-4 h-4" />
                                             View Details
@@ -471,7 +468,7 @@ const FeaturedProperties = () => {
                     >
                         <Link
                             href="/all-properties"
-                            className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-gray-900 border-2 border-blue-600 hover:bg-blue-600 text-blue-600 hover:text-white dark:text-blue-400 dark:hover:text-white font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
+                            className="inline-flex items-center gap-2 px-8 py-4 bg-white dark:bg-gray-900 border-2 border-emerald-600 hover:bg-emerald-600 text-emerald-600 hover:text-white dark:text-emerald-400 dark:hover:text-white font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20"
                         >
                             <Building2 className="w-5 h-5" />
                             View All Properties

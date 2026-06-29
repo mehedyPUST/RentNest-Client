@@ -1,74 +1,160 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { FaMapMarkerAlt, FaBuilding, FaHome, FaCity } from 'react-icons/fa';
-import { Sparkles, ArrowRight, Users, TrendingUp } from 'lucide-react';
+import { Sparkles, ArrowRight, Users, TrendingUp, Loader2 } from 'lucide-react';
 
 const TopLocations = () => {
-    const locations = [
-        {
-            id: 1,
-            name: "New York City",
-            state: "NY",
-            properties: 1247,
-            image: "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            avgPrice: "$850,000",
-            growth: "+12.5%",
-            icon: FaBuilding
-        },
-        {
-            id: 2,
-            name: "Los Angeles",
-            state: "CA",
-            properties: 983,
-            image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            avgPrice: "$725,000",
-            growth: "+8.3%",
-            icon: FaHome
-        },
-        {
-            id: 3,
-            name: "Miami",
-            state: "FL",
-            properties: 756,
-            image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            avgPrice: "$620,000",
-            growth: "+15.7%",
-            icon: FaCity
-        },
-        {
-            id: 4,
-            name: "Austin",
-            state: "TX",
-            properties: 689,
-            image: "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            avgPrice: "$550,000",
-            growth: "+18.2%",
-            icon: FaBuilding
-        },
-        {
-            id: 5,
-            name: "Chicago",
-            state: "IL",
-            properties: 542,
-            image: "https://images.unsplash.com/photo-1494522358652-f30e61a60313?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            avgPrice: "$480,000",
-            growth: "+6.8%",
-            icon: FaHome
-        },
-        {
-            id: 6,
-            name: "Denver",
-            state: "CO",
-            properties: 478,
-            image: "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
-            avgPrice: "$520,000",
-            growth: "+10.4%",
-            icon: FaCity
-        }
-    ];
+    const [locations, setLocations] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Location Icons mapping
+    const locationIcons = [FaBuilding, FaHome, FaCity, FaBuilding, FaHome, FaCity];
+
+    // Random growth data
+    const growthData = ['+12.5%', '+8.3%', '+15.7%', '+18.2%', '+6.8%', '+10.4%'];
+    const avgPriceData = ['$850,000', '$725,000', '$620,000', '$550,000', '$480,000', '$520,000'];
+
+    useEffect(() => {
+        const fetchLocations = async () => {
+            try {
+                setLoading(true);
+                setError(null);
+
+                // Fetch properties with location aggregation
+                const res = await fetch(
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties/locations?limit=6`,
+                    { cache: 'no-store' }
+                );
+
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch locations: ${res.status}`);
+                }
+
+                const data = await res.json();
+                console.log('📥 Locations Response:', data);
+
+                let locationData = [];
+
+                if (data.success && data.locations) {
+                    // Transform location data
+                    locationData = data.locations.map((loc, index) => ({
+                        id: index + 1,
+                        name: loc.location || 'Unknown Location',
+                        state: loc.location?.split(',')[1]?.trim() || 'N/A',
+                        properties: loc.count || 0,
+                        image: getRandomImage(index),
+                        avgPrice: avgPriceData[index % avgPriceData.length],
+                        growth: growthData[index % growthData.length],
+                        icon: locationIcons[index % locationIcons.length]
+                    }));
+                } else {
+                    // Fallback: Fetch properties and group by location
+                    const propsRes = await fetch(
+                        `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties?status=approved&limit=50`,
+                        { cache: 'no-store' }
+                    );
+
+                    if (propsRes.ok) {
+                        const propsData = await propsRes.json();
+                        const properties = propsData.success ? propsData.properties : [];
+
+                        // Group by location
+                        const locationMap = {};
+                        properties.forEach(prop => {
+                            const loc = prop.location || 'Unknown';
+                            if (locationMap[loc]) {
+                                locationMap[loc]++;
+                            } else {
+                                locationMap[loc] = 1;
+                            }
+                        });
+
+                        // Sort and take top 6
+                        const sortedLocations = Object.entries(locationMap)
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 6);
+
+                        locationData = sortedLocations.map(([name, count], index) => ({
+                            id: index + 1,
+                            name: name,
+                            state: name.split(',')[1]?.trim() || 'N/A',
+                            properties: count,
+                            image: getRandomImage(index),
+                            avgPrice: avgPriceData[index % avgPriceData.length],
+                            growth: growthData[index % growthData.length],
+                            icon: locationIcons[index % locationIcons.length]
+                        }));
+                    }
+                }
+
+                // If still empty, use dummy data from database
+                if (locationData.length === 0) {
+                    const propsRes = await fetch(
+                        `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties?status=approved&limit=50`,
+                        { cache: 'no-store' }
+                    );
+
+                    if (propsRes.ok) {
+                        const propsData = await propsRes.json();
+                        const properties = propsData.success ? propsData.properties : [];
+
+                        const locationMap = {};
+                        properties.forEach(prop => {
+                            const loc = prop.location || 'Unknown';
+                            if (locationMap[loc]) {
+                                locationMap[loc]++;
+                            } else {
+                                locationMap[loc] = 1;
+                            }
+                        });
+
+                        const sortedLocations = Object.entries(locationMap)
+                            .sort((a, b) => b[1] - a[1])
+                            .slice(0, 6);
+
+                        locationData = sortedLocations.map(([name, count], index) => ({
+                            id: index + 1,
+                            name: name,
+                            state: name.split(',')[1]?.trim() || 'N/A',
+                            properties: count,
+                            image: getRandomImage(index),
+                            avgPrice: avgPriceData[index % avgPriceData.length],
+                            growth: growthData[index % growthData.length],
+                            icon: locationIcons[index % locationIcons.length]
+                        }));
+                    }
+                }
+
+                setLocations(locationData);
+
+            } catch (err) {
+                console.error('Error fetching locations:', err);
+                setError(err.message);
+                setLocations([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchLocations();
+    }, []);
+
+    // Random images for locations
+    const getRandomImage = (index) => {
+        const images = [
+            "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1502672260266-1c1ef2d93688?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1494522358652-f30e61a60313?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80",
+            "https://images.unsplash.com/photo-1519904981063-b0cf448d479e?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
+        ];
+        return images[index % images.length];
+    };
 
     // Animation Variants
     const containerVariants = {
@@ -196,9 +282,73 @@ const TopLocations = () => {
         },
     };
 
+    // Loading State
+    if (loading) {
+        return (
+            <section className="py-20 bg-gradient-to-b from-white via-emerald-50/30 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
+                <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className="text-center">
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                            className="inline-block"
+                        >
+                            <Loader2 className="w-12 h-12 text-emerald-600" />
+                        </motion.div>
+                        <p className="mt-4 text-gray-600 dark:text-gray-400">Loading locations...</p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    // Error State
+    if (error) {
+        return (
+            <section className="py-20 bg-gradient-to-b from-white via-emerald-50/30 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
+                <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className="text-center">
+                        <div className="text-6xl mb-4">📍</div>
+                        <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
+                            Unable to load locations
+                        </h3>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2">
+                            {error}
+                        </p>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors"
+                        >
+                            Try Again
+                        </button>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
+    // Empty State
+    if (locations.length === 0) {
+        return (
+            <section className="py-20 bg-gradient-to-b from-white via-emerald-50/30 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
+                <div className="w-full px-4 sm:px-6 lg:px-8">
+                    <div className="text-center">
+                        <div className="text-6xl mb-4">🌍</div>
+                        <h3 className="text-xl font-semibold text-gray-700 dark:text-gray-300">
+                            No Locations Found
+                        </h3>
+                        <p className="text-gray-500 dark:text-gray-400 mt-2">
+                            Check back later for new properties
+                        </p>
+                    </div>
+                </div>
+            </section>
+        );
+    }
+
     return (
-        <section className="py-20 bg-gradient-to-b from-white via-blue-50/30 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-20 bg-gradient-to-b from-white via-emerald-50/30 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
 
                 {/* Section Header */}
                 <motion.div
@@ -223,32 +373,32 @@ const TopLocations = () => {
                                 ease: "easeInOut",
                             }}
                         >
-                            <FaMapMarkerAlt className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <FaMapMarkerAlt className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         </motion.span>
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Top Locations</span>
                     </motion.div>
 
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-                        Popular <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Cities</span>
+                        Popular <span className="bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">Cities</span>
                     </h2>
 
                     <div className="flex items-center justify-center gap-3 mb-6">
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-2 h-2 bg-blue-600 rounded-full"
+                            className="w-2 h-2 bg-emerald-600 rounded-full"
                             initial={{ scale: 0 }}
                             whileInView={{ scale: 1 }}
                             transition={{ duration: 0.4, delay: 0.4 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-700 to-emerald-800 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
@@ -279,7 +429,7 @@ const TopLocations = () => {
                             viewport={{ once: true }}
                         >
                             <Link
-                                href={`/properties?location=${location.name}`}
+                                href={`/all-properties?location=${encodeURIComponent(location.name)}`}
                                 className="group relative overflow-hidden rounded-2xl shadow-md hover:shadow-2xl transition-shadow duration-300 block"
                             >
                                 {/* Image */}
@@ -293,6 +443,9 @@ const TopLocations = () => {
                                         src={location.image}
                                         alt={location.name}
                                         className="w-full h-full object-cover"
+                                        onError={(e) => {
+                                            e.target.src = 'https://via.placeholder.com/800x600/CCCCCC/FFFFFF?text=No+Image';
+                                        }}
                                     />
                                     <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent"></div>
                                 </motion.div>
@@ -367,7 +520,7 @@ const TopLocations = () => {
                     ))}
                 </motion.div>
 
-                {/* View All Locations */}
+                {/* View All Locations - ✅ Redirect to /all-properties */}
                 <motion.div
                     className="text-center mt-10"
                     initial={{ opacity: 0, y: 20 }}
@@ -382,8 +535,8 @@ const TopLocations = () => {
                         whileTap="tap"
                     >
                         <Link
-                            href="/properties"
-                            className="inline-flex items-center gap-2 px-8 py-3.5 bg-white dark:bg-gray-900 border-2 border-blue-600 hover:bg-blue-600 text-blue-600 hover:text-white dark:text-blue-400 dark:hover:text-white font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/20"
+                            href="/all-properties"
+                            className="inline-flex items-center gap-2 px-8 py-3.5 bg-white dark:bg-gray-900 border-2 border-emerald-600 hover:bg-emerald-600 text-emerald-600 hover:text-white dark:text-emerald-400 dark:hover:text-white font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/20"
                         >
                             <motion.span
                                 animate={{

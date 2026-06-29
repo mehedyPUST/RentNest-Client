@@ -152,7 +152,7 @@ const Navbar = () => {
             animate={{ y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
         >
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
                 <div className="flex items-center justify-between h-16">
 
                     {/* Logo + Name */}
@@ -163,7 +163,7 @@ const Navbar = () => {
                         animate="animate"
                     >
                         <motion.div
-                            className="w-9 h-9 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center cursor-pointer shadow-md shadow-blue-200"
+                            className="w-9 h-9 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl flex items-center justify-center cursor-pointer shadow-md shadow-emerald-200"
                             variants={logoIconVariants}
                             initial="initial"
                             animate="animate"
@@ -174,7 +174,7 @@ const Navbar = () => {
                         </motion.div>
                         <div className='flex flex-col'>
                             <Link href="/" className="text-2xl font-bold tracking-tight text-gray-900">
-                                Rent<span className="text-blue-600">Nest</span>
+                                Rent<span className="text-emerald-600">Nest</span>
                             </Link>
                             <motion.p
                                 className="text-xs text-gray-500 -mt-0.5"
@@ -209,7 +209,7 @@ const Navbar = () => {
                                 <Link
                                     href={item.href}
                                     className={`flex items-center gap-2 transition-colors ${isActive(item.href)
-                                        ? "text-blue-600 font-semibold"
+                                        ? "text-emerald-600 font-semibold"
                                         : "text-gray-700 hover:text-gray-900 font-medium"
                                         }`}
                                 >
@@ -230,7 +230,7 @@ const Navbar = () => {
                                     <Link
                                         href={dashboardPath}
                                         className={`flex items-center gap-2 transition-colors ${isActive(dashboardPath)
-                                            ? "text-blue-600 font-semibold"
+                                            ? "text-emerald-600 font-semibold"
                                             : "text-gray-700 hover:text-gray-900 font-medium"
                                             }`}
                                     >
@@ -275,7 +275,7 @@ const Navbar = () => {
                                 >
                                     <Link
                                         href="/register"
-                                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-2xl transition-all active:scale-[0.97] shadow-md shadow-blue-200"
+                                        className="flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold rounded-2xl transition-all active:scale-[0.97] shadow-md shadow-emerald-200"
                                     >
                                         <UserPlus className="w-4 h-4" /> Register
                                     </Link>
@@ -284,7 +284,7 @@ const Navbar = () => {
                         )}
                     </div>
 
-                    {/* Mobile Menu Button */}
+                    {/* Mobile Menu Button - ✅ mode="wait" সরানো হয়েছে */}
                     <motion.button
                         onClick={toggleMenu}
                         className="md:hidden p-2 text-gray-700 hover:text-gray-900 rounded-lg hover:bg-gray-100 transition-colors"
@@ -294,7 +294,7 @@ const Navbar = () => {
                         whileHover={{ scale: 1.1 }}
                         whileTap={{ scale: 0.9 }}
                     >
-                        <AnimatePresence mode="wait">
+                        <AnimatePresence>
                             <motion.div
                                 key={isMenuOpen ? 'close' : 'menu'}
                                 initial={{ rotate: -90, opacity: 0 }}
@@ -309,7 +309,7 @@ const Navbar = () => {
                 </div>
             </div>
 
-            {/* Mobile Menu */}
+            {/* Mobile Menu - ✅ mode="wait" সরানো হয়েছে */}
             <AnimatePresence>
                 {isMenuOpen && (
                     <motion.div
@@ -324,7 +324,7 @@ const Navbar = () => {
                                 <Link
                                     href="/"
                                     className={`flex items-center gap-3 transition-colors ${isActive('/')
-                                        ? "text-blue-600 font-semibold"
+                                        ? "text-emerald-600 font-semibold"
                                         : "text-gray-700 hover:text-gray-900"
                                         }`}
                                     onClick={() => setIsMenuOpen(false)}
@@ -337,7 +337,7 @@ const Navbar = () => {
                                 <Link
                                     href="/all-properties"
                                     className={`flex items-center gap-3 transition-colors ${isActive('/all-properties')
-                                        ? "text-blue-600 font-semibold"
+                                        ? "text-emerald-600 font-semibold"
                                         : "text-gray-700 hover:text-gray-900"
                                         }`}
                                     onClick={() => setIsMenuOpen(false)}
@@ -352,7 +352,7 @@ const Navbar = () => {
                                         <Link
                                             href={dashboardPath}
                                             className={`flex items-center gap-3 transition-colors ${isActive(dashboardPath)
-                                                ? "text-blue-600 font-semibold"
+                                                ? "text-emerald-600 font-semibold"
                                                 : "text-gray-700 hover:text-gray-900"
                                                 }`}
                                             onClick={() => setIsMenuOpen(false)}
@@ -386,7 +386,7 @@ const Navbar = () => {
                                     >
                                         <Link
                                             href="/register"
-                                            className="block w-full text-center py-4 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold rounded-2xl transition-all shadow-md shadow-blue-200"
+                                            className="block w-full text-center py-4 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold rounded-2xl transition-all shadow-md shadow-emerald-200"
                                             onClick={() => setIsMenuOpen(false)}
                                         >
                                             Register

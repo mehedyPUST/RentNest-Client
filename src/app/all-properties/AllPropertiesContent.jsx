@@ -18,7 +18,7 @@ const AllPropertiesContent = () => {
     const [showFilters, setShowFilters] = useState(false);
     const [searchInput, setSearchInput] = useState('');
 
-    // ✅ Pagination State
+    // Pagination State
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 1,
@@ -37,33 +37,29 @@ const AllPropertiesContent = () => {
         sortBy: searchParams.get('sortBy') || 'createdAt',
         sortOrder: searchParams.get('sortOrder') || 'desc',
         location: searchParams.get('location') || '',
-        page: parseInt(searchParams.get('page')) || 1,  // ✅ Page from URL
+        page: parseInt(searchParams.get('page')) || 1,
     });
 
-    const propertyTypes = ['Apartment', 'House', 'Condo', 'Villa', 'Townhouse', 'Land'];
+    const propertyTypes = ['Apartment', 'House', 'Villa', 'Commercial Space'];
 
-    // ✅ Fetch properties with pagination
+    // Fetch properties with pagination
     const fetchProperties = useCallback(async (page = 1) => {
         try {
             setLoading(true);
             setError(null);
 
-            // Update page in filters
             setFilters(prev => ({ ...prev, page }));
 
             const queryParams = new URLSearchParams();
 
-            // Add all filters
             Object.entries({ ...filters, page }).forEach(([key, value]) => {
                 if (value && value.toString().trim() !== '') {
-                    // Skip default sort values
                     if (key === 'sortBy' && value === 'createdAt') return;
                     if (key === 'sortOrder' && value === 'desc') return;
                     queryParams.append(key, value);
                 }
             });
 
-            // ✅ Add limit
             queryParams.append('limit', pagination.itemsPerPage);
 
             const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties?${queryParams.toString()}`;
@@ -83,7 +79,6 @@ const AllPropertiesContent = () => {
 
             setProperties(approvedProps);
 
-            // ✅ Update pagination
             if (data.pagination) {
                 setPagination({
                     currentPage: data.pagination.currentPage || page,
@@ -93,7 +88,6 @@ const AllPropertiesContent = () => {
                 });
             }
 
-            // ✅ Update URL with page
             const newQueryString = queryParams.toString();
             const newUrl = newQueryString
                 ? `/all-properties?${newQueryString}`
@@ -112,28 +106,27 @@ const AllPropertiesContent = () => {
         }
     }, [filters, router, pagination.itemsPerPage]);
 
-    // ✅ Handle page change
+    // Handle page change
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPages) {
             fetchProperties(newPage);
-            // Scroll to top
             window.scrollTo({ top: 0, behavior: 'smooth' });
         }
     };
 
-    // ✅ Handle filter change
+    // Handle filter change
     const handleFilterChange = (e) => {
         const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value, page: 1 })); // Reset to page 1
+        setFilters(prev => ({ ...prev, [name]: value, page: 1 }));
     };
 
-    // ✅ Apply filters
+    // Apply filters
     const applyFilters = () => {
         fetchProperties(1);
         setShowFilters(false);
     };
 
-    // ✅ Reset filters
+    // Reset filters
     const resetFilters = () => {
         setFilters({
             search: '',
@@ -152,7 +145,7 @@ const AllPropertiesContent = () => {
         fetchProperties(1);
     };
 
-    // ✅ Search with debounce
+    // Search with debounce
     useEffect(() => {
         const delayDebounceFn = setTimeout(() => {
             if (searchInput !== filters.search) {
@@ -162,7 +155,7 @@ const AllPropertiesContent = () => {
         return () => clearTimeout(delayDebounceFn);
     }, [searchInput]);
 
-    // ✅ Fetch on filter change
+    // Fetch on filter change
     useEffect(() => {
         fetchProperties(filters.page || 1);
     }, [filters.search, filters.propertyType, filters.minPrice, filters.maxPrice,
@@ -201,7 +194,7 @@ const AllPropertiesContent = () => {
     if (loading) {
         return (
             <div className="min-h-screen flex items-center justify-center">
-                <Loader2 className="w-10 h-10 animate-spin text-blue-600" />
+                <Loader2 className="w-10 h-10 animate-spin text-emerald-600" />
             </div>
         );
     }
@@ -213,7 +206,7 @@ const AllPropertiesContent = () => {
                 <p className="text-red-500 text-lg">{error}</p>
                 <button
                     onClick={() => fetchProperties(1)}
-                    className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                    className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
                 >
                     Try Again
                 </button>
@@ -222,8 +215,9 @@ const AllPropertiesContent = () => {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-white dark:from-gray-950 dark:to-gray-900 py-16 px-4">
-            <div className="max-w-7xl mx-auto">
+        // ✅ max-w-7xl সরিয়ে w-full করা হয়েছে
+        <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-white dark:from-gray-950 dark:to-gray-900 py-8 px-4 md:px-6 w-full">
+            <div className="w-full">
 
                 {/* Header */}
                 <div className="text-center mb-8">
@@ -235,32 +229,32 @@ const AllPropertiesContent = () => {
                             animate={{ rotate: 360 }}
                             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                         >
-                            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         </motion.span>
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Premium Properties</span>
                     </motion.div>
 
                     <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold text-gray-900 dark:text-white mb-4">
-                        Explore <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Verified</span> Properties
+                        Explore <span className="bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">Verified</span> Properties
                     </h1>
 
                     <div className="flex items-center justify-center gap-3 mb-6">
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-2 h-2 bg-blue-600 rounded-full"
+                            className="w-2 h-2 bg-emerald-600 rounded-full"
                             initial={{ scale: 0 }}
                             whileInView={{ scale: 1 }}
                             transition={{ duration: 0.4, delay: 0.4 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-700 to-emerald-800 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
@@ -273,9 +267,9 @@ const AllPropertiesContent = () => {
                     </p>
 
                     {properties.length > 0 && (
-                        <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-blue-50 dark:bg-blue-900/20 rounded-full">
-                            <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                            <span className="text-sm text-blue-700 dark:text-blue-300 font-medium">
+                        <div className="mt-6 inline-flex items-center gap-2 px-4 py-2 bg-emerald-50 dark:bg-emerald-900/20 rounded-full">
+                            <Building2 className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
+                            <span className="text-sm text-emerald-700 dark:text-emerald-300 font-medium">
                                 {pagination.totalItems} Verified Properties Available
                             </span>
                         </div>
@@ -285,7 +279,6 @@ const AllPropertiesContent = () => {
                 {/* Search and Filter Bar */}
                 <div className="mb-8">
                     <div className="flex flex-col md:flex-row gap-4">
-                        {/* Search Input */}
                         <div className="flex-1 relative">
                             <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                             <input
@@ -293,7 +286,7 @@ const AllPropertiesContent = () => {
                                 placeholder="Search by location, title, or description..."
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                             />
                             {searchInput && (
                                 <button
@@ -308,7 +301,6 @@ const AllPropertiesContent = () => {
                             )}
                         </div>
 
-                        {/* Action Buttons */}
                         <div className="flex gap-3">
                             <button
                                 onClick={() => setShowFilters(!showFilters)}
@@ -317,7 +309,7 @@ const AllPropertiesContent = () => {
                                 <FaFilter />
                                 <span>Filters</span>
                                 {getActiveFilterCount() > 0 && (
-                                    <span className="absolute -top-2 -right-2 w-5 h-5 bg-blue-600 text-white text-xs rounded-full flex items-center justify-center">
+                                    <span className="absolute -top-2 -right-2 w-5 h-5 bg-emerald-600 text-white text-xs rounded-full flex items-center justify-center">
                                         {getActiveFilterCount()}
                                     </span>
                                 )}
@@ -327,7 +319,7 @@ const AllPropertiesContent = () => {
                                 name="sortBy"
                                 value={filters.sortBy}
                                 onChange={handleFilterChange}
-                                className="px-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500 appearance-none cursor-pointer"
+                                className="px-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
                             >
                                 <option value="createdAt">Latest First</option>
                                 <option value="price">Price: Low to High</option>
@@ -342,22 +334,22 @@ const AllPropertiesContent = () => {
                     {getActiveFilterCount() > 0 && (
                         <div className="flex flex-wrap gap-2 mt-3">
                             {filters.propertyType && (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm">
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-sm">
                                     {capitalizeFirst(filters.propertyType)}
                                     <button
                                         onClick={() => setFilters(prev => ({ ...prev, propertyType: '' }))}
-                                        className="hover:text-blue-900"
+                                        className="hover:text-emerald-900"
                                     >
                                         <FaTimes className="w-3 h-3" />
                                     </button>
                                 </span>
                             )}
                             {filters.location && (
-                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-300 rounded-full text-sm">
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm">
                                     📍 {filters.location}
                                     <button
                                         onClick={() => setFilters(prev => ({ ...prev, location: '' }))}
-                                        className="hover:text-green-900"
+                                        className="hover:text-blue-900"
                                     >
                                         <FaTimes className="w-3 h-3" />
                                     </button>
@@ -423,7 +415,7 @@ const AllPropertiesContent = () => {
                                         name="propertyType"
                                         value={filters.propertyType}
                                         onChange={handleFilterChange}
-                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     >
                                         <option value="">All Types</option>
                                         {propertyTypes.map(type => (
@@ -444,7 +436,7 @@ const AllPropertiesContent = () => {
                                         value={filters.location}
                                         onChange={handleFilterChange}
                                         placeholder="City, State, or ZIP"
-                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     />
                                 </div>
 
@@ -458,7 +450,7 @@ const AllPropertiesContent = () => {
                                         value={filters.minPrice}
                                         onChange={handleFilterChange}
                                         placeholder="$0"
-                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     />
                                 </div>
 
@@ -472,7 +464,7 @@ const AllPropertiesContent = () => {
                                         value={filters.maxPrice}
                                         onChange={handleFilterChange}
                                         placeholder="$1,000,000+"
-                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     />
                                 </div>
 
@@ -484,7 +476,7 @@ const AllPropertiesContent = () => {
                                         name="bedrooms"
                                         value={filters.bedrooms}
                                         onChange={handleFilterChange}
-                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     >
                                         <option value="">Any</option>
                                         {[1, 2, 3, 4, 5, 6, 7, 8].map(num => (
@@ -501,7 +493,7 @@ const AllPropertiesContent = () => {
                                         name="bathrooms"
                                         value={filters.bathrooms}
                                         onChange={handleFilterChange}
-                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                                        className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     >
                                         <option value="">Any</option>
                                         {[1, 2, 3, 4, 5, 6].map(num => (
@@ -513,7 +505,7 @@ const AllPropertiesContent = () => {
                                 <div className="sm:col-span-2 flex items-end gap-3">
                                     <button
                                         onClick={applyFilters}
-                                        className="flex-1 px-6 py-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:opacity-90 transition"
+                                        className="flex-1 px-6 py-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-lg hover:opacity-90 transition"
                                     >
                                         Apply Filters
                                     </button>
@@ -543,7 +535,7 @@ const AllPropertiesContent = () => {
                         </p>
                         <button
                             onClick={resetFilters}
-                            className="mt-4 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                            className="mt-4 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
                         >
                             Clear Filters
                         </button>
@@ -574,6 +566,9 @@ const AllPropertiesContent = () => {
                                         src={image}
                                         alt={property.title}
                                         className="w-full h-full object-cover hover:scale-110 transition-transform duration-500"
+                                        onError={(e) => {
+                                            e.target.src = 'https://via.placeholder.com/800x600/CCCCCC/FFFFFF?text=No+Image';
+                                        }}
                                     />
                                     <span className="absolute top-3 left-3 px-3 py-1 text-xs bg-green-600 text-white rounded-full flex items-center gap-1">
                                         <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
@@ -618,7 +613,7 @@ const AllPropertiesContent = () => {
 
                                     <button
                                         onClick={() => handleViewDetails(id)}
-                                        className="mt-5 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl hover:opacity-90 transition"
+                                        className="mt-5 w-full flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white py-3 rounded-xl hover:opacity-90 transition"
                                     >
                                         <Home className="w-4 h-4" />
                                         View Details
@@ -629,7 +624,7 @@ const AllPropertiesContent = () => {
                     })}
                 </div>
 
-                {/* ✅ Pagination Section */}
+                {/* Pagination Section */}
                 {pagination.totalPages > 1 && (
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mt-10 pt-6 border-t border-gray-200 dark:border-gray-800">
                         <div className="text-sm text-gray-600 dark:text-gray-400">
@@ -639,7 +634,6 @@ const AllPropertiesContent = () => {
                         </div>
 
                         <div className="flex items-center gap-2">
-                            {/* Previous Button */}
                             <button
                                 onClick={() => handlePageChange(pagination.currentPage - 1)}
                                 disabled={pagination.currentPage === 1}
@@ -649,14 +643,12 @@ const AllPropertiesContent = () => {
                                 Previous
                             </button>
 
-                            {/* Page Numbers */}
                             <div className="flex gap-1">
                                 {(() => {
                                     const pages = [];
                                     const total = pagination.totalPages;
                                     const current = pagination.currentPage;
 
-                                    // Show first page
                                     if (total <= 7) {
                                         for (let i = 1; i <= total; i++) {
                                             pages.push(i);
@@ -685,7 +677,7 @@ const AllPropertiesContent = () => {
                                             onClick={() => typeof page === 'number' && handlePageChange(page)}
                                             disabled={page === '...' || page === pagination.currentPage}
                                             className={`w-10 h-10 rounded-lg transition ${page === pagination.currentPage
-                                                ? 'bg-blue-600 text-white'
+                                                ? 'bg-emerald-600 text-white'
                                                 : page === '...'
                                                     ? 'cursor-default'
                                                     : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
@@ -697,7 +689,6 @@ const AllPropertiesContent = () => {
                                 })()}
                             </div>
 
-                            {/* Next Button */}
                             <button
                                 onClick={() => handlePageChange(pagination.currentPage + 1)}
                                 disabled={pagination.currentPage === pagination.totalPages}

@@ -98,12 +98,12 @@ const Footer = () => {
         <footer className="relative bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 border-t border-slate-200/50 dark:border-gray-800/50 mt-auto overflow-hidden">
             {/* ডেকোরেটিভ ব্যাকগ্রাউন্ড এলিমেন্ট */}
             <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-br from-blue-400/5 to-purple-400/5 rounded-full blur-3xl"></div>
-                <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-tr from-indigo-400/5 to-pink-400/5 rounded-full blur-3xl"></div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-300/5 rounded-full blur-3xl"></div>
+                <div className="absolute -top-32 -right-32 w-96 h-96 bg-gradient-to-br from-emerald-400/5 to-emerald-400/5 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-32 -left-32 w-96 h-96 bg-gradient-to-tr from-emerald-400/5 to-emerald-400/5 rounded-full blur-3xl"></div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-emerald-300/5 rounded-full blur-3xl"></div>
             </div>
 
-            <div className="relative max-w-7xl mx-auto px-6 lg:px-8 py-16 lg:py-20">
+            <div className="relative w-full px-6 lg:px-8 py-16 lg:py-20">
                 {/* মেইন ফুটার গ্রিড */}
                 <motion.div
                     className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-12 gap-10 lg:gap-12"
@@ -119,15 +119,15 @@ const Footer = () => {
                     >
                         <Link href="/" className="inline-flex items-center gap-3 group">
                             <motion.div
-                                className="relative w-12 h-12 bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-lg shadow-blue-500/25 group-hover:shadow-xl group-hover:shadow-blue-500/30 transition-all duration-300"
+                                className="relative w-12 h-12 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl flex items-center justify-center shadow-lg shadow-emerald-500/25 group-hover:shadow-xl group-hover:shadow-emerald-500/30 transition-all duration-300"
                                 whileHover={{ rotate: 360, scale: 1.05 }}
                                 transition={{ duration: 0.6 }}
                             >
                                 <Building2 className="w-6 h-6 text-white" />
-                                <div className="absolute inset-0 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-300"></div>
+                                <div className="absolute inset-0 bg-gradient-to-br from-emerald-600 to-emerald-700 rounded-2xl opacity-0 group-hover:opacity-30 blur-xl transition-opacity duration-300"></div>
                             </motion.div>
                             <span className="font-bold text-2xl tracking-tight text-gray-900 dark:text-white">
-                                Rent<span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Nest</span>
+                                Rent<span className="bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">Nest</span>
                             </span>
                         </Link>
 
@@ -166,9 +166,9 @@ const Footer = () => {
                                 <li key={href}>
                                     <Link
                                         href={href}
-                                        className={`group inline-flex items-center gap-2 text-sm transition-all duration-200 ${isActive(href) ? "text-blue-600 dark:text-blue-400 font-medium" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
+                                        className={`group inline-flex items-center gap-2 text-sm transition-all duration-200 ${isActive(href) ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                                     >
-                                        <ChevronRight className={`w-3.5 h-3.5 transition-all duration-200 ${isActive(href) ? "opacity-100 translate-x-0 text-blue-600" : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"}`} />
+                                        <ChevronRight className={`w-3.5 h-3.5 transition-all duration-200 ${isActive(href) ? "opacity-100 translate-x-0 text-emerald-600" : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"}`} />
                                         {label}
                                     </Link>
                                 </li>
@@ -189,9 +189,9 @@ const Footer = () => {
                                 <li key={href}>
                                     <Link
                                         href={href}
-                                        className={`group inline-flex items-center gap-2 text-sm transition-all duration-200 ${isActive(href) ? "text-blue-600 dark:text-blue-400 font-medium" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
+                                        className={`group inline-flex items-center gap-2 text-sm transition-all duration-200 ${isActive(href) ? "text-emerald-600 dark:text-emerald-400 font-medium" : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"}`}
                                     >
-                                        <ChevronRight className={`w-3.5 h-3.5 transition-all duration-200 ${isActive(href) ? "opacity-100 translate-x-0 text-blue-600" : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"}`} />
+                                        <ChevronRight className={`w-3.5 h-3.5 transition-all duration-200 ${isActive(href) ? "opacity-100 translate-x-0 text-emerald-600" : "opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0"}`} />
                                         {label}
                                     </Link>
                                 </li>
@@ -213,8 +213,8 @@ const Footer = () => {
                                     href="mailto:info@rentnest.com"
                                     className="group flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200"
                                 >
-                                    <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-blue-500/10 to-blue-600/10 dark:from-blue-500/20 dark:to-blue-600/20 flex items-center justify-center group-hover:from-blue-500/20 group-hover:to-blue-600/20 dark:group-hover:from-blue-500/30 dark:group-hover:to-blue-600/30 transition-all duration-200 group-hover:scale-105">
-                                        <Mail className="w-4.5 h-4.5 text-blue-600 dark:text-blue-400" />
+                                    <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 dark:from-emerald-500/20 dark:to-emerald-600/20 flex items-center justify-center group-hover:from-emerald-500/20 group-hover:to-emerald-600/20 dark:group-hover:from-emerald-500/30 dark:group-hover:to-emerald-600/30 transition-all duration-200 group-hover:scale-105">
+                                        <Mail className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
                                     </div>
                                     <span className="font-light">info@rentnest.com</span>
                                 </a>
@@ -224,16 +224,16 @@ const Footer = () => {
                                     href="tel:+1234567890"
                                     className="group flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-all duration-200"
                                 >
-                                    <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-green-500/10 to-emerald-600/10 dark:from-green-500/20 dark:to-emerald-600/20 flex items-center justify-center group-hover:from-green-500/20 group-hover:to-emerald-600/20 dark:group-hover:from-green-500/30 dark:group-hover:to-emerald-600/30 transition-all duration-200 group-hover:scale-105">
-                                        <Phone className="w-4.5 h-4.5 text-green-600 dark:text-green-400" />
+                                    <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 dark:from-emerald-500/20 dark:to-emerald-600/20 flex items-center justify-center group-hover:from-emerald-500/20 group-hover:to-emerald-600/20 dark:group-hover:from-emerald-500/30 dark:group-hover:to-emerald-600/30 transition-all duration-200 group-hover:scale-105">
+                                        <Phone className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
                                     </div>
                                     <span className="font-light">+1 (234) 567-890</span>
                                 </a>
                             </motion.li>
                             <motion.li whileHover={{ x: 5 }} transition={{ type: "spring", stiffness: 300 }}>
                                 <div className="flex items-start gap-4 text-sm text-slate-600 dark:text-slate-400">
-                                    <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-purple-500/10 to-pink-600/10 dark:from-purple-500/20 dark:to-pink-600/20 flex items-center justify-center flex-shrink-0">
-                                        <MapPin className="w-4.5 h-4.5 text-purple-600 dark:text-purple-400" />
+                                    <div className="relative w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500/10 to-emerald-600/10 dark:from-emerald-500/20 dark:to-emerald-600/20 flex items-center justify-center flex-shrink-0">
+                                        <MapPin className="w-4.5 h-4.5 text-emerald-600 dark:text-emerald-400" />
                                     </div>
                                     <span className="font-light leading-relaxed">123 Main Street,<br />New York, NY 10001</span>
                                 </div>
@@ -266,7 +266,7 @@ const Footer = () => {
                                 }}
                                 className="inline-block"
                             >
-                                <Sparkles className="w-3.5 h-3.5 inline mr-2 text-blue-500" />
+                                <Sparkles className="w-3.5 h-3.5 inline mr-2 text-emerald-500" />
                             </motion.span>
                             Trusted by thousands
                         </span>

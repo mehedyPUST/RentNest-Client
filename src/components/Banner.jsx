@@ -16,14 +16,12 @@ const Banner = () => {
         maxPrice: '',
     });
 
+    // ✅ Add Property Form এর সাথে মিল রেখে Property Types
     const propertyTypes = [
         { key: "apartment", label: "Apartment" },
         { key: "house", label: "House" },
         { key: "villa", label: "Villa" },
-        { key: "condo", label: "Condo" },
-        { key: "townhouse", label: "Townhouse" },
-        { key: "studio", label: "Studio" },
-        { key: "land", label: "Land" },
+        { key: "commercial space", label: "Commercial Space" },
     ];
 
     const priceRanges = [
@@ -38,11 +36,9 @@ const Banner = () => {
         { key: "50000", label: "$50,000" },
     ];
 
-    // Handle search - navigate to all-properties with filters
     const handleSearch = (e) => {
         e.preventDefault();
 
-        // Build query parameters
         const params = new URLSearchParams();
 
         if (searchParams.location) {
@@ -58,14 +54,12 @@ const Banner = () => {
             params.append('maxPrice', searchParams.maxPrice);
         }
 
-        // Navigate to all-properties with filters
         const queryString = params.toString();
         const url = queryString ? `/all-properties?${queryString}` : '/all-properties';
 
         router.push(url);
     };
 
-    // Quick filter handler
     const handleQuickFilter = (filterType, value) => {
         const params = new URLSearchParams();
 
@@ -77,7 +71,6 @@ const Banner = () => {
                 params.append('bathrooms', '2');
                 break;
             case 'sqft':
-                // You can add sqft filter if your backend supports it
                 params.append('minPrice', '1000');
                 break;
             case 'petFriendly':
@@ -138,9 +131,9 @@ const Banner = () => {
     };
 
     return (
-        <section className="relative min-h-[90vh] flex items-center overflow-hidden">
+        <section className="relative min-h-[90vh] flex items-center overflow-hidden w-full">
             {/* High-Quality Background Image */}
-            <div className="absolute inset-0 z-0">
+            <div className="absolute inset-0 z-0 w-full h-full">
                 <div className="absolute inset-0 bg-gradient-to-br from-black/70 via-black/50 to-black/70 z-10" />
                 <motion.div
                     initial={{ scale: 1.1 }}
@@ -160,7 +153,7 @@ const Banner = () => {
                 animate="animate"
             >
                 <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50">
-                    <Building2 className="w-8 h-8 text-blue-600" />
+                    <Building2 className="w-8 h-8 text-emerald-600" />
                 </div>
             </motion.div>
 
@@ -171,7 +164,7 @@ const Banner = () => {
                 transition={{ delay: 0.5 }}
             >
                 <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-4 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50">
-                    <MapPin className="w-8 h-8 text-indigo-600" />
+                    <MapPin className="w-8 h-8 text-emerald-600" />
                 </div>
             </motion.div>
 
@@ -182,11 +175,11 @@ const Banner = () => {
                 transition={{ delay: 1 }}
             >
                 <div className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm p-3 rounded-2xl shadow-lg border border-gray-200/50 dark:border-gray-700/50">
-                    <Users className="w-6 h-6 text-purple-600" />
+                    <Users className="w-6 h-6 text-emerald-600" />
                 </div>
             </motion.div>
 
-            <div className="relative z-20 max-w-7xl mx-auto px-6 lg:px-8 py-20 w-full">
+            <div className="relative z-20 w-full px-6 lg:px-8 py-20">
                 <motion.div
                     className="max-w-4xl mx-auto text-center space-y-8"
                     variants={containerVariants}
@@ -258,7 +251,7 @@ const Banner = () => {
                                 <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-white/60 w-4 h-4 pointer-events-none" />
                             </motion.div>
 
-                            {/* Property Type */}
+                            {/* Property Type - ✅ Add Property Form এর সাথে মিল */}
                             <motion.div
                                 className="relative"
                                 whileHover={{ scale: 1.02 }}
