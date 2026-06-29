@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from '@/lib/auth-client';
-import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
+import AccessDenied from '@/components/AccessDenied';
 import { motion } from 'framer-motion';
 import {
     CheckCircle,
@@ -31,7 +31,7 @@ import toast from 'react-hot-toast';
 import Link from 'next/link';
 
 const BookingRequestsPage = () => {
-    const { data: session, status } = useSession(); // ✅ status যোগ করা হয়েছে
+    const { data: session, status } = useSession();
     const user = session?.user;
 
     const [bookings, setBookings] = useState([]);
@@ -65,7 +65,6 @@ const BookingRequestsPage = () => {
 
     const API_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
 
-    // Fetch booking requests
     const fetchBookings = async (page = 1, status = 'all', search = '') => {
         if (!user) return;
 
@@ -74,7 +73,7 @@ const BookingRequestsPage = () => {
 
         try {
             const ownerId = user.id || user._id;
-            let url = `${API_URL}/api/bookings/owner/${ownerId}?page=${page}&limit=10`;
+            let url = `${API_URL}/api/bookings/owner/${ownerId}?page=${page}&limit=${pagination.itemsPerPage}`;
 
             if (status !== 'all') {
                 url += `&status=${status}`;
@@ -93,7 +92,12 @@ const BookingRequestsPage = () => {
             if (data.success) {
                 setBookings(data.bookings || []);
                 if (data.pagination) {
-                    setPagination(data.pagination);
+                    setPagination({
+                        currentPage: data.pagination.currentPage || page,
+                        totalPages: data.pagination.totalPages || 1,
+                        totalItems: data.pagination.totalItems || 0,
+                        itemsPerPage: data.pagination.itemsPerPage || 10
+                    });
                 }
             } else {
                 throw new Error(data.message || 'Failed to fetch bookings');
@@ -108,7 +112,6 @@ const BookingRequestsPage = () => {
         }
     };
 
-    // ✅ Open Confirmation Modal
     const openConfirmModal = (booking, action, message, confirmText, confirmColor) => {
         setConfirmModal({
             isOpen: true,
@@ -122,7 +125,6 @@ const BookingRequestsPage = () => {
         });
     };
 
-    // ✅ Close Confirmation Modal
     const closeConfirmModal = () => {
         setConfirmModal({
             isOpen: false,
@@ -136,7 +138,6 @@ const BookingRequestsPage = () => {
         });
     };
 
-    // ✅ Handle Approve
     const handleApprove = async (bookingId) => {
         setProcessingId(bookingId);
         try {
@@ -163,7 +164,6 @@ const BookingRequestsPage = () => {
         }
     };
 
-    // ✅ Handle Reject
     const handleReject = async (bookingId, reason) => {
         setProcessingId(bookingId);
         try {
@@ -196,13 +196,11 @@ const BookingRequestsPage = () => {
         }
     };
 
-    // View booking details
     const viewBookingDetails = (booking) => {
         setSelectedBooking(booking);
         setShowDetailsModal(true);
     };
 
-    // Format date
     const formatDate = (date) => {
         if (!date) return 'N/A';
         return new Date(date).toLocaleDateString('en-US', {
@@ -212,7 +210,6 @@ const BookingRequestsPage = () => {
         });
     };
 
-    // Format currency
     const formatCurrency = (amount) => {
         if (!amount) return 'N/A';
         return new Intl.NumberFormat('en-US', {
@@ -221,7 +218,6 @@ const BookingRequestsPage = () => {
         }).format(amount);
     };
 
-    // Get status badge
     const getStatusBadge = (status) => {
         const statusMap = {
             'pending': {
@@ -265,7 +261,6 @@ const BookingRequestsPage = () => {
         );
     };
 
-    // Get payment status badge
     const getPaymentBadge = (status) => {
         const statusMap = {
             'paid': 'bg-green-100 text-green-800',
@@ -280,25 +275,41 @@ const BookingRequestsPage = () => {
         );
     };
 
+    const goToPage = (page) => {
+        if (page >= 1 && page <= pagination.totalPages) {
+            fetchBookings(page, filter, searchTerm);
+        }
+    };
+
+    const goToNextPage = () => {
+        if (pagination.currentPage < pagination.totalPages) {
+            fetchBookings(pagination.currentPage + 1, filter, searchTerm);
+        }
+    };
+
+    const goToPrevPage = () => {
+        if (pagination.currentPage > 1) {
+            fetchBookings(pagination.currentPage - 1, filter, searchTerm);
+        }
+    };
+
     useEffect(() => {
         if (user) {
             fetchBookings();
         }
     }, [user]);
 
-    // ✅ Loading state
     if (status === 'loading' || loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                    <Loader2 className="w-10 h-10 animate-spin text-blue-600 mx-auto" />
+                    <Loader2 className="w-10 h-10 animate-spin text-emerald-600 mx-auto" />
                     <p className="mt-4 text-gray-600">Loading booking requests...</p>
                 </div>
             </div>
         );
     }
 
-    // ✅ Not authenticated
     if (!user) {
         return (
             <div className="flex items-center justify-center min-h-[60vh] px-4">
@@ -306,7 +317,7 @@ const BookingRequestsPage = () => {
                     <div className="text-5xl mb-4">🔒</div>
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Please Login</h2>
                     <p className="text-gray-600 dark:text-gray-400">You need to be logged in to view this page.</p>
-                    <Link href="/login" className="mt-4 inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <Link href="/login" className="mt-4 inline-block px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
                         Go to Login
                     </Link>
                 </div>
@@ -314,12 +325,10 @@ const BookingRequestsPage = () => {
         );
     }
 
-    // ✅ ✅ ✅ Role Check - Owner (AccessDenied যোগ করা)
     if (user.role?.toLowerCase() !== 'owner') {
         return <AccessDenied role="owner" />;
     }
 
-    // Error state
     if (error) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -329,7 +338,7 @@ const BookingRequestsPage = () => {
                     <p className="text-gray-600 mt-2">{error}</p>
                     <button
                         onClick={() => fetchBookings()}
-                        className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        className="mt-4 px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
                     >
                         Try Again
                     </button>
@@ -339,8 +348,7 @@ const BookingRequestsPage = () => {
     }
 
     return (
-        <div className="max-w-7xl mx-auto px-4 py-10">
-            {/* Header */}
+        <div className="p-4 md:p-6">
             <div className="mb-8">
                 <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                     Booking Requests
@@ -350,11 +358,10 @@ const BookingRequestsPage = () => {
                 </p>
             </div>
 
-            {/* Stats Cards */}
             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
                 <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
                     <p className="text-sm text-gray-500">Total</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{bookings.length}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{pagination.totalItems}</p>
                 </div>
                 <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4">
                     <p className="text-sm text-gray-500">Pending</p>
@@ -376,7 +383,6 @@ const BookingRequestsPage = () => {
                 </div>
             </div>
 
-            {/* Search and Filter */}
             <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-4 mb-6">
                 <div className="flex flex-col md:flex-row gap-4">
                     <div className="flex-1 relative">
@@ -387,7 +393,7 @@ const BookingRequestsPage = () => {
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
                             onKeyPress={(e) => e.key === 'Enter' && fetchBookings(1, filter, searchTerm)}
-                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 outline-none bg-white dark:bg-gray-900"
+                            className="w-full pl-10 pr-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg focus:ring-2 focus:ring-emerald-500 outline-none bg-white dark:bg-gray-900"
                         />
                     </div>
                     <div className="flex gap-2">
@@ -397,7 +403,7 @@ const BookingRequestsPage = () => {
                                 setFilter(e.target.value);
                                 fetchBookings(1, e.target.value, searchTerm);
                             }}
-                            className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-blue-500 outline-none"
+                            className="px-4 py-2 border border-gray-300 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-900 focus:ring-2 focus:ring-emerald-500 outline-none"
                         >
                             <option value="all">All Status</option>
                             <option value="pending">Pending</option>
@@ -407,7 +413,7 @@ const BookingRequestsPage = () => {
                         </select>
                         <button
                             onClick={() => fetchBookings(1, filter, searchTerm)}
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
                         >
                             Search
                         </button>
@@ -415,7 +421,6 @@ const BookingRequestsPage = () => {
                 </div>
             </div>
 
-            {/* Bookings List */}
             {bookings.length === 0 ? (
                 <div className="text-center py-20 bg-white dark:bg-gray-900 rounded-xl border border-gray-100 dark:border-gray-700">
                     <div className="text-6xl mb-4">📭</div>
@@ -426,10 +431,11 @@ const BookingRequestsPage = () => {
                 </div>
             ) : (
                 <div className="space-y-4">
-                    {bookings.map((booking) => {
+                    {bookings.map((booking, index) => {
                         const isPending = booking.bookingStatus === 'pending';
                         const isApproved = booking.bookingStatus === 'approved' || booking.bookingStatus === 'confirmed';
                         const isRejected = booking.bookingStatus === 'rejected';
+                        const serialNumber = (pagination.currentPage - 1) * pagination.itemsPerPage + index + 1;
 
                         return (
                             <motion.div
@@ -438,8 +444,12 @@ const BookingRequestsPage = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition"
                             >
+                                <div className="flex items-start gap-3 mb-2">
+                                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                        #{serialNumber}
+                                    </span>
+                                </div>
                                 <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-                                    {/* Property Info */}
                                     <div className="flex-1 min-w-0">
                                         <div className="flex items-start gap-4">
                                             <div className="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200 dark:bg-gray-800">
@@ -464,7 +474,7 @@ const BookingRequestsPage = () => {
                                                     {booking.propertyInfo?.location || 'N/A'}
                                                 </p>
                                                 <div className="flex flex-wrap items-center gap-3 mt-1">
-                                                    <span className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                                    <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                                                         {formatCurrency(booking.propertyInfo?.price)}
                                                     </span>
                                                     <span className="text-xs text-gray-400">|</span>
@@ -476,7 +486,6 @@ const BookingRequestsPage = () => {
                                         </div>
                                     </div>
 
-                                    {/* Tenant Info */}
                                     <div className="flex-1 min-w-0">
                                         <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
                                             <User className="w-3 h-3" />
@@ -492,7 +501,6 @@ const BookingRequestsPage = () => {
                                         </p>
                                     </div>
 
-                                    {/* Status & Actions */}
                                     <div className="flex flex-col items-end gap-3">
                                         <div className="flex flex-wrap items-center gap-2">
                                             {getStatusBadge(booking.bookingStatus)}
@@ -508,7 +516,6 @@ const BookingRequestsPage = () => {
                                                 <Eye className="w-4 h-4" />
                                             </button>
 
-                                            {/* Approve Button - Pending + Rejected */}
                                             {(isPending || isRejected) && (
                                                 <button
                                                     onClick={() => openConfirmModal(
@@ -532,7 +539,6 @@ const BookingRequestsPage = () => {
                                                 </button>
                                             )}
 
-                                            {/* Reject Button - Pending + Approved */}
                                             {(isPending || isApproved) && (
                                                 <button
                                                     onClick={() => {
@@ -554,7 +560,6 @@ const BookingRequestsPage = () => {
                                     </div>
                                 </div>
 
-                                {/* Rejection Reason (if rejected) */}
                                 {isRejected && booking.rejectionReason && (
                                     <div className="mt-3 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
                                         <p className="text-sm text-red-700 dark:text-red-400">
@@ -565,7 +570,6 @@ const BookingRequestsPage = () => {
                                     </div>
                                 )}
 
-                                {/* Additional Info */}
                                 {booking.additionalNotes && (
                                     <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-800">
                                         <p className="text-sm text-gray-500 dark:text-gray-400">
@@ -580,42 +584,54 @@ const BookingRequestsPage = () => {
                 </div>
             )}
 
-            {/* Pagination */}
             {pagination.totalPages > 1 && (
-                <div className="flex justify-center mt-6">
-                    <div className="flex gap-2">
-                        <button
-                            onClick={() => {
-                                const newPage = pagination.currentPage - 1;
-                                if (newPage >= 1) {
-                                    fetchBookings(newPage, filter, searchTerm);
-                                }
-                            }}
-                            disabled={pagination.currentPage === 1}
-                            className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <span className="px-3 py-1 bg-blue-600 text-white rounded-lg">
-                            {pagination.currentPage} / {pagination.totalPages}
-                        </span>
-                        <button
-                            onClick={() => {
-                                const newPage = pagination.currentPage + 1;
-                                if (newPage <= pagination.totalPages) {
-                                    fetchBookings(newPage, filter, searchTerm);
-                                }
-                            }}
-                            disabled={pagination.currentPage === pagination.totalPages}
-                            className="px-3 py-1 border border-gray-300 dark:border-gray-700 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <ChevronRight className="w-4 h-4" />
-                        </button>
+                <div className="flex items-center justify-center gap-2 mt-6">
+                    <button
+                        onClick={goToPrevPage}
+                        disabled={pagination.currentPage === 1}
+                        className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronLeft className="w-4 h-4" />
+                    </button>
+
+                    <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                            let pageNum;
+                            if (pagination.totalPages <= 5) {
+                                pageNum = i + 1;
+                            } else if (pagination.currentPage <= 3) {
+                                pageNum = i + 1;
+                            } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                                pageNum = pagination.totalPages - 4 + i;
+                            } else {
+                                pageNum = pagination.currentPage - 2 + i;
+                            }
+
+                            return (
+                                <button
+                                    key={pageNum}
+                                    onClick={() => goToPage(pageNum)}
+                                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${pagination.currentPage === pageNum
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                        }`}
+                                >
+                                    {pageNum}
+                                </button>
+                            );
+                        })}
                     </div>
+
+                    <button
+                        onClick={goToNextPage}
+                        disabled={pagination.currentPage === pagination.totalPages}
+                        className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    >
+                        <ChevronRight className="w-4 h-4" />
+                    </button>
                 </div>
             )}
 
-            {/* Confirmation Modal (Approve / Reject) */}
             {confirmModal.isOpen && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6">
@@ -663,7 +679,6 @@ const BookingRequestsPage = () => {
                 </div>
             )}
 
-            {/* Details Modal */}
             {showDetailsModal && selectedBooking && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto p-6">
@@ -680,7 +695,6 @@ const BookingRequestsPage = () => {
                         </div>
 
                         <div className="space-y-4">
-                            {/* Property */}
                             <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                                 <h3 className="font-semibold text-gray-900 dark:text-white">
                                     {selectedBooking.propertyInfo?.title}
@@ -688,12 +702,11 @@ const BookingRequestsPage = () => {
                                 <p className="text-sm text-gray-600 dark:text-gray-400">
                                     {selectedBooking.propertyInfo?.location}
                                 </p>
-                                <p className="text-sm font-semibold text-blue-600 dark:text-blue-400">
+                                <p className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
                                     {formatCurrency(selectedBooking.propertyInfo?.price)}
                                 </p>
                             </div>
 
-                            {/* Tenant */}
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
                                     <p className="text-sm text-gray-500">Tenant Name</p>
@@ -721,7 +734,6 @@ const BookingRequestsPage = () => {
                                 </div>
                             </div>
 
-                            {/* Rejection Reason (if any) */}
                             {selectedBooking.bookingStatus === 'rejected' && selectedBooking.rejectionReason && (
                                 <div className="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
                                     <p className="text-sm font-semibold text-red-700 dark:text-red-400">Rejection Reason</p>
@@ -729,7 +741,6 @@ const BookingRequestsPage = () => {
                                 </div>
                             )}
 
-                            {/* Additional Notes */}
                             {selectedBooking.additionalNotes && (
                                 <div className="bg-gray-50 dark:bg-gray-800 p-4 rounded-lg">
                                     <p className="text-sm text-gray-500">Additional Notes</p>
@@ -741,7 +752,6 @@ const BookingRequestsPage = () => {
                 </div>
             )}
 
-            {/* Reject Modal */}
             {showRejectModal && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                     <div className="bg-white dark:bg-gray-900 rounded-2xl max-w-md w-full p-6">

@@ -3,8 +3,8 @@
 
 import React, { useEffect, useState } from 'react';
 import { useSession } from '@/lib/auth-client';
-import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
-import { Pencil, Trash2, Eye, Plus, Loader2 } from 'lucide-react';
+import AccessDenied from '@/components/AccessDenied';
+import { Pencil, Trash2, Eye, Plus, Loader2, ChevronLeft, ChevronRight, AlertTriangle, X } from 'lucide-react';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import EditPropertyModal from '@/components/EditPropertyModal';
@@ -20,6 +20,19 @@ const MyProperties = () => {
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState(null);
 
+    // Delete Modal states
+    const [deleteModal, setDeleteModal] = useState({
+        isOpen: false,
+        propertyId: null,
+        title: ''
+    });
+
+    // Pagination states
+    const [currentPage, setCurrentPage] = useState(1);
+    const [totalPages, setTotalPages] = useState(1);
+    const [totalItems, setTotalItems] = useState(0);
+    const [itemsPerPage] = useState(10);
+
     useEffect(() => {
         const fetchMyProperties = async () => {
             if (!userId) {
@@ -30,7 +43,7 @@ const MyProperties = () => {
             try {
                 setLoading(true);
                 const res = await fetch(
-                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties/user/${userId}`,
+                    `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties/user/${userId}?page=${currentPage}&limit=${itemsPerPage}`,
                     { cache: 'no-store' }
                 );
 
@@ -41,9 +54,11 @@ const MyProperties = () => {
                 const data = await res.json();
                 const allProperties = data?.properties || (Array.isArray(data) ? data : []);
                 setProperties(allProperties);
+                setTotalItems(data?.pagination?.totalItems || allProperties.length);
+                setTotalPages(data?.pagination?.totalPages || 1);
 
             } catch (error) {
-                console.error('❌ Error fetching properties:', error);
+                console.error('Error fetching properties:', error);
                 toast.error('Failed to load properties');
                 setProperties([]);
             } finally {
@@ -52,15 +67,13 @@ const MyProperties = () => {
         };
 
         fetchMyProperties();
-    }, [userId]);
+    }, [userId, currentPage, itemsPerPage]);
 
-    // Handle Edit Click - Open Modal
     const handleEditClick = (property) => {
         setSelectedProperty(property);
         setEditModalOpen(true);
     };
 
-    // Handle Update
     const handlePropertyUpdate = (updatedProperty) => {
         setProperties(prev => prev.map(p => {
             const pId = p._id?.$oid || p._id;
@@ -69,13 +82,32 @@ const MyProperties = () => {
         }));
     };
 
-    // Delete property
-    const handleDelete = async (propertyId, title) => {
-        if (!confirm(`Are you sure you want to delete "${title}"? This action cannot be undone.`)) {
-            return;
-        }
+    // Open delete confirmation modal
+    const openDeleteModal = (propertyId, title) => {
+        setDeleteModal({
+            isOpen: true,
+            propertyId: propertyId,
+            title: title
+        });
+    };
+
+    // Close delete confirmation modal
+    const closeDeleteModal = () => {
+        setDeleteModal({
+            isOpen: false,
+            propertyId: null,
+            title: ''
+        });
+    };
+
+    // Handle delete
+    const handleDelete = async () => {
+        const { propertyId, title } = deleteModal;
+
+        if (!propertyId) return;
 
         setDeletingId(propertyId);
+        closeDeleteModal();
 
         try {
             const response = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/properties/${propertyId}`, {
@@ -85,23 +117,26 @@ const MyProperties = () => {
             const data = await response.json();
 
             if (response.ok && data.success) {
-                toast.success(`✅ Property "${title}" deleted successfully`);
+                toast.success(`Property "${title}" deleted successfully`);
                 setProperties(prev => prev.filter(p => {
                     const id = p._id?.$oid || p._id;
                     return id !== propertyId;
                 }));
+                setTotalItems(prev => prev - 1);
+                if (properties.length === 1 && currentPage > 1) {
+                    setCurrentPage(prev => prev - 1);
+                }
             } else {
-                toast.error(`❌ ${data.message || 'Failed to delete property'}`);
+                toast.error(`${data.message || 'Failed to delete property'}`);
             }
         } catch (error) {
             console.error('Error deleting property:', error);
-            toast.error('❌ Failed to delete property');
+            toast.error('Failed to delete property');
         } finally {
             setDeletingId(null);
         }
     };
 
-    // Get status badge color
     const getStatusBadge = (status) => {
         const styles = {
             pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
@@ -113,13 +148,29 @@ const MyProperties = () => {
         return styles[status?.toLowerCase()] || styles.pending;
     };
 
-    // Format price
     const formatPrice = (price) => {
         if (!price) return '0';
         return new Intl.NumberFormat('en-US').format(price);
     };
 
-    // ✅ Loading state
+    const goToPage = (page) => {
+        if (page >= 1 && page <= totalPages) {
+            setCurrentPage(page);
+        }
+    };
+
+    const goToNextPage = () => {
+        if (currentPage < totalPages) {
+            setCurrentPage(prev => prev + 1);
+        }
+    };
+
+    const goToPrevPage = () => {
+        if (currentPage > 1) {
+            setCurrentPage(prev => prev - 1);
+        }
+    };
+
     if (status === 'loading' || loading) {
         return (
             <div className="flex items-center justify-center min-h-[60vh]">
@@ -131,7 +182,6 @@ const MyProperties = () => {
         );
     }
 
-    // ✅ Not authenticated
     if (!user) {
         return (
             <div className="flex items-center justify-center min-h-[60vh] px-4">
@@ -150,22 +200,20 @@ const MyProperties = () => {
         );
     }
 
-    // ✅ ✅ ✅ Role Check - Owner (AccessDenied যোগ করা)
     if (user.role?.toLowerCase() !== 'owner') {
         return <AccessDenied role="owner" />;
     }
 
     return (
         <>
-            <div className="max-w-7xl mx-auto px-4 py-10">
-                {/* Header */}
+            <div className="p-4 md:p-6">
                 <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
                     <div>
                         <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                             My Properties
                         </h1>
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                            Total Properties: {properties.length}
+                            Total Properties: {totalItems}
                         </p>
                     </div>
                     <Link
@@ -199,6 +247,9 @@ const MyProperties = () => {
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                                     <tr>
+                                        <th className="px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider text-center w-12">
+                                            #
+                                        </th>
                                         <th className="px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
                                             Title
                                         </th>
@@ -223,13 +274,18 @@ const MyProperties = () => {
                                     {properties.map((property, index) => {
                                         const propertyId = property._id?.$oid || property._id || '';
                                         const isDeleting = deletingId === propertyId;
+                                        const serialNumber = (currentPage - 1) * itemsPerPage + index + 1;
 
                                         return (
                                             <tr
                                                 key={propertyId || index}
                                                 className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                                             >
-                                                {/* Title */}
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                        {serialNumber}
+                                                    </span>
+                                                </td>
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center gap-3">
                                                         {property.images && property.images[0] ? (
@@ -286,10 +342,8 @@ const MyProperties = () => {
                                                     </span>
                                                 </td>
 
-                                                {/* Actions */}
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center justify-center gap-2">
-                                                        {/* Edit Button - Opens Modal */}
                                                         <button
                                                             onClick={() => handleEditClick(property)}
                                                             className="p-2 text-blue-600 hover:text-blue-800 dark:text-blue-400 dark:hover:text-blue-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 rounded-lg transition-colors"
@@ -299,7 +353,7 @@ const MyProperties = () => {
                                                         </button>
 
                                                         <button
-                                                            onClick={() => handleDelete(propertyId, property.title)}
+                                                            onClick={() => openDeleteModal(propertyId, property.title)}
                                                             disabled={isDeleting}
                                                             className="p-2 text-red-600 hover:text-red-800 dark:text-red-400 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                                                             title="Delete Property"
@@ -326,30 +380,130 @@ const MyProperties = () => {
                             </table>
                         </div>
 
-                        <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50 flex flex-wrap items-center justify-between gap-2">
-                            <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Showing <span className="font-medium">{properties.length}</span> properties
-                            </p>
-                            <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
-                                <span className="inline-flex items-center gap-1">
-                                    <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                                    Pending: {properties.filter(p => p.status === 'pending').length}
-                                </span>
-                                <span className="inline-flex items-center gap-1">
-                                    <span className="w-2 h-2 rounded-full bg-green-500"></span>
-                                    Approved: {properties.filter(p => p.status === 'approved').length}
-                                </span>
-                                <span className="inline-flex items-center gap-1">
-                                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                                    Rejected: {properties.filter(p => p.status === 'rejected').length}
-                                </span>
+                        <div className="px-4 py-3 border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
+                            <div className="flex flex-wrap items-center justify-between gap-2">
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                    Showing <span className="font-medium">{properties.length}</span> of <span className="font-medium">{totalItems}</span> properties
+                                </p>
+
+                                <div className="flex flex-wrap items-center gap-3 text-sm text-gray-600 dark:text-gray-400">
+                                    <span className="inline-flex items-center gap-1">
+                                        <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
+                                        Pending: {properties.filter(p => p.status === 'pending').length}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1">
+                                        <span className="w-2 h-2 rounded-full bg-green-500"></span>
+                                        Approved: {properties.filter(p => p.status === 'approved').length}
+                                    </span>
+                                    <span className="inline-flex items-center gap-1">
+                                        <span className="w-2 h-2 rounded-full bg-red-500"></span>
+                                        Rejected: {properties.filter(p => p.status === 'rejected').length}
+                                    </span>
+                                </div>
                             </div>
+
+                            {totalPages > 1 && (
+                                <div className="flex items-center justify-center gap-2 mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
+                                    <button
+                                        onClick={goToPrevPage}
+                                        disabled={currentPage === 1}
+                                        className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <ChevronLeft className="w-4 h-4" />
+                                    </button>
+
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                                            let pageNum;
+                                            if (totalPages <= 5) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage <= 3) {
+                                                pageNum = i + 1;
+                                            } else if (currentPage >= totalPages - 2) {
+                                                pageNum = totalPages - 4 + i;
+                                            } else {
+                                                pageNum = currentPage - 2 + i;
+                                            }
+
+                                            return (
+                                                <button
+                                                    key={pageNum}
+                                                    onClick={() => goToPage(pageNum)}
+                                                    className={`px-3 py-1 rounded-lg text-sm font-medium transition-colors ${currentPage === pageNum
+                                                        ? 'bg-emerald-600 text-white'
+                                                        : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                                                        }`}
+                                                >
+                                                    {pageNum}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
+                                    <button
+                                        onClick={goToNextPage}
+                                        disabled={currentPage === totalPages}
+                                        className="p-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                                    >
+                                        <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                </div>
+                            )}
                         </div>
                     </div>
                 )}
             </div>
 
-            {/* Edit Property Modal */}
+            {/* Delete Confirmation Modal */}
+            {deleteModal.isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+                        <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                    <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                                </div>
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                                        Delete Property
+                                    </h2>
+                                    <button
+                                        onClick={closeDeleteModal}
+                                        className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                                    >
+                                        <X className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                                    Are you sure you want to delete <strong className="text-gray-900 dark:text-white">"{deleteModal.title}"</strong>?
+                                </p>
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                                    ⚠️ This action cannot be undone. All data associated with this property will be permanently removed.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={closeDeleteModal}
+                                className="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleDelete}
+                                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm flex items-center justify-center gap-2"
+                            >
+                                <Trash2 className="w-4 h-4" />
+                                Delete Property
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <EditPropertyModal
                 isOpen={editModalOpen}
                 onClose={() => {

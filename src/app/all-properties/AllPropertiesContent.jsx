@@ -23,7 +23,7 @@ const AllPropertiesContent = () => {
         currentPage: 1,
         totalPages: 1,
         totalItems: 0,
-        itemsPerPage: 20
+        itemsPerPage: 21
     });
 
     // Filters
@@ -685,10 +685,10 @@ const AllPropertiesContent = () => {
                                             onClick={() => typeof page === 'number' && handlePageChange(page)}
                                             disabled={page === '...' || page === pagination.currentPage}
                                             className={`w-10 h-10 rounded-lg transition ${page === pagination.currentPage
-                                                    ? 'bg-blue-600 text-white'
-                                                    : page === '...'
-                                                        ? 'cursor-default'
-                                                        : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                                ? 'bg-blue-600 text-white'
+                                                : page === '...'
+                                                    ? 'cursor-default'
+                                                    : 'border border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
                                                 }`}
                                         >
                                             {page}

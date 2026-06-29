@@ -10,24 +10,18 @@ import {
     Calendar,
     Heart,
     User,
-    LogOut,
-    Settings,
-    Bell,
     ChevronRight,
     TrendingUp,
     Building2,
     HeartHandshake,
-    Star,
     MapPin,
     Clock,
-    DollarSign,
-    Eye,
     Shield,
     Award,
     Sparkles,
     Loader2
 } from 'lucide-react';
-import { FaBed, FaBath, FaMapMarkerAlt } from 'react-icons/fa';
+import { FaBed, FaBath } from 'react-icons/fa';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
 import AccessDenied from '@/components/AccessDenied';
@@ -46,12 +40,10 @@ const TenantDashboardHomePage = () => {
     const [recentBookings, setRecentBookings] = useState([]);
     const [recentFavorites, setRecentFavorites] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
     const [greeting, setGreeting] = useState('Good Morning');
 
     const API_URL = process.env.NEXT_PUBLIC_BASE_URL || 'http://localhost:5000';
 
-    // ✅ Set greeting based on time
     useEffect(() => {
         const hour = new Date().getHours();
         if (hour < 12) setGreeting('Good Morning 🌅');
@@ -60,7 +52,6 @@ const TenantDashboardHomePage = () => {
         else setGreeting('Good Night 🌙');
     }, []);
 
-    // ✅ Fetch dashboard data
     useEffect(() => {
         if (user) {
             fetchDashboardData();
@@ -69,7 +60,6 @@ const TenantDashboardHomePage = () => {
 
     const fetchDashboardData = async () => {
         setLoading(true);
-        setError(null);
 
         try {
             const tenantId = user?.id || user?._id;
@@ -121,7 +111,6 @@ const TenantDashboardHomePage = () => {
 
         } catch (error) {
             console.error('Error fetching dashboard data:', error);
-            setError(error.message);
             toast.error('Failed to load dashboard data');
         } finally {
             setLoading(false);
@@ -153,7 +142,7 @@ const TenantDashboardHomePage = () => {
         };
         const info = statusMap[status] || statusMap['pending'];
         return (
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${info.bg} ${info.text}`}>
+            <span className={`px-2.5 py-1 rounded-full text-xs font-medium ${info.bg} ${info.text}`}>
                 {info.label}
             </span>
         );
@@ -190,29 +179,27 @@ const TenantDashboardHomePage = () => {
         },
     ];
 
-    // ✅ Loading state
     if (status === 'loading' || loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                    <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
+                    <Loader2 className="w-12 h-12 animate-spin text-emerald-600 mx-auto" />
                     <p className="mt-4 text-gray-600">Loading your dashboard...</p>
                 </div>
             </div>
         );
     }
 
-    // ✅ Not authenticated
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+            <div className="flex items-center justify-center min-h-[60vh] px-4">
                 <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
                     <div className="text-6xl mb-4">🔒</div>
                     <h2 className="text-xl font-bold text-gray-900 mb-2">Please Login</h2>
                     <p className="text-gray-600">You need to be logged in to view your dashboard.</p>
                     <button
                         onClick={() => router.push('/login')}
-                        className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+                        className="mt-6 bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition"
                     >
                         Go to Login
                     </button>
@@ -221,331 +208,325 @@ const TenantDashboardHomePage = () => {
         );
     }
 
-    // ✅ ✅ ✅ Role Check - এটা যোগ করুন
     if (user.role?.toLowerCase() !== 'tenant') {
         return <AccessDenied role="tenant" />;
     }
 
-    // ✅ Main Render - আপনার পুরো কন্টেন্ট এখানে আছে
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-
-                {/* 🎯 Welcome Header */}
-                <motion.div
-                    initial={{ opacity: 0, y: -20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-6 mb-8 text-white"
-                >
-                    <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <div className="flex items-center gap-3">
-                                <h1 className="text-2xl md:text-3xl font-bold">
-                                    {greeting}, {user?.name || 'Tenant'}! 👋
-                                </h1>
-                                <span className="bg-white/20 px-3 py-1 rounded-full text-sm">
-                                    Tenant
-                                </span>
-                            </div>
-                            <p className="text-white/80 mt-1">
-                                Welcome to your dashboard. Here's what's happening with your rentals.
-                            </p>
+        <div className="p-4 md:p-6">
+            {/* 🎯 Welcome Header */}
+            <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-2xl p-6 md:p-8 mb-8 text-white"
+            >
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                    <div>
+                        <div className="flex items-center gap-3 mb-1">
+                            <h1 className="text-2xl md:text-3xl font-bold">
+                                {greeting}, {user?.name || 'Tenant'}!
+                            </h1>
+                            <span className="bg-white/20 px-3 py-1 rounded-full text-sm font-medium">
+                                Tenant
+                            </span>
                         </div>
-                        <button
-                            onClick={() => router.push('/all-properties')}
-                            className="mt-4 md:mt-0 bg-white/20 hover:bg-white/30 px-4 py-2 rounded-lg transition flex items-center gap-2"
-                        >
-                            <Building2 className="w-4 h-4" />
-                            Find Properties
-                        </button>
+                        <p className="text-emerald-50/80 text-sm md:text-base">
+                            Welcome to your dashboard. Here's what's happening with your rentals.
+                        </p>
+                    </div>
+                    <button
+                        onClick={() => router.push('/all-properties')}
+                        className="mt-4 md:mt-0 bg-white/20 hover:bg-white/30 px-5 py-2.5 rounded-xl transition flex items-center gap-2 text-sm font-medium backdrop-blur-sm border border-white/10"
+                    >
+                        <Building2 className="w-4 h-4" />
+                        Find Properties
+                    </button>
+                </div>
+            </motion.div>
+
+            {/* 📊 Stats Cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.1 }}
+                    className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 hover:shadow-md transition"
+                >
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Total Bookings</p>
+                            <p className="text-2xl font-bold text-gray-900 dark:text-white">{stats.totalBookings}</p>
+                        </div>
+                        <div className="bg-emerald-100 dark:bg-emerald-900/30 p-3 rounded-xl">
+                            <Calendar className="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+                        </div>
                     </div>
                 </motion.div>
 
-                {/* 📊 Stats Cards */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.1 }}
-                        className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition"
-                    >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-500">Total Bookings</p>
-                                <p className="text-2xl font-bold text-gray-900">{stats.totalBookings}</p>
-                            </div>
-                            <div className="bg-blue-100 p-3 rounded-lg">
-                                <Calendar className="w-5 h-5 text-blue-600" />
-                            </div>
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.2 }}
+                    className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 hover:shadow-md transition"
+                >
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Pending</p>
+                            <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">{stats.pendingBookings}</p>
                         </div>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.2 }}
-                        className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition"
-                    >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-500">Pending</p>
-                                <p className="text-2xl font-bold text-yellow-600">{stats.pendingBookings}</p>
-                            </div>
-                            <div className="bg-yellow-100 p-3 rounded-lg">
-                                <Clock className="w-5 h-5 text-yellow-600" />
-                            </div>
+                        <div className="bg-yellow-100 dark:bg-yellow-900/30 p-3 rounded-xl">
+                            <Clock className="w-5 h-5 text-yellow-600 dark:text-yellow-400" />
                         </div>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.3 }}
-                        className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition"
-                    >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-500">Confirmed</p>
-                                <p className="text-2xl font-bold text-green-600">{stats.confirmedBookings}</p>
-                            </div>
-                            <div className="bg-green-100 p-3 rounded-lg">
-                                <TrendingUp className="w-5 h-5 text-green-600" />
-                            </div>
-                        </div>
-                    </motion.div>
-
-                    <motion.div
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        transition={{ delay: 0.4 }}
-                        className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition"
-                    >
-                        <div className="flex items-center justify-between">
-                            <div>
-                                <p className="text-sm text-gray-500">Favorites</p>
-                                <p className="text-2xl font-bold text-red-600">{stats.favorites}</p>
-                            </div>
-                            <div className="bg-red-100 p-3 rounded-lg">
-                                <Heart className="w-5 h-5 text-red-600" />
-                            </div>
-                        </div>
-                    </motion.div>
-                </div>
-
-                {/* 🚀 Quick Actions */}
-                <div className="mb-8">
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4">Quick Actions</h2>
-                    <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                        {quickActions.map((action, index) => (
-                            <motion.div
-                                key={action.title}
-                                initial={{ opacity: 0, y: 20 }}
-                                animate={{ opacity: 1, y: 0 }}
-                                transition={{ delay: 0.1 * index }}
-                                whileHover={{ y: -5 }}
-                                className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 hover:shadow-md transition cursor-pointer"
-                                onClick={() => router.push(action.href)}
-                            >
-                                <div className={`${action.color} w-12 h-12 rounded-lg flex items-center justify-center mb-3`}>
-                                    <action.icon className="w-6 h-6 text-white" />
-                                </div>
-                                <h3 className="font-semibold text-gray-900">{action.title}</h3>
-                                <p className="text-sm text-gray-500 mt-1">{action.description}</p>
-                            </motion.div>
-                        ))}
                     </div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 hover:shadow-md transition"
+                >
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Confirmed</p>
+                            <p className="text-2xl font-bold text-green-600 dark:text-green-400">{stats.confirmedBookings}</p>
+                        </div>
+                        <div className="bg-green-100 dark:bg-green-900/30 p-3 rounded-xl">
+                            <TrendingUp className="w-5 h-5 text-green-600 dark:text-green-400" />
+                        </div>
+                    </div>
+                </motion.div>
+
+                <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: 0.4 }}
+                    className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-5 hover:shadow-md transition"
+                >
+                    <div className="flex items-center justify-between">
+                        <div>
+                            <p className="text-sm text-gray-500 dark:text-gray-400">Favorites</p>
+                            <p className="text-2xl font-bold text-red-600 dark:text-red-400">{stats.favorites}</p>
+                        </div>
+                        <div className="bg-red-100 dark:bg-red-900/30 p-3 rounded-xl">
+                            <Heart className="w-5 h-5 text-red-600 dark:text-red-400" />
+                        </div>
+                    </div>
+                </motion.div>
+            </div>
+
+            {/* 🚀 Quick Actions */}
+            <div className="mb-8">
+                <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    {quickActions.map((action, index) => (
+                        <motion.div
+                            key={action.title}
+                            initial={{ opacity: 0, y: 20 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: 0.1 * index }}
+                            whileHover={{ y: -5 }}
+                            className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 hover:shadow-md transition cursor-pointer"
+                            onClick={() => router.push(action.href)}
+                        >
+                            <div className={`${action.color} w-12 h-12 rounded-lg flex items-center justify-center mb-3`}>
+                                <action.icon className="w-6 h-6 text-white" />
+                            </div>
+                            <h3 className="font-semibold text-gray-900 dark:text-white">{action.title}</h3>
+                            <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{action.description}</p>
+                        </motion.div>
+                    ))}
+                </div>
+            </div>
+
+            {/* 📝 Recent Activity */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                {/* Recent Bookings */}
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Calendar className="w-5 h-5 text-emerald-600" />
+                            Recent Bookings
+                        </h2>
+                        <Link
+                            href="/dashboard/tenant/my-bookings"
+                            className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                        >
+                            View All
+                            <ChevronRight className="w-4 h-4" />
+                        </Link>
+                    </div>
+
+                    {recentBookings.length === 0 ? (
+                        <div className="text-center py-8">
+                            <div className="text-4xl mb-2">📭</div>
+                            <p className="text-gray-500 dark:text-gray-400">No bookings yet</p>
+                            <button
+                                onClick={() => router.push('/all-properties')}
+                                className="mt-2 text-emerald-600 hover:text-emerald-700 text-sm"
+                            >
+                                Browse properties →
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {recentBookings.slice(0, 4).map((booking) => (
+                                <div
+                                    key={booking._id}
+                                    className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
+                                    onClick={() => router.push(`/dashboard/tenant/my-bookings/${booking._id}`)}
+                                >
+                                    <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200 dark:bg-gray-700">
+                                        <img
+                                            src={booking.propertyInfo?.images?.[0] || '/placeholder.jpg'}
+                                            alt={booking.propertyInfo?.title}
+                                            className="w-full h-full object-cover"
+                                            onError={(e) => {
+                                                e.target.src = 'https://via.placeholder.com/56x56/CCCCCC/FFFFFF?text=No+Image';
+                                            }}
+                                        />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                        <h4 className="font-medium text-gray-900 dark:text-white truncate text-sm">
+                                            {booking.propertyInfo?.title || 'Property'}
+                                        </h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
+                                            <MapPin className="w-3 h-3" />
+                                            {booking.propertyInfo?.location || 'N/A'}
+                                        </p>
+                                        <div className="flex items-center gap-2 mt-1">
+                                            <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                                                {formatPrice(booking.propertyInfo?.price)}
+                                            </span>
+                                            {getStatusBadge(booking.bookingStatus)}
+                                        </div>
+                                    </div>
+                                    <div className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+                                        {formatDate(booking.createdAt)}
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
 
-                {/* 📝 Recent Activity */}
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                    {/* Recent Bookings */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                <Calendar className="w-5 h-5 text-blue-600" />
-                                Recent Bookings
-                            </h2>
-                            <Link
-                                href="/dashboard/tenant/my-bookings"
-                                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                            >
-                                View All
-                                <ChevronRight className="w-4 h-4" />
-                            </Link>
-                        </div>
+                {/* Recent Favorites */}
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-6">
+                    <div className="flex items-center justify-between mb-4">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+                            <Heart className="w-5 h-5 text-red-500" />
+                            Recent Favorites
+                        </h2>
+                        <Link
+                            href="/dashboard/tenant/favorites"
+                            className="text-sm text-emerald-600 hover:text-emerald-700 flex items-center gap-1"
+                        >
+                            View All
+                            <ChevronRight className="w-4 h-4" />
+                        </Link>
+                    </div>
 
-                        {recentBookings.length === 0 ? (
-                            <div className="text-center py-8">
-                                <div className="text-4xl mb-2">📭</div>
-                                <p className="text-gray-500">No bookings yet</p>
-                                <button
-                                    onClick={() => router.push('/all-properties')}
-                                    className="mt-2 text-blue-600 hover:text-blue-800 text-sm"
-                                >
-                                    Browse properties →
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {recentBookings.slice(0, 4).map((booking) => (
+                    {recentFavorites.length === 0 ? (
+                        <div className="text-center py-8">
+                            <div className="text-4xl mb-2">❤️</div>
+                            <p className="text-gray-500 dark:text-gray-400">No favorites yet</p>
+                            <button
+                                onClick={() => router.push('/all-properties')}
+                                className="mt-2 text-emerald-600 hover:text-emerald-700 text-sm"
+                            >
+                                Start exploring →
+                            </button>
+                        </div>
+                    ) : (
+                        <div className="space-y-3">
+                            {recentFavorites.slice(0, 4).map((favorite) => {
+                                const property = favorite.propertyData || {};
+                                return (
                                     <div
-                                        key={booking._id}
-                                        className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer"
-                                        onClick={() => router.push(`/dashboard/tenant/my-bookings/${booking._id}`)}
+                                        key={favorite._id}
+                                        className="flex items-start gap-3 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
+                                        onClick={() => router.push(`/all-properties/${favorite.propertyId}`)}
                                     >
-                                        <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
+                                        <div className="w-14 h-14 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200 dark:bg-gray-700">
                                             <img
-                                                src={booking.propertyInfo?.images?.[0] || '/placeholder.jpg'}
-                                                alt={booking.propertyInfo?.title}
+                                                src={property.images?.[0] || '/placeholder.jpg'}
+                                                alt={property.title}
                                                 className="w-full h-full object-cover"
                                                 onError={(e) => {
-                                                    e.target.src = 'https://via.placeholder.com/64x64/CCCCCC/FFFFFF?text=No+Image';
+                                                    e.target.src = 'https://via.placeholder.com/56x56/CCCCCC/FFFFFF?text=No+Image';
                                                 }}
                                             />
                                         </div>
                                         <div className="flex-1 min-w-0">
-                                            <h4 className="font-medium text-gray-900 truncate">
-                                                {booking.propertyInfo?.title || 'Property'}
+                                            <h4 className="font-medium text-gray-900 dark:text-white truncate text-sm">
+                                                {property.title || 'Untitled'}
                                             </h4>
-                                            <p className="text-sm text-gray-500 flex items-center gap-1">
+                                            <p className="text-xs text-gray-500 dark:text-gray-400 flex items-center gap-1">
                                                 <MapPin className="w-3 h-3" />
-                                                {booking.propertyInfo?.location || 'N/A'}
+                                                {property.location || 'N/A'}
                                             </p>
                                             <div className="flex items-center gap-2 mt-1">
-                                                <span className="text-sm font-semibold text-blue-600">
-                                                    {formatPrice(booking.propertyInfo?.price)}
+                                                <span className="text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+                                                    {formatPrice(property.price)}
                                                 </span>
-                                                <span className="text-xs text-gray-400">|</span>
-                                                {getStatusBadge(booking.bookingStatus)}
+                                                <span className="text-xs text-gray-400 dark:text-gray-500">
+                                                    <FaBed className="inline mr-1" />
+                                                    {property.specifications?.bedrooms || 0}
+                                                </span>
+                                                <span className="text-xs text-gray-400 dark:text-gray-500">
+                                                    <FaBath className="inline mr-1" />
+                                                    {property.specifications?.bathrooms || 0}
+                                                </span>
                                             </div>
                                         </div>
-                                        <div className="text-xs text-gray-400">
-                                            {formatDate(booking.createdAt)}
+                                        <div className="text-xs text-gray-400 dark:text-gray-500 flex-shrink-0">
+                                            {formatDate(favorite.createdAt)}
                                         </div>
                                     </div>
-                                ))}
-                            </div>
-                        )}
-                    </div>
-
-                    {/* Recent Favorites */}
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-lg font-semibold text-gray-900 flex items-center gap-2">
-                                <Heart className="w-5 h-5 text-red-600" />
-                                Recent Favorites
-                            </h2>
-                            <Link
-                                href="/dashboard/tenant/favorites"
-                                className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
-                            >
-                                View All
-                                <ChevronRight className="w-4 h-4" />
-                            </Link>
+                                );
+                            })}
                         </div>
-
-                        {recentFavorites.length === 0 ? (
-                            <div className="text-center py-8">
-                                <div className="text-4xl mb-2">❤️</div>
-                                <p className="text-gray-500">No favorites yet</p>
-                                <button
-                                    onClick={() => router.push('/all-properties')}
-                                    className="mt-2 text-blue-600 hover:text-blue-800 text-sm"
-                                >
-                                    Start exploring →
-                                </button>
-                            </div>
-                        ) : (
-                            <div className="space-y-4">
-                                {recentFavorites.slice(0, 4).map((favorite) => {
-                                    const property = favorite.propertyData || {};
-                                    return (
-                                        <div
-                                            key={favorite._id}
-                                            className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition cursor-pointer"
-                                            onClick={() => router.push(`/all-properties/${favorite.propertyId}`)}
-                                        >
-                                            <div className="w-16 h-16 rounded-lg overflow-hidden flex-shrink-0 bg-gray-200">
-                                                <img
-                                                    src={property.images?.[0] || '/placeholder.jpg'}
-                                                    alt={property.title}
-                                                    className="w-full h-full object-cover"
-                                                    onError={(e) => {
-                                                        e.target.src = 'https://via.placeholder.com/64x64/CCCCCC/FFFFFF?text=No+Image';
-                                                    }}
-                                                />
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <h4 className="font-medium text-gray-900 truncate">
-                                                    {property.title || 'Untitled'}
-                                                </h4>
-                                                <p className="text-sm text-gray-500 flex items-center gap-1">
-                                                    <MapPin className="w-3 h-3" />
-                                                    {property.location || 'N/A'}
-                                                </p>
-                                                <div className="flex items-center gap-2 mt-1">
-                                                    <span className="text-sm font-semibold text-blue-600">
-                                                        {formatPrice(property.price)}
-                                                    </span>
-                                                    <span className="text-xs text-gray-400">|</span>
-                                                    <span className="text-xs text-gray-500">
-                                                        {property.specifications?.bedrooms || 0} beds
-                                                    </span>
-                                                    <span className="text-xs text-gray-400">|</span>
-                                                    <span className="text-xs text-gray-500">
-                                                        {property.specifications?.bathrooms || 0} baths
-                                                    </span>
-                                                </div>
-                                            </div>
-                                            <div className="text-xs text-gray-400">
-                                                {formatDate(favorite.createdAt)}
-                                            </div>
-                                        </div>
-                                    );
-                                })}
-                            </div>
-                        )}
-                    </div>
+                    )}
                 </div>
-
-                {/* 🏷️ Features / Benefits Section */}
-                <motion.div
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: 0.5 }}
-                    className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4"
-                >
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-                        <div className="bg-blue-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Shield className="w-6 h-6 text-blue-600" />
-                        </div>
-                        <h4 className="font-semibold text-gray-900">Verified Properties</h4>
-                        <p className="text-sm text-gray-500">All listings are verified</p>
-                    </div>
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-                        <div className="bg-green-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <HeartHandshake className="w-6 h-6 text-green-600" />
-                        </div>
-                        <h4 className="font-semibold text-gray-900">Secure Booking</h4>
-                        <p className="text-sm text-gray-500">Safe and secure process</p>
-                    </div>
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-                        <div className="bg-purple-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Award className="w-6 h-6 text-purple-600" />
-                        </div>
-                        <h4 className="font-semibold text-gray-900">Best Prices</h4>
-                        <p className="text-sm text-gray-500">Competitive rental rates</p>
-                    </div>
-                    <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-4 text-center">
-                        <div className="bg-yellow-100 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
-                            <Sparkles className="w-6 h-6 text-yellow-600" />
-                        </div>
-                        <h4 className="font-semibold text-gray-900">Premium Service</h4>
-                        <p className="text-sm text-gray-500">24/7 customer support</p>
-                    </div>
-                </motion.div>
-
             </div>
+
+            {/* 🏷️ Features Section */}
+            <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.5 }}
+                className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4"
+            >
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 text-center">
+                    <div className="bg-blue-100 dark:bg-blue-900/30 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Shield className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Verified Properties</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">All listings are verified</p>
+                </div>
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 text-center">
+                    <div className="bg-green-100 dark:bg-green-900/30 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <HeartHandshake className="w-6 h-6 text-green-600 dark:text-green-400" />
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Secure Booking</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Safe and secure process</p>
+                </div>
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 text-center">
+                    <div className="bg-purple-100 dark:bg-purple-900/30 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Award className="w-6 h-6 text-purple-600 dark:text-purple-400" />
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Best Prices</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Competitive rental rates</p>
+                </div>
+                <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4 text-center">
+                    <div className="bg-yellow-100 dark:bg-yellow-900/30 w-12 h-12 rounded-full flex items-center justify-center mx-auto mb-3">
+                        <Sparkles className="w-6 h-6 text-yellow-600 dark:text-yellow-400" />
+                    </div>
+                    <h4 className="font-semibold text-gray-900 dark:text-white text-sm">Premium Service</h4>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">24/7 customer support</p>
+                </div>
+            </motion.div>
+
         </div>
     );
 };

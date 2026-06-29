@@ -3,7 +3,8 @@
 import { createProperty } from '@/lib/actions/properties';
 import { authClient, useSession } from '@/lib/auth-client';
 import React, { useState, useRef, useEffect } from 'react';
-import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
+import AccessDenied from '@/components/AccessDenied';
+import toast from 'react-hot-toast';
 
 export default function AddPropertyForm() {
     const propertyTypes = ["Apartment", "House", "Villa", "Commercial Space"];
@@ -61,7 +62,7 @@ export default function AddPropertyForm() {
         if (files.length === 0) return;
 
         if (selectedImages.length + files.length > 10) {
-            alert('Maximum 10 images allowed');
+            toast.error('Maximum 10 images allowed');
             return;
         }
 
@@ -71,11 +72,11 @@ export default function AddPropertyForm() {
             const isValidSize = file.size <= 5 * 1024 * 1024;
 
             if (!isValidType) {
-                alert(`Invalid file type: ${file.name}. Only JPEG, JPG, PNG, WEBP, and GIF are allowed.`);
+                toast.error(`Invalid file type: ${file.name}. Only JPEG, JPG, PNG, WEBP, and GIF are allowed.`);
                 return false;
             }
             if (!isValidSize) {
-                alert(`File too large: ${file.name}. Maximum size is 5MB.`);
+                toast.error(`File too large: ${file.name}. Maximum size is 5MB.`);
                 return false;
             }
             return true;
@@ -126,7 +127,6 @@ export default function AddPropertyForm() {
             const file = files[i];
             const formData = new FormData();
             formData.append('image', file);
-
 
             try {
                 const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {
@@ -181,17 +181,17 @@ export default function AddPropertyForm() {
         e.preventDefault();
 
         if (!hasPermission()) {
-            alert('You do not have permission to add properties. Only Admin and Owner roles can add properties.');
+            toast.error('You do not have permission to add properties. Only Admin and Owner roles can add properties.');
             return;
         }
 
         if (!title || !description || !location || !propertyType || !price || !bedrooms || !bathrooms || !size) {
-            alert('Please fill in all required fields');
+            toast.error('Please fill in all required fields');
             return;
         }
 
         if (!user) {
-            alert('Please login to add a property');
+            toast.error('Please login to add a property');
             return;
         }
 
@@ -203,7 +203,9 @@ export default function AddPropertyForm() {
             let imageUrls = [];
 
             if (selectedImages.length > 0) {
+                const uploadToast = toast.loading('Uploading images...');
                 imageUrls = await uploadImagesToImgBB(selectedImages);
+                toast.success(`${imageUrls.length} images uploaded successfully!`, { id: uploadToast });
                 console.log('Images uploaded successfully:', imageUrls);
             }
 
@@ -235,10 +237,11 @@ export default function AddPropertyForm() {
 
             console.log("Submitting Property Data:", propertyData);
 
+            const submittingToast = toast.loading('Submitting property...');
             const result = await createProperty(propertyData);
 
             if (result.success) {
-                alert('Property submitted successfully!');
+                toast.success('Property submitted successfully! 🎉', { id: submittingToast });
                 console.log('Server response:', result);
                 resetForm();
             } else {
@@ -246,7 +249,7 @@ export default function AddPropertyForm() {
             }
         } catch (error) {
             console.error('Error submitting property:', error);
-            alert(`Error: ${error.message}`);
+            toast.error(`Error: ${error.message}`);
         } finally {
             setUploading(false);
             setUploadProgress(0);
@@ -254,7 +257,6 @@ export default function AddPropertyForm() {
         }
     };
 
-    // ✅ Loading state
     if (status === 'loading') {
         return (
             <div className="flex justify-center items-center min-h-screen">
@@ -263,7 +265,6 @@ export default function AddPropertyForm() {
         );
     }
 
-    // ✅ Not authenticated
     if (!user) {
         return (
             <div className="max-w-4xl mx-auto p-8 text-center">
@@ -285,15 +286,13 @@ export default function AddPropertyForm() {
         );
     }
 
-    // ✅ ✅ ✅ Role Check - Admin or Owner (AccessDenied যোগ করা)
     if (!hasPermission()) {
         return <AccessDenied role={user?.role || 'owner'} />;
     }
 
     return (
-        <div className="w-full space-y-3">
-            {/* Header */}
-            <div className="border-b border-gray-300 dark:border-gray-800 pb-2">
+        <div className="p-4 md:p-6 w-full">
+            <div className="border-b border-gray-300 dark:border-gray-800 pb-2 mb-4">
                 <h1 className="text-lg font-bold tracking-tight text-gray-950 dark:text-white">Add New Property</h1>
                 <p className="text-xs text-gray-600 dark:text-gray-400">Fill out the details below to list your property on RentNest.</p>
                 <div className="mt-1 inline-flex items-center gap-2 px-2.5 py-0.5 bg-emerald-100 dark:bg-emerald-900/30 rounded-full">
@@ -304,7 +303,6 @@ export default function AddPropertyForm() {
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-3">
-                {/* SECTION 1: Basic Information */}
                 <div className="bg-white dark:bg-gray-950 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-800 space-y-2.5">
                     <h2 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Basic Information</h2>
 
@@ -366,7 +364,6 @@ export default function AddPropertyForm() {
                     </div>
                 </div>
 
-                {/* SECTION 2: Pricing & Specifications */}
                 <div className="bg-white dark:bg-gray-950 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-800 space-y-2.5">
                     <h2 className="text-xs font-bold text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">Pricing & Specifications</h2>
 
@@ -442,7 +439,6 @@ export default function AddPropertyForm() {
                     </div>
                 </div>
 
-                {/* SECTION 3: Amenities & Media */}
                 <div className="bg-white dark:bg-gray-950 rounded-lg p-3 shadow-sm border border-gray-200 dark:border-gray-800 space-y-2.5">
                     <div className="space-y-1">
                         <label className="text-xs font-semibold text-gray-800 dark:text-gray-200 block">Amenities</label>
@@ -578,7 +574,6 @@ export default function AddPropertyForm() {
                     </div>
                 </div>
 
-                {/* SECTION 4: Owner Information */}
                 <div className="bg-gray-200/40 dark:bg-gray-900/40 border border-gray-300 dark:border-gray-800 rounded-lg p-3 space-y-2.5">
                     <h2 className="text-xs font-bold text-gray-800 dark:text-gray-200 uppercase tracking-wider">Owner Information</h2>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
@@ -625,7 +620,6 @@ export default function AddPropertyForm() {
                     </div>
                 </div>
 
-                {/* ACTION BUTTONS */}
                 <div className="flex items-center justify-end gap-2.5 pt-2.5 border-t border-gray-200 dark:border-gray-800">
                     <button
                         type="button"

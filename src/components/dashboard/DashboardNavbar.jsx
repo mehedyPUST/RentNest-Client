@@ -1,3 +1,4 @@
+// components/dashboard/DashboardNavbar.jsx
 'use client';
 
 import { useState } from 'react';
@@ -39,8 +40,8 @@ export default function DashboardNavbar({ onMenuClick, user, isMobile, isSidebar
     };
 
     return (
-        <header className="sticky top-0 z-30 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800">
-            <div className="flex items-center justify-between px-4 md:px-6 h-16">
+        <header className="sticky top-0 z-30 bg-white dark:bg-gray-950 border-b border-gray-200 dark:border-gray-800 h-16 flex-shrink-0">
+            <div className="flex items-center justify-between px-4 md:px-6 h-full">
                 {/* বাম পাশে - মেনু বাটন + সার্চ */}
                 <div className="flex items-center gap-3">
                     {/* মোবাইলে মেনু বাটন */}
@@ -79,6 +80,12 @@ export default function DashboardNavbar({ onMenuClick, user, isMobile, isSidebar
 
                 {/* ডান পাশে - ইউজার প্রোফাইল */}
                 <div className="flex items-center gap-2 md:gap-4">
+                    {/* নোটিফিকেশন বেল */}
+                    <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative">
+                        <Bell className="size-5 text-gray-600 dark:text-gray-400" />
+                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
+                    </button>
+
                     <div className="relative">
                         <button
                             onClick={() => setIsDropdownOpen(!isDropdownOpen)}

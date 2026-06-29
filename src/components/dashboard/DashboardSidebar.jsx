@@ -1,3 +1,4 @@
+// components/dashboard/DashboardSidebar.jsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -19,7 +20,7 @@ import {
     CreditCard,
 } from "lucide-react";
 import { useSession } from "@/lib/auth-client";
-import { signOut } from "@/lib/auth-client"; // ✅ আলাদা ইমপোর্ট
+import { signOut } from "@/lib/auth-client";
 
 export default function DashboardSidebar({ isOpen, setIsOpen, isMobile }) {
     const pathname = usePathname();
@@ -32,12 +33,15 @@ export default function DashboardSidebar({ isOpen, setIsOpen, isMobile }) {
 
     // ✅ লগআউট হ্যান্ডেল
     const handleLogout = async () => {
+        if (isLoggingOut) return;
+
         try {
             setIsLoggingOut(true);
             await signOut();
             router.push('/login');
         } catch (error) {
             console.error('Logout error:', error);
+        } finally {
             setIsLoggingOut(false);
         }
     };
@@ -73,14 +77,14 @@ export default function DashboardSidebar({ isOpen, setIsOpen, isMobile }) {
     // ✅ সাইডবার কন্টেন্ট
     const SidebarContent = () => (
         <>
-            {/* হেডার - শুধু লোগো */}
-            <div className={`p-4 border-b border-gray-200 dark:border-gray-800 ${isCollapsed ? 'text-center' : ''}`}>
+            {/* ✅ হেডার - h-16 fixed (Navbar এর সাথে match) */}
+            <div className={`h-16 flex items-center px-4 border-b border-gray-200 dark:border-gray-800 ${isCollapsed ? 'justify-center' : ''}`}>
                 <Link href="/" className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
-                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
-                        <span className="text-white font-bold text-lg">RN</span>
+                    <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
+                        <span className="text-white font-bold text-base">RN</span>
                     </div>
                     {!isCollapsed && (
-                        <span className="text-xl font-bold text-gray-900 dark:text-white">
+                        <span className="text-lg font-bold text-gray-900 dark:text-white">
                             Rent<span className="text-emerald-600">Nest</span>
                         </span>
                     )}
@@ -192,13 +196,13 @@ export default function DashboardSidebar({ isOpen, setIsOpen, isMobile }) {
                     />
                     <div className="absolute top-0 left-0 h-full w-72 bg-white dark:bg-gray-950 shadow-2xl">
                         <div className="flex flex-col h-full">
-                            {/* মোবাইল হেডার */}
-                            <div className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-800">
+                            {/* মোবাইল হেডার - h-16 */}
+                            <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800">
                                 <Link href="/dashboard" className="flex items-center gap-3">
-                                    <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                                        <span className="text-white font-bold text-lg">RN</span>
+                                    <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
+                                        <span className="text-white font-bold text-base">RN</span>
                                     </div>
-                                    <span className="text-xl font-bold text-gray-900 dark:text-white">
+                                    <span className="text-lg font-bold text-gray-900 dark:text-white">
                                         Rent<span className="text-emerald-600">Nest</span>
                                     </span>
                                 </Link>

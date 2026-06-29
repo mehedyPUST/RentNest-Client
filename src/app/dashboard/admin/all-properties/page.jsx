@@ -310,7 +310,7 @@ const AllPropertiesPageAdminView = () => {
                     <div className="text-5xl mb-4">🔒</div>
                     <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Please Login</h2>
                     <p className="text-gray-600 dark:text-gray-400">You need to be logged in to view this page.</p>
-                    <Link href="/login" className="mt-4 inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                    <Link href="/login" className="mt-4 inline-block px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition">
                         Go to Login
                     </Link>
                 </div>
@@ -407,6 +407,7 @@ const AllPropertiesPageAdminView = () => {
                         <table className="w-full text-sm text-left">
                             <thead className="bg-gray-50 dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700">
                                 <tr>
+                                    <th className="px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">#</th>
                                     <th className="px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Property</th>
                                     <th className="px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Owner</th>
                                     <th className="px-4 py-3 text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Location</th>
@@ -419,7 +420,7 @@ const AllPropertiesPageAdminView = () => {
                             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
                                 {properties.length === 0 ? (
                                     <tr>
-                                        <td colSpan="7" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                                        <td colSpan="8" className="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
                                             <div className="flex flex-col items-center gap-2">
                                                 <svg className="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
@@ -437,12 +438,20 @@ const AllPropertiesPageAdminView = () => {
                                         const isApproved = status === 'approved';
                                         const isRejected = status === 'rejected';
                                         const isPending = status === 'pending';
+                                        const serialNumber = (pagination.currentPage - 1) * pagination.itemsPerPage + index + 1;
 
                                         return (
                                             <tr
                                                 key={propertyId || index}
                                                 className="hover:bg-gray-50 dark:hover:bg-gray-800/50 transition-colors"
                                             >
+                                                {/* Serial Number */}
+                                                <td className="px-4 py-3 text-center">
+                                                    <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                                                        {serialNumber}
+                                                    </span>
+                                                </td>
+
                                                 {/* Property */}
                                                 <td className="px-4 py-3">
                                                     <div className="flex items-center gap-3">
@@ -588,9 +597,16 @@ const AllPropertiesPageAdminView = () => {
                                 {pagination.totalItems} properties
                             </p>
 
-                            {/* Pagination Controls */}
+                            {/* Pagination Controls - Improved UI */}
                             {pagination.totalPages > 1 && (
                                 <div className="flex items-center gap-2">
+                                    <button
+                                        onClick={() => handlePageChange(1)}
+                                        disabled={pagination.currentPage === 1}
+                                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
+                                    >
+                                        First
+                                    </button>
                                     <button
                                         onClick={() => handlePageChange(pagination.currentPage - 1)}
                                         disabled={pagination.currentPage === 1}
@@ -598,15 +614,49 @@ const AllPropertiesPageAdminView = () => {
                                     >
                                         <ChevronLeft className="w-4 h-4" />
                                     </button>
-                                    <span className="text-sm text-gray-600 dark:text-gray-400">
-                                        Page {pagination.currentPage} of {pagination.totalPages}
-                                    </span>
+
+                                    {/* Page Numbers */}
+                                    <div className="flex items-center gap-1">
+                                        {Array.from({ length: Math.min(5, pagination.totalPages) }, (_, i) => {
+                                            let pageNum;
+                                            if (pagination.totalPages <= 5) {
+                                                pageNum = i + 1;
+                                            } else if (pagination.currentPage <= 3) {
+                                                pageNum = i + 1;
+                                            } else if (pagination.currentPage >= pagination.totalPages - 2) {
+                                                pageNum = pagination.totalPages - 4 + i;
+                                            } else {
+                                                pageNum = pagination.currentPage - 2 + i;
+                                            }
+
+                                            return (
+                                                <button
+                                                    key={pageNum}
+                                                    onClick={() => handlePageChange(pageNum)}
+                                                    className={`px-3 py-1.5 text-sm rounded-lg transition ${pagination.currentPage === pageNum
+                                                            ? 'bg-emerald-600 text-white font-medium'
+                                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                                        }`}
+                                                >
+                                                    {pageNum}
+                                                </button>
+                                            );
+                                        })}
+                                    </div>
+
                                     <button
                                         onClick={() => handlePageChange(pagination.currentPage + 1)}
                                         disabled={pagination.currentPage === pagination.totalPages}
                                         className="p-2 border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
                                     >
                                         <ChevronRight className="w-4 h-4" />
+                                    </button>
+                                    <button
+                                        onClick={() => handlePageChange(pagination.totalPages)}
+                                        disabled={pagination.currentPage === pagination.totalPages}
+                                        className="px-3 py-1.5 text-sm border border-gray-300 dark:border-gray-600 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition disabled:opacity-50 disabled:cursor-not-allowed text-gray-700 dark:text-gray-300"
+                                    >
+                                        Last
                                     </button>
                                 </div>
                             )}

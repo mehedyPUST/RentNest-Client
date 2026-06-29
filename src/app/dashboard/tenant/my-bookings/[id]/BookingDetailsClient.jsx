@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useSession } from '@/lib/auth-client';
-import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
+import AccessDenied from '@/components/AccessDenied';
 import { motion } from 'framer-motion';
 import {
     FaArrowLeft,
@@ -19,20 +19,9 @@ import {
     FaClock,
     FaTimesCircle,
     FaPrint,
-    FaDownload,
-    FaShare
 } from 'react-icons/fa';
-import {
-    MdVerified,
-    MdPending,
-    MdCancel,
-    MdCheckCircle,
-    MdWarning,
-    MdInfo
-} from 'react-icons/md';
 import Link from 'next/link';
 import toast from 'react-hot-toast';
-import Image from 'next/image';
 
 const BookingDetailsClient = ({ bookingId }) => {
     const router = useRouter();
@@ -43,7 +32,6 @@ const BookingDetailsClient = ({ bookingId }) => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
 
-    // ✅ Fetch booking details
     useEffect(() => {
         const fetchBookingDetails = async () => {
             if (!user || !bookingId) {
@@ -82,7 +70,6 @@ const BookingDetailsClient = ({ bookingId }) => {
         fetchBookingDetails();
     }, [bookingId, user]);
 
-    // ✅ Cancel booking
     const handleCancelBooking = async () => {
         if (!confirm('Are you sure you want to cancel this booking?')) {
             return;
@@ -110,7 +97,6 @@ const BookingDetailsClient = ({ bookingId }) => {
         }
     };
 
-    // ✅ Format date
     const formatDate = (date) => {
         if (!date) return 'N/A';
         return new Date(date).toLocaleDateString('en-US', {
@@ -131,7 +117,6 @@ const BookingDetailsClient = ({ bookingId }) => {
         });
     };
 
-    // ✅ Format currency
     const formatCurrency = (amount) => {
         if (!amount) return 'N/A';
         return new Intl.NumberFormat('en-US', {
@@ -140,7 +125,6 @@ const BookingDetailsClient = ({ bookingId }) => {
         }).format(amount);
     };
 
-    // ✅ Get status badge
     const getStatusBadge = (status) => {
         const statusMap = {
             'pending': {
@@ -198,7 +182,6 @@ const BookingDetailsClient = ({ bookingId }) => {
         };
     };
 
-    // ✅ Get payment status badge
     const getPaymentBadge = (status) => {
         const statusMap = {
             'paid': {
@@ -233,29 +216,27 @@ const BookingDetailsClient = ({ bookingId }) => {
         );
     };
 
-    // ✅ Loading state
     if (status === 'loading' || loading) {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
+            <div className="flex items-center justify-center min-h-[60vh]">
                 <div className="text-center">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-emerald-600 mx-auto"></div>
                     <p className="mt-4 text-gray-600">Loading booking details...</p>
                 </div>
             </div>
         );
     }
 
-    // ✅ Not authenticated
     if (!user) {
         return (
-            <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-                <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
+            <div className="flex items-center justify-center min-h-[60vh] px-4">
+                <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
                     <div className="text-6xl mb-4">🔒</div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Please Login</h2>
-                    <p className="text-gray-600">You need to be logged in to view booking details.</p>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Please Login</h2>
+                    <p className="text-gray-600 dark:text-gray-400">You need to be logged in to view booking details.</p>
                     <button
                         onClick={() => router.push('/login')}
-                        className="mt-6 bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition"
+                        className="mt-6 bg-emerald-600 text-white px-6 py-2 rounded-lg hover:bg-emerald-700 transition"
                     >
                         Go to Login
                     </button>
@@ -264,22 +245,20 @@ const BookingDetailsClient = ({ bookingId }) => {
         );
     }
 
-    // ✅ ✅ ✅ Role Check - Tenant (AccessDenied যোগ করা)
     if (user.role?.toLowerCase() !== 'tenant') {
         return <AccessDenied role="tenant" />;
     }
 
-    // ✅ Error state
     if (error || !booking) {
         return (
-            <div className="min-h-screen flex items-center justify-center px-4 bg-gray-50">
-                <div className="bg-white p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
+            <div className="flex items-center justify-center min-h-[60vh] px-4">
+                <div className="bg-white dark:bg-gray-900 p-8 rounded-2xl shadow-lg max-w-md w-full text-center">
                     <div className="text-6xl mb-4">🔍</div>
-                    <h2 className="text-xl font-bold text-gray-900 mb-2">Booking Not Found</h2>
-                    <p className="text-gray-600">{error || "The booking you're looking for doesn't exist."}</p>
+                    <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Booking Not Found</h2>
+                    <p className="text-gray-600 dark:text-gray-400">{error || "The booking you're looking for doesn't exist."}</p>
                     <Link
                         href="/dashboard/tenant/my-bookings"
-                        className="mt-6 inline-flex items-center gap-2 px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+                        className="mt-6 inline-flex items-center gap-2 px-6 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
                     >
                         <FaArrowLeft />
                         Back to My Bookings
@@ -293,18 +272,17 @@ const BookingDetailsClient = ({ bookingId }) => {
     const propertyInfo = booking.propertyInfo || {};
     const tenantInfo = booking.tenantInfo || {};
 
-    // ✅ Check if property image exists
     const propertyImage = propertyInfo.images && propertyInfo.images.length > 0
         ? propertyInfo.images[0]
         : null;
 
     return (
-        <div className="min-h-screen bg-gray-50 py-8">
-            <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="p-4 md:p-6">
+            <div className="max-w-4xl mx-auto">
                 {/* Back Button */}
                 <Link
                     href="/dashboard/tenant/my-bookings"
-                    className="inline-flex items-center gap-2 text-gray-600 hover:text-blue-600 transition-colors mb-6"
+                    className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-emerald-600 dark:hover:text-emerald-400 transition-colors mb-6"
                 >
                     <FaArrowLeft className="w-4 h-4" />
                     <span>Back to My Bookings</span>
@@ -314,20 +292,20 @@ const BookingDetailsClient = ({ bookingId }) => {
                 <motion.div
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="bg-white rounded-2xl shadow-lg border border-gray-200 overflow-hidden"
+                    className="bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 overflow-hidden"
                 >
                     {/* Header with Status */}
-                    <div className={`p-6 border-b ${booking.bookingStatus === 'rejected' ? 'bg-red-50 border-red-200' :
-                        booking.bookingStatus === 'pending' ? 'bg-yellow-50 border-yellow-200' :
-                            booking.bookingStatus === 'approved' || booking.bookingStatus === 'confirmed' ? 'bg-green-50 border-green-200' :
-                                'bg-gray-50 border-gray-200'
+                    <div className={`p-6 border-b ${booking.bookingStatus === 'rejected' ? 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800' :
+                        booking.bookingStatus === 'pending' ? 'bg-yellow-50 dark:bg-yellow-950/20 border-yellow-200 dark:border-yellow-800' :
+                            booking.bookingStatus === 'approved' || booking.bookingStatus === 'confirmed' ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800' :
+                                'bg-gray-50 dark:bg-gray-800/50 border-gray-200 dark:border-gray-700'
                         }`}>
                         <div className="flex flex-wrap items-center justify-between gap-4">
                             <div>
-                                <h1 className="text-2xl font-bold text-gray-900">
+                                <h1 className="text-2xl font-bold text-gray-900 dark:text-white">
                                     Booking Details
                                 </h1>
-                                <p className="text-sm text-gray-500 mt-1">
+                                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                                     Booking ID: #{booking._id?.slice(-8) || 'N/A'}
                                 </p>
                             </div>
@@ -339,14 +317,14 @@ const BookingDetailsClient = ({ bookingId }) => {
                     </div>
 
                     {/* Status Description */}
-                    <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
-                        <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <div className="px-6 py-4 bg-gray-50 dark:bg-gray-800/50 border-b border-gray-200 dark:border-gray-700">
+                        <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                             <span className="text-lg">{statusInfo.icon}</span>
                             <span>{statusInfo.description}</span>
                         </div>
                         {booking.bookingStatus === 'rejected' && booking.rejectionReason && (
-                            <div className="mt-2 p-3 bg-red-50 border border-red-200 rounded-lg">
-                                <p className="text-sm text-red-700">
+                            <div className="mt-2 p-3 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
+                                <p className="text-sm text-red-700 dark:text-red-400">
                                     <span className="font-semibold">Rejection Reason:</span>
                                     <br />
                                     {booking.rejectionReason}
@@ -356,14 +334,13 @@ const BookingDetailsClient = ({ bookingId }) => {
                     </div>
 
                     {/* Property Info */}
-                    <div className="p-6 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                            <FaHome className="text-blue-600" />
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <FaHome className="text-emerald-600" />
                             Property Information
                         </h2>
                         <div className="flex flex-col md:flex-row gap-4">
-                            {/* Property Image */}
-                            <div className="w-full md:w-48 h-48 rounded-lg overflow-hidden bg-gray-200 flex-shrink-0">
+                            <div className="w-full md:w-48 h-48 rounded-lg overflow-hidden bg-gray-200 dark:bg-gray-700 flex-shrink-0">
                                 {propertyImage ? (
                                     <img
                                         src={propertyImage}
@@ -379,22 +356,20 @@ const BookingDetailsClient = ({ bookingId }) => {
                                     </div>
                                 )}
                             </div>
-
-                            {/* Property Details */}
                             <div className="flex-1 space-y-2">
-                                <h3 className="text-xl font-semibold text-gray-900">
+                                <h3 className="text-xl font-semibold text-gray-900 dark:text-white">
                                     {propertyInfo.title || 'Property'}
                                 </h3>
-                                <p className="text-gray-600 flex items-center gap-1">
+                                <p className="text-gray-600 dark:text-gray-400 flex items-center gap-1">
                                     <FaMapMarkerAlt className="text-red-500" />
                                     {propertyInfo.location || 'Location not specified'}
                                 </p>
-                                <p className="text-2xl font-bold text-blue-600">
+                                <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
                                     {formatCurrency(propertyInfo.price)}
                                 </p>
                                 <Link
                                     href={`/all-properties/${booking.propertyId}`}
-                                    className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-800 text-sm font-medium"
+                                    className="inline-flex items-center gap-1 text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 text-sm font-medium"
                                 >
                                     View Property Details →
                                 </Link>
@@ -403,75 +378,74 @@ const BookingDetailsClient = ({ bookingId }) => {
                     </div>
 
                     {/* Booking Details Grid */}
-                    <div className="p-6 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                            <FaCalendarAlt className="text-blue-600" />
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <FaCalendarAlt className="text-emerald-600" />
                             Booking Details
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <p className="text-sm text-gray-500">Move-in Date</p>
-                                <p className="font-medium text-gray-900">{formatDate(booking.moveInDate)}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Move-in Date</p>
+                                <p className="font-medium text-gray-900 dark:text-white">{formatDate(booking.moveInDate)}</p>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Booking Date</p>
-                                <p className="font-medium text-gray-900">{formatDateTime(booking.createdAt)}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Booking Date</p>
+                                <p className="font-medium text-gray-900 dark:text-white">{formatDateTime(booking.createdAt)}</p>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Contact Number</p>
-                                <p className="font-medium text-gray-900 flex items-center gap-1">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Contact Number</p>
+                                <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
                                     <FaPhone className="text-gray-400 text-sm" />
                                     {booking.contactNumber || 'N/A'}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Payment Status</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Payment Status</p>
                                 <div>{getPaymentBadge(booking.paymentStatus)}</div>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Payment Session ID</p>
-                                <p className="font-medium text-gray-900 text-xs truncate max-w-[200px]">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Payment Session ID</p>
+                                <p className="font-medium text-gray-900 dark:text-white text-xs truncate max-w-[200px]">
                                     {booking.paymentSessionId || 'N/A'}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Payment Date</p>
-                                <p className="font-medium text-gray-900">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Payment Date</p>
+                                <p className="font-medium text-gray-900 dark:text-white">
                                     {booking.paymentDate ? formatDateTime(booking.paymentDate) : 'N/A'}
                                 </p>
                             </div>
                         </div>
 
-                        {/* Additional Notes */}
                         {booking.additionalNotes && (
-                            <div className="mt-4 p-3 bg-gray-50 rounded-lg">
-                                <p className="text-sm text-gray-500">Additional Notes</p>
-                                <p className="text-sm text-gray-700 mt-1">{booking.additionalNotes}</p>
+                            <div className="mt-4 p-3 bg-gray-50 dark:bg-gray-800/50 rounded-lg">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Additional Notes</p>
+                                <p className="text-sm text-gray-700 dark:text-gray-300 mt-1">{booking.additionalNotes}</p>
                             </div>
                         )}
                     </div>
 
                     {/* Tenant Information */}
-                    <div className="p-6 border-b border-gray-200">
-                        <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                            <FaUser className="text-blue-600" />
+                    <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+                        <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                            <FaUser className="text-emerald-600" />
                             Tenant Information
                         </h2>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <p className="text-sm text-gray-500">Name</p>
-                                <p className="font-medium text-gray-900">{tenantInfo.name || 'N/A'}</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Name</p>
+                                <p className="font-medium text-gray-900 dark:text-white">{tenantInfo.name || 'N/A'}</p>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Email</p>
-                                <p className="font-medium text-gray-900 flex items-center gap-1">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Email</p>
+                                <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
                                     <FaEnvelope className="text-gray-400 text-sm" />
                                     {tenantInfo.email || 'N/A'}
                                 </p>
                             </div>
                             <div>
-                                <p className="text-sm text-gray-500">Phone</p>
-                                <p className="font-medium text-gray-900 flex items-center gap-1">
+                                <p className="text-sm text-gray-500 dark:text-gray-400">Phone</p>
+                                <p className="font-medium text-gray-900 dark:text-white flex items-center gap-1">
                                     <FaPhone className="text-gray-400 text-sm" />
                                     {tenantInfo.phone || booking.contactNumber || 'N/A'}
                                 </p>
@@ -480,7 +454,7 @@ const BookingDetailsClient = ({ bookingId }) => {
                     </div>
 
                     {/* Action Buttons */}
-                    <div className="p-6 bg-gray-50 flex flex-wrap items-center justify-between gap-4">
+                    <div className="p-6 bg-gray-50 dark:bg-gray-800/50 flex flex-wrap items-center justify-between gap-4">
                         <div className="flex flex-wrap gap-3">
                             {booking.bookingStatus === 'pending' && (
                                 <button
@@ -493,7 +467,7 @@ const BookingDetailsClient = ({ bookingId }) => {
                             )}
                             <button
                                 onClick={() => window.print()}
-                                className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors flex items-center gap-2"
+                                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors flex items-center gap-2"
                             >
                                 <FaPrint className="w-4 h-4" />
                                 Print
@@ -501,7 +475,7 @@ const BookingDetailsClient = ({ bookingId }) => {
                         </div>
                         <Link
                             href="/all-properties"
-                            className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center gap-2"
+                            className="px-4 py-2 bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition-colors flex items-center gap-2"
                         >
                             <FaHome className="w-4 h-4" />
                             Browse More Properties
@@ -514,18 +488,18 @@ const BookingDetailsClient = ({ bookingId }) => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2 }}
-                    className="mt-8 bg-white rounded-2xl shadow-lg border border-gray-200 p-6"
+                    className="mt-8 bg-white dark:bg-gray-900 rounded-2xl shadow-lg border border-gray-200 dark:border-gray-800 p-6"
                 >
-                    <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                        <FaClock className="text-blue-600" />
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                        <FaClock className="text-emerald-600" />
                         Booking Timeline
                     </h2>
                     <div className="space-y-4">
                         <div className="flex items-start gap-3">
-                            <div className="w-3 h-3 rounded-full bg-blue-600 mt-1.5 flex-shrink-0"></div>
+                            <div className="w-3 h-3 rounded-full bg-emerald-600 mt-1.5 flex-shrink-0"></div>
                             <div>
-                                <p className="font-medium text-gray-900">Booking Created</p>
-                                <p className="text-sm text-gray-500">{formatDateTime(booking.createdAt)}</p>
+                                <p className="font-medium text-gray-900 dark:text-white">Booking Created</p>
+                                <p className="text-sm text-gray-500 dark:text-gray-400">{formatDateTime(booking.createdAt)}</p>
                             </div>
                         </div>
 
@@ -533,8 +507,8 @@ const BookingDetailsClient = ({ bookingId }) => {
                             <div className="flex items-start gap-3">
                                 <div className="w-3 h-3 rounded-full bg-green-600 mt-1.5 flex-shrink-0"></div>
                                 <div>
-                                    <p className="font-medium text-gray-900">Payment Completed</p>
-                                    <p className="text-sm text-gray-500">{formatDateTime(booking.paymentDate)}</p>
+                                    <p className="font-medium text-gray-900 dark:text-white">Payment Completed</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatDateTime(booking.paymentDate)}</p>
                                 </div>
                             </div>
                         )}
@@ -543,8 +517,8 @@ const BookingDetailsClient = ({ bookingId }) => {
                             <div className="flex items-start gap-3">
                                 <div className="w-3 h-3 rounded-full bg-green-600 mt-1.5 flex-shrink-0"></div>
                                 <div>
-                                    <p className="font-medium text-gray-900">Booking Approved</p>
-                                    <p className="text-sm text-gray-500">{formatDateTime(booking.approvedAt)}</p>
+                                    <p className="font-medium text-gray-900 dark:text-white">Booking Approved</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatDateTime(booking.approvedAt)}</p>
                                 </div>
                             </div>
                         )}
@@ -553,8 +527,8 @@ const BookingDetailsClient = ({ bookingId }) => {
                             <div className="flex items-start gap-3">
                                 <div className="w-3 h-3 rounded-full bg-red-600 mt-1.5 flex-shrink-0"></div>
                                 <div>
-                                    <p className="font-medium text-gray-900">Booking Rejected</p>
-                                    <p className="text-sm text-gray-500">{formatDateTime(booking.rejectedAt)}</p>
+                                    <p className="font-medium text-gray-900 dark:text-white">Booking Rejected</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatDateTime(booking.rejectedAt)}</p>
                                 </div>
                             </div>
                         )}
@@ -563,8 +537,8 @@ const BookingDetailsClient = ({ bookingId }) => {
                             <div className="flex items-start gap-3">
                                 <div className="w-3 h-3 rounded-full bg-gray-600 mt-1.5 flex-shrink-0"></div>
                                 <div>
-                                    <p className="font-medium text-gray-900">Booking Cancelled</p>
-                                    <p className="text-sm text-gray-500">{formatDateTime(booking.cancelledAt)}</p>
+                                    <p className="font-medium text-gray-900 dark:text-white">Booking Cancelled</p>
+                                    <p className="text-sm text-gray-500 dark:text-gray-400">{formatDateTime(booking.cancelledAt)}</p>
                                 </div>
                             </div>
                         )}
