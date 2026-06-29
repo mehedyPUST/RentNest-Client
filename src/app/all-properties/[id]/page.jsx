@@ -237,7 +237,7 @@ const PropertyDetailsPage = ({ params }) => {
     // Handle Property Update
     const handlePropertyUpdate = (updatedProperty) => {
         setProperty(updatedProperty);
-        toast.success('Property updated successfully!');
+        // toast.success('Property updated successfully!');
         setEditModalOpen(false);
     };
 
