@@ -3,6 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useRouter } from 'next/navigation';
 import { FaStar, FaUser, FaCalendarAlt, FaQuoteLeft } from 'react-icons/fa';
 import { Sparkles, Loader2 } from 'lucide-react';
 
@@ -89,6 +90,7 @@ const starVariants = {
 };
 
 const CustomerReviews = () => {
+    const router = useRouter();
     const [reviews, setReviews] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -156,11 +158,15 @@ const CustomerReviews = () => {
         });
     };
 
+    const handleViewAllReviews = () => {
+        router.push('/all-reviews');
+    };
+
     // Loading Animation
     if (loading) {
         return (
-            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
-                <div className="max-w-7xl mx-auto px-4 text-center">
+            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
+                <div className="w-full px-4 text-center">
                     <motion.div
                         initial={{ opacity: 0, scale: 0.5 }}
                         animate={{ opacity: 1, scale: 1 }}
@@ -170,7 +176,7 @@ const CustomerReviews = () => {
                             stiffness: 200,
                         }}
                     >
-                        <Loader2 className="w-12 h-12 animate-spin text-blue-600 mx-auto" />
+                        <Loader2 className="w-12 h-12 animate-spin text-emerald-600 mx-auto" />
                         <motion.p
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}
@@ -188,8 +194,8 @@ const CustomerReviews = () => {
     // Empty State
     if (error || reviews.length === 0) {
         return (
-            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
-                <div className="max-w-7xl mx-auto px-4 text-center">
+            <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
+                <div className="w-full px-4 text-center">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -219,8 +225,8 @@ const CustomerReviews = () => {
     }
 
     return (
-        <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 overflow-hidden">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-20 bg-gradient-to-b from-white via-slate-50/50 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 overflow-hidden w-full">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
                 {/* Section Header */}
                 <motion.div
                     variants={headerVariants}
@@ -238,7 +244,7 @@ const CustomerReviews = () => {
                             animate={{ rotate: 360 }}
                             transition={{ duration: 3, repeat: Infinity, ease: "linear" }}
                         >
-                            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         </motion.span>
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
                             What Our Clients Say
@@ -252,26 +258,26 @@ const CustomerReviews = () => {
                         transition={{ delay: 0.1, duration: 0.6 }}
                         viewport={{ once: true }}
                     >
-                        Customer <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Reviews</span>
+                        Customer <span className="bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">Reviews</span>
                     </motion.h2>
 
                     <div className="flex items-center justify-center gap-3 mb-6">
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-2 h-2 bg-blue-600 rounded-full"
+                            className="w-2 h-2 bg-emerald-600 rounded-full"
                             initial={{ scale: 0 }}
                             whileInView={{ scale: 1 }}
                             transition={{ duration: 0.4, delay: 0.4 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-700 to-emerald-800 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
@@ -311,7 +317,7 @@ const CustomerReviews = () => {
                             >
                                 {/* Background gradient on hover */}
                                 <motion.div
-                                    className="absolute inset-0 bg-gradient-to-br from-blue-50/50 to-purple-50/50 dark:from-blue-950/20 dark:to-purple-950/20"
+                                    className="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-teal-50/50 dark:from-emerald-950/20 dark:to-teal-950/20"
                                     initial={{ opacity: 0 }}
                                     animate={{ opacity: hoveredCard === index ? 1 : 0 }}
                                     transition={{ duration: 0.3 }}
@@ -322,7 +328,7 @@ const CustomerReviews = () => {
                                     <div className="flex items-start gap-4">
                                         {/* Avatar */}
                                         <motion.div
-                                            className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center flex-shrink-0"
+                                            className="w-12 h-12 rounded-full overflow-hidden bg-gradient-to-r from-emerald-500 to-emerald-700 flex items-center justify-center flex-shrink-0"
                                             whileHover={{ scale: 1.1, rotate: 5 }}
                                             transition={{ type: "spring", stiffness: 300 }}
                                         >
@@ -337,7 +343,7 @@ const CustomerReviews = () => {
                                                     onError={(e) => {
                                                         e.target.style.display = 'none';
                                                         e.target.parentElement.innerHTML = review.tenantName?.charAt(0) || 'U';
-                                                        e.target.parentElement.className = 'w-12 h-12 rounded-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0';
+                                                        e.target.parentElement.className = 'w-12 h-12 rounded-full bg-gradient-to-r from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold text-lg flex-shrink-0';
                                                     }}
                                                 />
                                             ) : (
@@ -395,7 +401,7 @@ const CustomerReviews = () => {
                                                 transition={{ delay: 0.2 }}
                                             >
                                                 <p className="text-gray-600 dark:text-gray-300 mt-2 text-sm leading-relaxed line-clamp-3">
-                                                    <FaQuoteLeft className="w-3 h-3 text-blue-400 inline mr-1" />
+                                                    <FaQuoteLeft className="w-3 h-3 text-emerald-400 inline mr-1" />
                                                     {review.comment}
                                                 </p>
                                             </motion.div>
@@ -420,7 +426,7 @@ const CustomerReviews = () => {
                     </AnimatePresence>
                 </motion.div>
 
-                {/* View All Button */}
+                {/* View All Reviews Button - ✅ Functional */}
                 {reviews.length > 0 && (
                     <motion.div
                         className="text-center mt-10"
@@ -430,10 +436,11 @@ const CustomerReviews = () => {
                         viewport={{ once: true }}
                     >
                         <motion.button
-                            className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-full font-medium shadow-lg hover:shadow-xl transition"
+                            onClick={handleViewAllReviews}
+                            className="px-8 py-3.5 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white rounded-2xl font-medium shadow-lg hover:shadow-xl transition-all duration-300 border border-emerald-500"
                             whileHover={{
                                 scale: 1.05,
-                                boxShadow: "0 20px 40px rgba(59, 130, 246, 0.3)",
+                                boxShadow: "0 20px 40px rgba(16, 185, 129, 0.3)",
                             }}
                             whileTap={{ scale: 0.95 }}
                         >
