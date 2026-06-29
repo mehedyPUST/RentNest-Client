@@ -179,7 +179,7 @@ const Banner = () => {
                 </div>
             </motion.div>
 
-            <div className="relative z-20 w-full px-6 lg:px-8 py-20">
+            <div className="relative z-20 w-full px-4 sm:px-6 lg:px-8 py-20">
                 <motion.div
                     className="max-w-4xl mx-auto text-center space-y-8"
                     variants={containerVariants}

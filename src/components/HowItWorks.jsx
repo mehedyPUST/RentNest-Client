@@ -27,19 +27,19 @@ const HowItWorks = () => {
             icon: <Search className="w-6 h-6" />,
             title: "Search Properties",
             description: "Browse thousands of properties. Filter by location, price, property type, and amenities to find your perfect match.",
-            color: "from-blue-500 to-blue-600",
-            bgColor: "bg-blue-50 dark:bg-blue-950/30",
-            borderColor: "border-blue-200 dark:border-blue-800",
-            numberColor: "bg-blue-600"
+            color: "from-emerald-500 to-emerald-600",
+            bgColor: "bg-emerald-50 dark:bg-emerald-950/30",
+            borderColor: "border-emerald-200 dark:border-emerald-800",
+            numberColor: "bg-emerald-600"
         },
         {
             icon: <Calendar className="w-6 h-6" />,
             title: "Schedule a Visit",
             description: "Book a viewing at your convenience. Virtual tours available for remote viewing or visit in person.",
-            color: "from-indigo-500 to-indigo-600",
-            bgColor: "bg-indigo-50 dark:bg-indigo-950/30",
-            borderColor: "border-indigo-200 dark:border-indigo-800",
-            numberColor: "bg-indigo-600"
+            color: "from-blue-500 to-blue-600",
+            bgColor: "bg-blue-50 dark:bg-blue-950/30",
+            borderColor: "border-blue-200 dark:border-blue-800",
+            numberColor: "bg-blue-600"
         },
         {
             icon: <Home className="w-6 h-6" />,
@@ -217,9 +217,9 @@ const HowItWorks = () => {
     };
 
     return (
-        <section className="py-20 sm:py-28 bg-gradient-to-b from-white via-blue-50/30 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
+        <section className="py-20 sm:py-28 bg-gradient-to-b from-white via-emerald-50/30 to-white dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
 
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
 
                 {/* Header */}
                 <motion.div
@@ -238,33 +238,33 @@ const HowItWorks = () => {
                             animate={{ rotate: 360 }}
                             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                         >
-                            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         </motion.span>
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Simple Process</span>
                     </motion.div>
 
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-gray-900 dark:text-white leading-tight">
-                        How <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">RentNest</span>{" "}
+                        How <span className="bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">RentNest</span>{" "}
                         <span className="text-gray-900 dark:text-white">Works</span>
                     </h2>
 
                     <div className="flex items-center justify-center gap-3 mb-6">
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-2 h-2 bg-blue-600 rounded-full"
+                            className="w-2 h-2 bg-emerald-600 rounded-full"
                             initial={{ scale: 0 }}
                             whileInView={{ scale: 1 }}
                             transition={{ duration: 0.4, delay: 0.4 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-700 to-emerald-800 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
@@ -287,7 +287,7 @@ const HowItWorks = () => {
                 >
                     {/* Connecting Line - Desktop */}
                     <motion.div
-                        className="hidden lg:block absolute top-1/2 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-blue-200 via-indigo-200 to-purple-200 dark:from-blue-900 dark:via-indigo-900 dark:to-purple-900 -translate-y-1/2 origin-left"
+                        className="hidden lg:block absolute top-1/2 left-[12.5%] right-[12.5%] h-0.5 bg-gradient-to-r from-emerald-200 via-blue-200 to-purple-200 dark:from-emerald-900 dark:via-blue-900 dark:to-purple-900 -translate-y-1/2 origin-left"
                         variants={lineVariants}
                         initial="hidden"
                         whileInView="visible"
@@ -306,7 +306,7 @@ const HowItWorks = () => {
                         >
                             {/* Step number */}
                             <motion.div
-                                className={`absolute -top-4 -left-4 w-10 h-10 ${step.numberColor} rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-blue-500/20`}
+                                className={`absolute -top-4 -left-4 w-10 h-10 ${step.numberColor} rounded-full flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-emerald-500/20`}
                                 variants={numberVariants}
                                 initial="hidden"
                                 whileInView="visible"
@@ -372,7 +372,7 @@ const HowItWorks = () => {
                                 whileHover="hover"
                             >
                                 <motion.div
-                                    className="text-blue-600 dark:text-blue-400 text-xl"
+                                    className="text-emerald-600 dark:text-emerald-400 text-xl"
                                     whileHover={{ rotate: 360, scale: 1.2 }}
                                     transition={{ duration: 0.4 }}
                                 >

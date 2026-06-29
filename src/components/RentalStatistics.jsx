@@ -19,8 +19,8 @@ const RentalStatistics = () => {
             label: "Active Properties",
             icon: FaHome,
             suffix: "+",
-            color: "from-blue-500 to-blue-600",
-            bgColor: "bg-blue-50 dark:bg-blue-950/30"
+            color: "from-emerald-500 to-emerald-600",
+            bgColor: "bg-emerald-50 dark:bg-emerald-950/30"
         },
         {
             id: 2,
@@ -28,8 +28,8 @@ const RentalStatistics = () => {
             label: "Happy Tenants",
             icon: FaUsers,
             suffix: "+",
-            color: "from-green-500 to-green-600",
-            bgColor: "bg-green-50 dark:bg-green-950/30"
+            color: "from-blue-500 to-blue-600",
+            bgColor: "bg-blue-50 dark:bg-blue-950/30"
         },
         {
             id: 3,
@@ -200,8 +200,8 @@ const RentalStatistics = () => {
     };
 
     return (
-        <section className="py-20 bg-gradient-to-b from-slate-50/80 via-white to-slate-50/80 dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <section className="py-20 bg-gradient-to-b from-slate-50/80 via-white to-slate-50/80 dark:from-gray-950 dark:via-gray-900/50 dark:to-gray-950 w-full">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
 
                 {/* Section Header */}
                 <motion.div
@@ -227,32 +227,32 @@ const RentalStatistics = () => {
                                 ease: "easeInOut",
                             }}
                         >
-                            <TrendingUp className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <TrendingUp className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         </motion.span>
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Rental Statistics</span>
                     </motion.div>
 
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-gray-900 dark:text-white">
-                        Trusted by <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">Thousands</span>
+                        Trusted by <span className="bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">Thousands</span>
                     </h2>
 
                     <div className="flex items-center justify-center gap-3 mb-6">
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-2 h-2 bg-blue-600 rounded-full"
+                            className="w-2 h-2 bg-emerald-600 rounded-full"
                             initial={{ scale: 0 }}
                             whileInView={{ scale: 1 }}
                             transition={{ duration: 0.4, delay: 0.4 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-700 to-emerald-800 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
@@ -305,7 +305,7 @@ const RentalStatistics = () => {
                                     <>
                                         {stat.value.toLocaleString()}
                                         <motion.span
-                                            className="text-blue-600 dark:text-blue-400"
+                                            className="text-emerald-600 dark:text-emerald-400"
                                             animate={{
                                                 scale: [1, 1.2, 1],
                                             }}
@@ -378,7 +378,7 @@ const RentalStatistics = () => {
 
                 {/* Growth Indicator */}
                 <motion.div
-                    className="mt-10 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30 rounded-2xl border border-blue-100 dark:border-blue-900/30"
+                    className="mt-10 p-6 bg-gradient-to-r from-emerald-50 to-blue-50 dark:from-emerald-950/30 dark:to-blue-950/30 rounded-2xl border border-emerald-100 dark:border-emerald-900/30"
                     variants={growthVariants}
                     initial="hidden"
                     whileInView="visible"
@@ -388,11 +388,11 @@ const RentalStatistics = () => {
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                         <div className="flex items-center gap-3">
                             <motion.div
-                                className="p-3 bg-blue-600/10 rounded-xl"
+                                className="p-3 bg-emerald-600/10 rounded-xl"
                                 variants={pulseIconVariants}
                                 animate="animate"
                             >
-                                <TrendingUp className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                                <TrendingUp className="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
                             </motion.div>
                             <div>
                                 <p className="text-sm text-gray-600 dark:text-gray-400">Year-over-Year Growth</p>

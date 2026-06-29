@@ -220,9 +220,9 @@ const WhyChooseUs = () => {
     };
 
     return (
-        <section className="py-20 sm:py-28 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950">
+        <section className="py-20 sm:py-28 bg-gradient-to-b from-gray-50 via-white to-gray-50 dark:from-gray-950 dark:via-gray-900 dark:to-gray-950 w-full">
 
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="w-full px-4 sm:px-6 lg:px-8">
 
                 {/* Header */}
                 <motion.div
@@ -241,32 +241,32 @@ const WhyChooseUs = () => {
                             animate={{ rotate: 360 }}
                             transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
                         >
-                            <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                            <Sparkles className="w-4 h-4 text-emerald-600 dark:text-emerald-400" />
                         </motion.span>
                         <span className="text-sm font-medium text-gray-700 dark:text-gray-300">Why RentNest</span>
                     </motion.div>
 
                     <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold mb-4 text-gray-900 dark:text-white leading-tight">
-                        Why Choose <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 bg-clip-text text-transparent">RentNest</span>
+                        Why Choose <span className="bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">RentNest</span>
                     </h2>
 
                     <div className="flex items-center justify-center gap-3 mb-6">
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-600 to-emerald-700 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-2 h-2 bg-blue-600 rounded-full"
+                            className="w-2 h-2 bg-emerald-600 rounded-full"
                             initial={{ scale: 0 }}
                             whileInView={{ scale: 1 }}
                             transition={{ duration: 0.4, delay: 0.4 }}
                             viewport={{ once: true }}
                         />
                         <motion.div
-                            className="w-16 h-1 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-full"
+                            className="w-16 h-1 bg-gradient-to-r from-emerald-700 to-emerald-800 rounded-full"
                             initial={{ width: 0 }}
                             whileInView={{ width: 64 }}
                             transition={{ duration: 0.8, delay: 0.2 }}
@@ -388,7 +388,7 @@ const WhyChooseUs = () => {
                             transition={{ delay: index * 0.1 }}
                         >
                             <motion.div
-                                className="text-blue-600 dark:text-blue-400 text-xl"
+                                className="text-emerald-600 dark:text-emerald-400 text-xl"
                                 whileHover={{ rotate: 360, scale: 1.2 }}
                                 transition={{ duration: 0.4 }}
                             >
