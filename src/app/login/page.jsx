@@ -22,6 +22,7 @@ import { FcGoogle } from "react-icons/fc";
 import { FiEyeOff } from "react-icons/fi";
 import { BsEye } from "react-icons/bs";
 import toast from "react-hot-toast";
+
 export default function SignInPage() {
     const router = useRouter();
 
@@ -64,22 +65,22 @@ export default function SignInPage() {
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-white to-orange-50 px-4 animate__animated animate__backInDown">
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-emerald-50/80 via-white to-emerald-50/60 px-4 animate__animated animate__backInDown">
 
-            <Card className="w-full max-w-md p-6 md:p-8 rounded-2xl shadow-lg border border-gray-100">
+            <Card className="w-full max-w-md p-6 md:p-8 rounded-2xl shadow-lg border border-emerald-100/50">
 
                 {/* Header */}
                 <div className="text-center mb-6">
-                    <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-600 px-4 py-1.5 rounded-full text-xs font-semibold mb-3">
+                    <div className="inline-flex items-center gap-2 bg-emerald-100/80 text-emerald-700 px-4 py-1.5 rounded-full text-xs font-semibold mb-3">
                         🔐 Welcome Back
                     </div>
 
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent">
+                    <h1 className="text-3xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent">
                         Sign In
                     </h1>
 
                     <p className="text-gray-500 text-sm mt-2">
-                        Access your account and enjoy your  RentNest
+                        Access your account and enjoy your RentNest
                     </p>
                 </div>
 
@@ -106,7 +107,7 @@ export default function SignInPage() {
                                 placeholder="john@example.com"
                                 className="h-12 w-full pl-10 pr-3 rounded-xl border border-gray-200 bg-white
                                 transition-all duration-200
-                                focus:border-amber-400 focus:ring-2 focus:ring-amber-100
+                                focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100
                                 hover:border-gray-300"
                             />
                         </div>
@@ -128,7 +129,7 @@ export default function SignInPage() {
                                 placeholder="Enter your password"
                                 className="h-12 w-full pl-10 pr-10 rounded-xl border border-gray-200 bg-white
                                 transition-all duration-200
-                                focus:border-amber-400 focus:ring-2 focus:ring-amber-100
+                                focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100
                                 hover:border-gray-300"
                             />
 
@@ -152,7 +153,7 @@ export default function SignInPage() {
                     <div className="text-right">
                         <Link
                             href="/forgot-password"
-                            className="text-xs text-amber-600 hover:text-amber-700 hover:underline"
+                            className="text-xs text-emerald-600 hover:text-emerald-700 hover:underline"
                         >
                             Forgot password?
                         </Link>
@@ -164,10 +165,10 @@ export default function SignInPage() {
                         <Button
                             type="submit"
                             disabled={loading}
-                            className="flex-1 h-12 rounded-xl bg-gradient-to-r from-amber-600 to-orange-500 
+                            className="flex-1 h-12 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 
                             text-white font-semibold
                             hover:scale-[1.02] active:scale-[0.98]
-                            transition-all duration-200 shadow-md"
+                            transition-all duration-200 shadow-md shadow-emerald-200"
                         >
                             {loading ? "Signing in..." : (
                                 <>
@@ -203,7 +204,7 @@ export default function SignInPage() {
                 {/* Google */}
                 <Button
                     onClick={handleGoogleSignIn}
-                    className="w-full border border-amber-200 bg-white text-gray-700 font-semibold hover:bg-amber-50 hover:border-amber-300 transition-all duration-300"
+                    className="w-full border border-emerald-200 bg-white text-gray-700 font-semibold hover:bg-emerald-50 hover:border-emerald-300 transition-all duration-300"
                 >
                     <FcGoogle />
                     Continue with Google
@@ -214,7 +215,7 @@ export default function SignInPage() {
                     Don't have an account?{" "}
                     <Link
                         href="/register"
-                        className="text-amber-600 font-semibold hover:underline"
+                        className="text-emerald-600 font-semibold hover:underline"
                     >
                         Create account
                     </Link>

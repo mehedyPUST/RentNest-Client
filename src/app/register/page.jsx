@@ -38,7 +38,7 @@ export default function SignUpPage() {
     const fileInputRef = useRef(null);
 
     const roles = [
-        { id: "tenant", label: "Tenant", description: "Looking for a home", icon: MdHome, colorClass: "text-blue-600", bgClass: "bg-blue-100" },
+        { id: "tenant", label: "Tenant", description: "Looking for a home", icon: MdHome, colorClass: "text-emerald-600", bgClass: "bg-emerald-100" },
         { id: "owner", label: "Owner", description: "List your property", icon: MdBusiness, colorClass: "text-purple-600", bgClass: "bg-purple-100" },
     ];
 
@@ -51,10 +51,10 @@ export default function SignUpPage() {
         const role = roles.find(r => r.id === selectedRole);
         if (!role) return null;
         const Icon = role.icon;
-        return <Icon className={selectedRole === "tenant" ? "text-blue-500" : "text-purple-500"} size={18} />;
+        return <Icon className={selectedRole === "tenant" ? "text-emerald-500" : "text-purple-500"} size={18} />;
     };
 
-    // 📸 ইমেজ আপলোড ফাংশন (AddPropertyForm থেকে নেওয়া)
+    // 📸 ইমেজ আপলোড ফাংশন
     const uploadImageToImgBB = async (file) => {
         const API_KEY = process.env.NEXT_PUBLIC_IMGBB_API_KEY;
 
@@ -89,7 +89,6 @@ export default function SignUpPage() {
         const file = e.target.files?.[0];
         if (!file) return;
 
-        // ভ্যালিডেশন
         const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp', 'image/gif'];
         const isValidType = validTypes.includes(file.type);
         const isValidSize = file.size <= 5 * 1024 * 1024;
@@ -103,11 +102,10 @@ export default function SignUpPage() {
             return;
         }
 
-        // প্রিভিউ তৈরি
         const preview = URL.createObjectURL(file);
         setImagePreview(preview);
         setSelectedImage(file);
-        setImageUrl(""); // Reset URL if any
+        setImageUrl("");
 
         if (fileInputRef.current) {
             fileInputRef.current.value = '';
@@ -123,7 +121,6 @@ export default function SignUpPage() {
         setImageUrl("");
     };
 
-    // Image URL input change
     const handleImageUrlChange = (e) => {
         const url = e.target.value;
         setImageUrl(url);
@@ -159,7 +156,6 @@ export default function SignUpPage() {
         try {
             let finalImageUrl = imageUrlFromInput;
 
-            // 📸 ইমেজ আপলোড (যদি ফাইল সিলেক্ট করা থাকে)
             if (selectedImage) {
                 setUploading(true);
                 setUploadProgress(0);
@@ -235,18 +231,18 @@ export default function SignUpPage() {
     };
 
     return (
-        <div className="bg-gradient-to-r from-amber-50 via-white to-amber-50 min-h-screen py-8">
+        <div className="bg-gradient-to-r from-emerald-50/80 via-white to-emerald-50/60 min-h-screen py-8">
             <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 {/* Page Header */}
                 <div className="text-center mb-8">
-                    <div className="inline-flex items-center gap-2 bg-amber-100 text-amber-600 px-4 py-2 rounded-full text-sm font-semibold mb-4">
+                    <div className="inline-flex items-center gap-2 bg-emerald-100/80 text-emerald-700 px-4 py-2 rounded-full text-sm font-semibold mb-4">
                         <span>📝</span>
                         <span>Join Us Today</span>
                     </div>
-                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-amber-600 to-orange-500 bg-clip-text text-transparent mb-4">
+                    <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-emerald-600 to-emerald-700 bg-clip-text text-transparent mb-4">
                         Create Account
                     </h1>
-                    <div className="w-24 h-1 bg-gradient-to-r from-amber-600 to-orange-500 mx-auto rounded-full"></div>
+                    <div className="w-24 h-1 bg-gradient-to-r from-emerald-600 to-emerald-700 mx-auto rounded-full"></div>
                     <p className="text-gray-500 mt-4">
                         Sign up for exclusive deals and offers
                     </p>
@@ -254,7 +250,7 @@ export default function SignUpPage() {
 
                 {/* Sign Up Card */}
                 <div className="flex justify-center items-center">
-                    <Card className="w-full max-w-md border border-amber-100 shadow-xl hover:shadow-2xl transition-all duration-300 bg-white">
+                    <Card className="w-full max-w-md border border-emerald-100/50 shadow-xl hover:shadow-2xl transition-all duration-300 bg-white">
                         <div className="p-6 md:p-8">
                             <Form className="flex flex-col gap-5" onSubmit={onSubmit}>
                                 {/* Name Field */}
@@ -264,18 +260,17 @@ export default function SignUpPage() {
                                         <MdPerson className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <Input
                                             placeholder="Enter your name"
-                                            className="pl-10 border-amber-100 focus:border-amber-400 w-full"
+                                            className="pl-10 border-emerald-100 focus:border-emerald-400 w-full"
                                             disabled={isLoading}
                                         />
                                     </div>
                                     <FieldError />
                                 </TextField>
 
-                                {/* 📸 Profile Image Upload - Updated */}
+                                {/* 📸 Profile Image Upload */}
                                 <div className="flex flex-col gap-2">
                                     <Label className="text-gray-700 font-semibold">Profile Image</Label>
 
-                                    {/* Drag & Drop / Click to Upload */}
                                     <div
                                         onClick={() => fileInputRef.current?.click()}
                                         onDragOver={(e) => {
@@ -293,16 +288,16 @@ export default function SignUpPage() {
                                         }}
                                         className={`border-2 border-dashed rounded-xl p-4 text-center transition-all cursor-pointer ${imagePreview
                                             ? 'border-emerald-500 bg-emerald-50/30'
-                                            : 'border-amber-200 hover:border-amber-400 hover:bg-amber-50/30'
+                                            : 'border-emerald-200 hover:border-emerald-400 hover:bg-emerald-50/30'
                                             } ${uploading ? 'opacity-50 cursor-not-allowed' : ''}`}
                                     >
                                         {uploading ? (
                                             <div className="flex flex-col items-center gap-2 py-4">
-                                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-amber-600"></div>
+                                                <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-emerald-600"></div>
                                                 <p className="text-sm text-gray-500">Uploading... {Math.round(uploadProgress)}%</p>
                                                 <div className="w-full max-w-xs bg-gray-200 rounded-full h-2">
                                                     <div
-                                                        className="bg-amber-600 h-2 rounded-full transition-all duration-300"
+                                                        className="bg-emerald-600 h-2 rounded-full transition-all duration-300"
                                                         style={{ width: `${uploadProgress}%` }}
                                                     ></div>
                                                 </div>
@@ -312,7 +307,7 @@ export default function SignUpPage() {
                                                 <img
                                                     src={imagePreview}
                                                     alt="Profile preview"
-                                                    className="w-24 h-24 rounded-full object-cover mx-auto border-4 border-amber-400 shadow-lg"
+                                                    className="w-24 h-24 rounded-full object-cover mx-auto border-4 border-emerald-400 shadow-lg"
                                                 />
                                                 <button
                                                     type="button"
@@ -328,8 +323,8 @@ export default function SignUpPage() {
                                             </div>
                                         ) : (
                                             <div className="flex flex-col items-center gap-2 py-4">
-                                                <div className="w-16 h-16 rounded-full bg-amber-100 flex items-center justify-center">
-                                                    <MdCloudUpload className="w-8 h-8 text-amber-500" />
+                                                <div className="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center">
+                                                    <MdCloudUpload className="w-8 h-8 text-emerald-500" />
                                                 </div>
                                                 <p className="text-sm font-medium text-gray-700">Click to upload or drag & drop</p>
                                                 <p className="text-xs text-gray-400">PNG, JPG, WEBP, GIF (Max 5MB)</p>
@@ -358,8 +353,8 @@ export default function SignUpPage() {
                                         <Input
                                             name="imageUrl"
                                             type="url"
-                                            placeholder="imgbb only"
-                                            className="pl-10 border-amber-100 focus:border-amber-400 w-full"
+                                            placeholder="https://i.ibb.co/..."
+                                            className="pl-10 border-emerald-100 focus:border-emerald-400 w-full"
                                             disabled={isLoading || uploading}
                                             value={imageUrl}
                                             onChange={handleImageUrlChange}
@@ -400,7 +395,7 @@ export default function SignUpPage() {
                                         <MdEmail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <Input
                                             placeholder="john@example.com"
-                                            className="pl-10 border-amber-100 focus:border-amber-400 w-full"
+                                            className="pl-10 border-emerald-100 focus:border-emerald-400 w-full"
                                             disabled={isLoading}
                                         />
                                     </div>
@@ -431,7 +426,7 @@ export default function SignUpPage() {
                                         <MdLock className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
                                         <Input
                                             placeholder="Enter your password"
-                                            className="pl-10 border-amber-100 focus:border-amber-400 w-full"
+                                            className="pl-10 border-emerald-100 focus:border-emerald-400 w-full"
                                             disabled={isLoading}
                                         />
                                     </div>
@@ -450,7 +445,7 @@ export default function SignUpPage() {
                                             <Button
                                                 aria-label="Select role dropdown trigger"
                                                 variant="bordered"
-                                                className="w-full justify-between border-2 border-amber-200 bg-white hover:bg-amber-50 text-gray-700 font-medium h-12 rounded-xl text-left px-4"
+                                                className="w-full justify-between border-2 border-emerald-200 bg-white hover:bg-emerald-50 text-gray-700 font-medium h-12 rounded-xl text-left px-4"
                                                 endContent={<span className="text-gray-400 text-xs">▼</span>}
                                                 startContent={getSelectedRoleIcon()}
                                                 disabled={isLoading}
@@ -479,8 +474,8 @@ export default function SignUpPage() {
                                                             aria-label={role.label}
                                                             className={`w-full max-w-full m-0 p-3 border rounded-xl transition-all cursor-pointer flex items-start gap-3
                                                                 ${isSelected
-                                                                    ? "border-amber-500 bg-amber-50/50 shadow-sm"
-                                                                    : "border-gray-200 bg-white hover:border-amber-200"
+                                                                    ? "border-emerald-500 bg-emerald-50/50 shadow-sm"
+                                                                    : "border-gray-200 bg-white hover:border-emerald-200"
                                                                 }`}
                                                         >
                                                             <div
@@ -514,7 +509,7 @@ export default function SignUpPage() {
                                 <div className="flex gap-3 pt-2">
                                     <Button
                                         type="submit"
-                                        className="flex-1 bg-gradient-to-r from-amber-600 to-orange-500 text-white font-semibold hover:from-amber-700 hover:to-orange-600 transition-all hover:scale-105 shadow-md h-12"
+                                        className="flex-1 bg-gradient-to-r from-emerald-600 to-emerald-700 text-white font-semibold hover:from-emerald-700 hover:to-emerald-800 transition-all hover:scale-105 shadow-md shadow-emerald-200 h-12"
                                         disabled={isLoading || uploading}
                                     >
                                         <Check size={18} />
@@ -523,7 +518,7 @@ export default function SignUpPage() {
                                     <Button
                                         type="reset"
                                         variant="flat"
-                                        className="border border-amber-200 text-gray-600 hover:bg-amber-50 h-12"
+                                        className="border border-emerald-200 text-gray-600 hover:bg-emerald-50 h-12"
                                         disabled={isLoading || uploading}
                                         onClick={() => {
                                             setSelectedRole("tenant");
@@ -539,7 +534,7 @@ export default function SignUpPage() {
                             {/* Divider */}
                             <div className="relative my-6">
                                 <div className="absolute inset-0 flex items-center">
-                                    <div className="w-full border-t border-amber-100"></div>
+                                    <div className="w-full border-t border-emerald-100"></div>
                                 </div>
                                 <div className="relative flex justify-center text-sm">
                                     <span className="px-2 bg-white text-gray-400">Or continue with</span>
@@ -550,21 +545,21 @@ export default function SignUpPage() {
                             <div className="space-y-2">
                                 <Button
                                     onClick={handleGoogleSignIn}
-                                    className="w-full border-2 border-amber-200 bg-white text-gray-700 font-semibold hover:bg-amber-50 hover:border-amber-300 transition-all duration-300 h-12"
+                                    className="w-full border-2 border-emerald-200 bg-white text-gray-700 font-semibold hover:bg-emerald-50 hover:border-emerald-300 transition-all duration-300 h-12"
                                     disabled={isLoading}
                                 >
                                     <GrGoogle className="text-red-500" />
                                     {isLoading ? "Loading..." : "Sign Up with Google"}
                                 </Button>
                                 <p className="text-xs text-gray-400 text-center">
-                                    ⚡ Google sign-up will automatically set your role as <span className="font-semibold text-blue-600">Tenant</span>
+                                    ⚡ Google sign-up will automatically set your role as <span className="font-semibold text-emerald-600">Tenant</span>
                                 </p>
                             </div>
 
                             {/* Sign In Link */}
                             <p className="text-center text-sm text-gray-600 mt-6">
                                 Already have an account?{' '}
-                                <Link href="/login" className="text-amber-600 font-semibold hover:text-amber-700 hover:underline transition-colors">
+                                <Link href="/login" className="text-emerald-600 font-semibold hover:text-emerald-700 hover:underline transition-colors">
                                     Sign In
                                 </Link>
                             </p>
