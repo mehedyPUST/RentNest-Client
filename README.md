@@ -61,5 +61,5 @@ A modern, full-stack property rental platform built with Next.js, featuring real
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/yourusername/rentnest.git
+git clone https://github.com/mehedyPUST/RentNest-Client.git
 cd rentnest
