@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from '@/lib/auth-client';
-import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
+import AccessDenied from '@/components/AccessDenied';
 import {
     Calendar,
     Search,
@@ -58,8 +58,6 @@ const AllBookingsPageAdmin = () => {
             if (search) {
                 url += `&search=${encodeURIComponent(search)}`;
             }
-
-            console.log('📤 Fetching bookings:', url);
 
             const response = await fetch(url, {
                 cache: 'no-store'
@@ -216,7 +214,7 @@ const AllBookingsPageAdmin = () => {
         );
     }
 
-    // ✅ ✅ ✅ Role Check - Admin (AccessDenied যোগ করা)
+    // ✅ ✅ ✅ Role Check - Admin
     if (user.role?.toLowerCase() !== 'admin') {
         return <AccessDenied role="admin" />;
     }

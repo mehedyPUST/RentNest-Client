@@ -1,3 +1,4 @@
+// app/dashboard/layout.jsx
 'use client';
 
 import { useState, useEffect } from 'react';
@@ -50,24 +51,18 @@ export default function DashboardLayout({ children }) {
 
     return (
         <div className="flex h-screen bg-gray-50 dark:bg-gray-950 overflow-hidden">
-            {/* সাইডবার */}
             <DashboardSidebar
                 isOpen={sidebarOpen}
                 setIsOpen={setSidebarOpen}
                 isMobile={isMobile}
             />
-
-            {/* ডান পাশের কন্টেন্ট */}
             <div className="flex-1 flex flex-col min-w-0">
-                {/* নাভবার */}
                 <DashboardNavbar
                     onMenuClick={() => setSidebarOpen(!sidebarOpen)}
                     user={session?.user}
                     isMobile={isMobile}
                     isSidebarOpen={sidebarOpen}
                 />
-
-                {/* মেইন কন্টেন্ট */}
                 <main className="flex-1 overflow-y-auto p-4 md:p-6 lg:p-8">
                     <div className="max-w-7xl mx-auto">
                         {children}

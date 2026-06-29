@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useSession } from '@/lib/auth-client';
-import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
+import AccessDenied from '@/components/AccessDenied';
 import {
     DollarSign,
     Search,
@@ -216,7 +216,7 @@ const TransactionsPageAdmin = () => {
         );
     }
 
-    // ✅ ✅ ✅ Role Check - Admin (AccessDenied যোগ করা)
+    // ✅ ✅ ✅ Role Check - Admin
     if (user.role?.toLowerCase() !== 'admin') {
         return <AccessDenied role="admin" />;
     }

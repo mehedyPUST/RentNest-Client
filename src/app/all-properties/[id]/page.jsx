@@ -58,7 +58,9 @@ const PropertyDetailsPage = ({ params }) => {
                 // ✅ Single property fetch
                 const res = await fetch(
                     `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties/${id}`,
-                    { cache: 'no-store' }
+                    { cache: 'no-store' },
+
+
                 );
 
                 if (!res.ok) throw new Error('Failed to fetch property');

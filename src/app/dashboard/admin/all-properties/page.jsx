@@ -3,7 +3,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useSession } from '@/lib/auth-client';
-import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
+import AccessDenied from '@/components/AccessDenied';
 import {
     Pencil,
     Trash2,
@@ -22,7 +22,6 @@ import Link from 'next/link';
 import toast from 'react-hot-toast';
 import EditPropertyModal from '@/components/EditPropertyModal';
 
-// API Service with Pagination
 const API_BASE = process.env.NEXT_PUBLIC_BASE_URL;
 
 const propertyApi = {
@@ -35,7 +34,6 @@ const propertyApi = {
         if (!res.ok) throw new Error('Failed to fetch properties');
         return res.json();
     },
-
     approve: async (id) => {
         const res = await fetch(`${API_BASE}/api/properties/${id}/approve`, {
             method: 'PATCH',
@@ -46,7 +44,6 @@ const propertyApi = {
         if (!res.ok || !data.success) throw new Error(data.message || 'Failed to approve');
         return data;
     },
-
     reject: async (id, reason) => {
         const res = await fetch(`${API_BASE}/api/properties/${id}/reject`, {
             method: 'PATCH',
@@ -60,7 +57,6 @@ const propertyApi = {
         if (!res.ok || !data.success) throw new Error(data.message || 'Failed to reject');
         return data;
     },
-
     delete: async (id) => {
         const res = await fetch(`${API_BASE}/api/properties/${id}`, {
             method: 'DELETE',
@@ -105,7 +101,6 @@ const AllPropertiesPageAdminView = () => {
     const [filterStatus, setFilterStatus] = useState('all');
     const [processingId, setProcessingId] = useState(null);
 
-    // Pagination State
     const [pagination, setPagination] = useState({
         currentPage: 1,
         totalPages: 1,
@@ -113,7 +108,6 @@ const AllPropertiesPageAdminView = () => {
         itemsPerPage: 20
     });
 
-    // Reject Modal
     const [rejectModal, setRejectModal] = useState({
         isOpen: false,
         id: null,
@@ -122,7 +116,6 @@ const AllPropertiesPageAdminView = () => {
     });
     const [rejectReason, setRejectReason] = useState('');
 
-    // Confirmation Modal
     const [confirmModal, setConfirmModal] = useState({
         isOpen: false,
         id: null,
@@ -134,11 +127,9 @@ const AllPropertiesPageAdminView = () => {
         property: null
     });
 
-    // Edit Modal
     const [editModalOpen, setEditModalOpen] = useState(false);
     const [selectedProperty, setSelectedProperty] = useState(null);
 
-    // Fetch data with pagination
     const fetchData = useCallback(async (page = 1) => {
         if (!user) return;
 
@@ -167,14 +158,12 @@ const AllPropertiesPageAdminView = () => {
         }
     }, [user, searchTerm, filterStatus, pagination.itemsPerPage]);
 
-    // Initial load
     useEffect(() => {
         if (user) {
             fetchData(1);
         }
     }, [user]);
 
-    // Handle page change
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPages) {
             fetchData(newPage);
@@ -182,25 +171,21 @@ const AllPropertiesPageAdminView = () => {
         }
     };
 
-    // Handle search
     const handleSearch = (e) => {
         e.preventDefault();
         fetchData(1);
     };
 
-    // Clear search
     const clearSearch = () => {
         setSearchTerm('');
         fetchData(1);
     };
 
-    // Handle status filter change
     const handleStatusChange = (e) => {
         setFilterStatus(e.target.value);
         fetchData(1);
     };
 
-    // Open Confirmation Modal
     const openConfirmModal = (property, action, message, confirmText, confirmColor) => {
         setConfirmModal({
             isOpen: true,
@@ -214,7 +199,6 @@ const AllPropertiesPageAdminView = () => {
         });
     };
 
-    // Close Confirmation Modal
     const closeConfirmModal = () => {
         setConfirmModal({
             isOpen: false,
@@ -228,7 +212,6 @@ const AllPropertiesPageAdminView = () => {
         });
     };
 
-    // Handle Confirm Action (Approve/Delete)
     const handleConfirmAction = async () => {
         const { id, title, action, property } = confirmModal;
 
@@ -259,7 +242,6 @@ const AllPropertiesPageAdminView = () => {
         }
     };
 
-    // Open Reject Modal
     const openRejectModal = (property) => {
         const propertyId = property._id?.$oid || property._id || property.id;
         setRejectModal({
@@ -271,7 +253,6 @@ const AllPropertiesPageAdminView = () => {
         setRejectReason('');
     };
 
-    // Close Reject Modal
     const closeRejectModal = () => {
         setRejectModal({
             isOpen: false,
@@ -282,7 +263,6 @@ const AllPropertiesPageAdminView = () => {
         setRejectReason('');
     };
 
-    // Handle Reject Submit
     const handleRejectSubmit = async () => {
         const { id, title } = rejectModal;
         if (!id) return;
@@ -301,13 +281,11 @@ const AllPropertiesPageAdminView = () => {
         }
     };
 
-    // Handle Edit
     const handleEditClick = (property) => {
         setSelectedProperty(property);
         setEditModalOpen(true);
     };
 
-    // Handle property update after edit
     const handlePropertyUpdate = () => {
         fetchData(pagination.currentPage);
     };
@@ -340,7 +318,7 @@ const AllPropertiesPageAdminView = () => {
         );
     }
 
-    // ✅ ✅ ✅ Role Check - Admin (AccessDenied যোগ করা)
+    // ✅ ✅ ✅ Role Check - Admin
     if (user.role?.toLowerCase() !== 'admin') {
         return <AccessDenied role="admin" />;
     }

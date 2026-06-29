@@ -1,7 +1,7 @@
 'use client';
 
 import { createProperty } from '@/lib/actions/properties';
-import { useSession } from '@/lib/auth-client';
+import { authClient, useSession } from '@/lib/auth-client';
 import React, { useState, useRef, useEffect } from 'react';
 import AccessDenied from '@/components/AccessDenied'; // ✅ যোগ করুন
 
@@ -126,6 +126,7 @@ export default function AddPropertyForm() {
             const file = files[i];
             const formData = new FormData();
             formData.append('image', file);
+
 
             try {
                 const response = await fetch(`https://api.imgbb.com/1/upload?key=${API_KEY}`, {

@@ -1,17 +1,14 @@
 // src/proxy.js
 import { NextResponse } from 'next/server';
 
-// ✅ Protected Routes
 const protectedRoutes = {
     admin: ['/dashboard/admin', '/dashboard/admin/:path*'],
     owner: ['/dashboard/owner', '/dashboard/owner/:path*'],
     tenant: ['/dashboard/tenant', '/dashboard/tenant/:path*'],
 };
 
-// ✅ Public Routes
 const publicRoutes = ['/', '/all-properties', '/login', '/register', '/api/auth'];
 
-// ✅ Check route match
 const matchesPattern = (path, patterns) => {
     return patterns.some(pattern => {
         if (pattern.includes(':path*')) {
@@ -25,30 +22,21 @@ const matchesPattern = (path, patterns) => {
 export async function proxy(request) {
     const { pathname } = request.nextUrl;
 
-    // ✅ Skip API routes
     if (pathname.startsWith('/api/')) {
         return NextResponse.next();
     }
 
-    // ✅ Skip public routes
     if (publicRoutes.some(p => pathname === p || pathname.startsWith(p + '/'))) {
         return NextResponse.next();
     }
 
-    // ✅ Check if protected
-    const isProtected = Object.values(protectedRoutes).some(routes =>
-        matchesPattern(pathname, routes)
-    );
-
-    if (!isProtected) {
+    if (!pathname.startsWith('/dashboard')) {
         return NextResponse.next();
     }
 
-    // ✅ Get session using Better Auth internal API
     try {
-        const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL;
+        const baseUrl = process.env.NEXT_PUBLIC_FRONTEND_URL || 'http://localhost:3000';
 
-        // ✅ Call Better Auth get-session API
         const sessionRes = await fetch(`${baseUrl}/api/auth/get-session`, {
             headers: {
                 Cookie: request.headers.get('cookie') || '',
@@ -71,21 +59,30 @@ export async function proxy(request) {
 
         const userRole = sessionData.user.role?.toLowerCase() || 'tenant';
 
-        // ✅ Role-based access
         const isAdminRoute = matchesPattern(pathname, protectedRoutes.admin);
         const isOwnerRoute = matchesPattern(pathname, protectedRoutes.owner);
         const isTenantRoute = matchesPattern(pathname, protectedRoutes.tenant);
 
+        // ✅ Access Denied - Redirect to Access Denied Page
         if (isAdminRoute && userRole !== 'admin') {
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+            const deniedUrl = new URL('/access-denied', request.url);
+            deniedUrl.searchParams.set('role', 'admin');
+            deniedUrl.searchParams.set('from', pathname);
+            return NextResponse.redirect(deniedUrl);
         }
 
         if (isOwnerRoute && userRole !== 'owner' && userRole !== 'admin') {
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+            const deniedUrl = new URL('/access-denied', request.url);
+            deniedUrl.searchParams.set('role', 'owner');
+            deniedUrl.searchParams.set('from', pathname);
+            return NextResponse.redirect(deniedUrl);
         }
 
         if (isTenantRoute && userRole !== 'tenant' && userRole !== 'owner' && userRole !== 'admin') {
-            return NextResponse.redirect(new URL('/dashboard', request.url));
+            const deniedUrl = new URL('/access-denied', request.url);
+            deniedUrl.searchParams.set('role', 'tenant');
+            deniedUrl.searchParams.set('from', pathname);
+            return NextResponse.redirect(deniedUrl);
         }
 
         return NextResponse.next();
