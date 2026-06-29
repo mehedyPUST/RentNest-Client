@@ -2,7 +2,7 @@
 'use client';
 
 import { useState } from 'react';
-import { Menu, Bell, User, LogOut, Settings, ChevronDown, Search, X } from 'lucide-react';
+import { Menu, Home, User, LogOut, Settings, ChevronDown, Search, X } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { authClient } from '@/lib/auth-client';
@@ -80,11 +80,14 @@ export default function DashboardNavbar({ onMenuClick, user, isMobile, isSidebar
 
                 {/* ডান পাশে - ইউজার প্রোফাইল */}
                 <div className="flex items-center gap-2 md:gap-4">
-                    {/* নোটিফিকেশন বেল */}
-                    <button className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative">
-                        <Bell className="size-5 text-gray-600 dark:text-gray-400" />
-                        <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full"></span>
-                    </button>
+                    {/* 🏠 Home Button - Bell এর জায়গায় */}
+                    <Link
+                        href="/"
+                        className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors relative group"
+                        title="Go to Home"
+                    >
+                        <Home className="size-5 text-gray-600 dark:text-gray-400 group-hover:text-emerald-600 dark:group-hover:text-emerald-400 transition-colors" />
+                    </Link>
 
                     <div className="relative">
                         <button

@@ -2,7 +2,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { X, ChevronLeft, ChevronRight, LogOut } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, LogOut, Home } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
@@ -50,14 +50,14 @@ export default function DashboardSidebar({ isOpen, setIsOpen, isMobile }) {
 
     if (userRole === 'tenant') {
         navItems = [
-            { icon: House, href: '/dashboard/tenant', label: "Home" },
+            { icon: House, href: '/dashboard/tenant', label: "Dashboard Home" },
             { icon: CalendarCheck, href: '/dashboard/tenant/my-bookings', label: "My Bookings" },
             { icon: Heart, href: '/dashboard/tenant/favorites', label: "Favorites" },
             { icon: User, href: '/dashboard/tenant/profile', label: "Profile" },
         ];
     } else if (userRole === 'owner') {
         navItems = [
-            { icon: House, href: '/dashboard/owner', label: "Home" },
+            { icon: House, href: '/dashboard/owner', label: "Dashboard Home" },
             { icon: Search, href: '/dashboard/owner/my-properties', label: "My Properties" },
             { icon: PlusCircle, href: '/dashboard/owner/add-property', label: "Add a New Property" },
             { icon: FileText, href: '/dashboard/owner/booking-requests', label: "Booking Requests" },
@@ -79,13 +79,22 @@ export default function DashboardSidebar({ isOpen, setIsOpen, isMobile }) {
         <>
             {/* ✅ হেডার - h-16 fixed (Navbar এর সাথে match) */}
             <div className={`h-16 flex items-center px-4 border-b border-gray-200 dark:border-gray-800 ${isCollapsed ? 'justify-center' : ''}`}>
-                <Link href="/" className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}>
-                    <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
-                        <span className="text-white font-bold text-base">RN</span>
-                    </div>
-                    {!isCollapsed && (
-                        <span className="text-lg font-bold text-gray-900 dark:text-white">
-                            Rent<span className="text-emerald-600">Nest</span>
+                <Link
+                    href="/"
+                    className={`flex items-center ${isCollapsed ? 'justify-center' : 'gap-3'}`}
+                >
+                    {!isCollapsed ? (
+                        <>
+                            <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
+                                <Home className="w-4 h-4 text-white" />
+                            </div>
+                            <span className="text-xl font-bold text-gray-900 dark:text-white">
+                                Rent<span className="text-emerald-600">Nest</span>
+                            </span>
+                        </>
+                    ) : (
+                        <span className="text-xl font-bold text-emerald-600 dark:text-emerald-400">
+                            RN
                         </span>
                     )}
                 </Link>
@@ -100,6 +109,11 @@ export default function DashboardSidebar({ isOpen, setIsOpen, isMobile }) {
                             <Link
                                 href={item.href}
                                 key={item.label}
+                                onClick={() => {
+                                    if (isMobile) {
+                                        setIsOpen(false);
+                                    }
+                                }}
                                 className={`
                                     flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-all duration-200
                                     ${isActive
@@ -198,11 +212,12 @@ export default function DashboardSidebar({ isOpen, setIsOpen, isMobile }) {
                         <div className="flex flex-col h-full">
                             {/* মোবাইল হেডার - h-16 */}
                             <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200 dark:border-gray-800">
-                                <Link href="/dashboard" className="flex items-center gap-3">
-                                    <div className="w-9 h-9 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-xl flex items-center justify-center shadow-lg shadow-emerald-500/20">
-                                        <span className="text-white font-bold text-base">RN</span>
+                                <Link href="/" className="flex items-center gap-3">
+                                    {/* ✅ মোবাইলেও Home Icon দেখাবে */}
+                                    <div className="w-8 h-8 bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-lg flex items-center justify-center shadow-lg shadow-emerald-500/20 flex-shrink-0">
+                                        <Home className="w-4 h-4 text-white" />
                                     </div>
-                                    <span className="text-lg font-bold text-gray-900 dark:text-white">
+                                    <span className="text-xl font-bold text-gray-900 dark:text-white">
                                         Rent<span className="text-emerald-600">Nest</span>
                                     </span>
                                 </Link>
@@ -223,7 +238,9 @@ export default function DashboardSidebar({ isOpen, setIsOpen, isMobile }) {
                                             <Link
                                                 href={item.href}
                                                 key={item.label}
-                                                onClick={() => setIsOpen(false)}
+                                                onClick={() => {
+                                                    setIsOpen(false);
+                                                }}
                                                 className={`
                                                     flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm transition-colors
                                                     ${isActive
