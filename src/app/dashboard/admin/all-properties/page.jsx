@@ -72,9 +72,7 @@ const StatusBadge = ({ status }) => {
     const styles = {
         pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
         approved: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        rejected: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-        sold: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-400',
-        rented: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400'
+        rejected: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
     };
     const statusKey = status?.toLowerCase() || 'pending';
     return (
@@ -164,6 +162,13 @@ const AllPropertiesPageAdminView = () => {
         }
     }, [user]);
 
+    // ✅ Auto fetch when filter or search changes
+    useEffect(() => {
+        if (user) {
+            fetchData(1);
+        }
+    }, [filterStatus, searchTerm]);
+
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPages) {
             fetchData(newPage);
@@ -178,12 +183,12 @@ const AllPropertiesPageAdminView = () => {
 
     const clearSearch = () => {
         setSearchTerm('');
-        fetchData(1);
+        // fetchData(1); // ✅ useEffect auto handle করবে
     };
 
     const handleStatusChange = (e) => {
         setFilterStatus(e.target.value);
-        fetchData(1);
+        // fetchData(1); // ✅ useEffect auto handle করবে
     };
 
     const openConfirmModal = (property, action, message, confirmText, confirmColor) => {
@@ -395,8 +400,6 @@ const AllPropertiesPageAdminView = () => {
                             <option value="pending">Pending</option>
                             <option value="approved">Approved</option>
                             <option value="rejected">Rejected</option>
-                            <option value="sold">Sold</option>
-                            <option value="rented">Rented</option>
                         </select>
                     </div>
                 </div>
@@ -634,8 +637,8 @@ const AllPropertiesPageAdminView = () => {
                                                     key={pageNum}
                                                     onClick={() => handlePageChange(pageNum)}
                                                     className={`px-3 py-1.5 text-sm rounded-lg transition ${pagination.currentPage === pageNum
-                                                            ? 'bg-emerald-600 text-white font-medium'
-                                                            : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
+                                                        ? 'bg-emerald-600 text-white font-medium'
+                                                        : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800'
                                                         }`}
                                                 >
                                                     {pageNum}
