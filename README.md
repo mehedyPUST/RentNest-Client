@@ -33,7 +33,7 @@ A modern, full-stack property rental platform built with Next.js, featuring real
 ## 🚀 Tech Stack
 
 ### Frontend
-- **Framework**: [Next.js 14](https://nextjs.org/) (App Router)
+- **Framework**: Next.js App Router
 - **Language**: JavaScript/React
 - **Styling**: Tailwind CSS with custom components
 - **Animations**: [Framer Motion](https://www.framer.com/motion/)
