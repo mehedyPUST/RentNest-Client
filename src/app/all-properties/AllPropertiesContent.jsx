@@ -145,21 +145,36 @@ const AllPropertiesContent = () => {
         fetchProperties(1);
     };
 
-    // Search with debounce
-    useEffect(() => {
-        const delayDebounceFn = setTimeout(() => {
-            if (searchInput !== filters.search) {
-                setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
-            }
-        }, 500);
-        return () => clearTimeout(delayDebounceFn);
-    }, [searchInput]);
+    // ✅ Search handler with Enter key
+    const handleSearchSubmit = (e) => {
+        e.preventDefault();
+        setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
+        fetchProperties(1);
+    };
 
-    // Fetch on filter change
+    // ✅ Clear search
+    const clearSearch = () => {
+        setSearchInput('');
+        setFilters(prev => ({ ...prev, search: '', page: 1 }));
+        fetchProperties(1);
+    };
+
+    // ✅ Auto fetch when filter changes (except search)
     useEffect(() => {
+        if (filters.search !== searchInput) {
+            return;
+        }
         fetchProperties(filters.page || 1);
-    }, [filters.search, filters.propertyType, filters.minPrice, filters.maxPrice,
-    filters.bedrooms, filters.bathrooms, filters.sortBy, filters.sortOrder, filters.location]);
+    }, [
+        filters.propertyType,
+        filters.minPrice,
+        filters.maxPrice,
+        filters.bedrooms,
+        filters.bathrooms,
+        filters.sortBy,
+        filters.sortOrder,
+        filters.location
+    ]);
 
     // Format price
     const formatPrice = (price) => {
@@ -215,7 +230,6 @@ const AllPropertiesContent = () => {
     }
 
     return (
-        // ✅ max-w-7xl সরিয়ে w-full করা হয়েছে
         <div className="min-h-screen bg-gradient-to-b from-white via-slate-50 to-white dark:from-gray-950 dark:to-gray-900 py-8 px-4 md:px-6 w-full">
             <div className="w-full">
 
@@ -276,38 +290,39 @@ const AllPropertiesContent = () => {
                     )}
                 </div>
 
-                {/* Search and Filter Bar */}
+                {/* ✅ Search and Filter Bar - New Layout */}
                 <div className="mb-8">
-                    <div className="flex flex-col md:flex-row gap-4">
-                        <div className="flex-1 relative">
-                            <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                            <input
-                                type="text"
-                                placeholder="Search by location, title, or description..."
-                                value={searchInput}
-                                onChange={(e) => setSearchInput(e.target.value)}
-                                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                            />
-                            {searchInput && (
-                                <button
-                                    onClick={() => {
-                                        setSearchInput('');
-                                        setFilters(prev => ({ ...prev, search: '' }));
-                                    }}
-                                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-                                >
-                                    <FaTimes />
-                                </button>
-                            )}
-                        </div>
+                    <div className="flex flex-col md:flex-row gap-3">
+                        {/* Search Input + Filter Button + Search Button - Inline */}
+                        <form onSubmit={handleSearchSubmit} className="flex-1 flex gap-2">
+                            <div className="relative flex-1">
+                                <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                                <input
+                                    type="text"
+                                    placeholder="Search by location, title, or description..."
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                                />
+                                {searchInput && (
+                                    <button
+                                        type="button"
+                                        onClick={clearSearch}
+                                        className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                                    >
+                                        <FaTimes />
+                                    </button>
+                                )}
+                            </div>
 
-                        <div className="flex gap-3">
+                            {/* ✅ Filter Button - Immediately right of search input */}
                             <button
+                                type="button"
                                 onClick={() => setShowFilters(!showFilters)}
-                                className="px-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center gap-2 relative"
+                                className="px-4 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl hover:bg-gray-50 dark:hover:bg-gray-800 transition flex items-center gap-2 relative flex-shrink-0"
                             >
-                                <FaFilter />
-                                <span>Filters</span>
+                                <FaFilter className="text-gray-600 dark:text-gray-400" />
+                                <span className="hidden sm:inline text-gray-700 dark:text-gray-300">Filters</span>
                                 {getActiveFilterCount() > 0 && (
                                     <span className="absolute -top-2 -right-2 w-5 h-5 bg-emerald-600 text-white text-xs rounded-full flex items-center justify-center">
                                         {getActiveFilterCount()}
@@ -315,11 +330,23 @@ const AllPropertiesContent = () => {
                                 )}
                             </button>
 
+                            {/* ✅ Search Button */}
+                            <button
+                                type="submit"
+                                className="px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition font-medium flex-shrink-0"
+                            >
+                                <FaSearch className="inline mr-2" />
+                                Search
+                            </button>
+                        </form>
+
+                        {/* Sort By Dropdown - Moved to right side */}
+                        <div className="flex-shrink-0">
                             <select
                                 name="sortBy"
                                 value={filters.sortBy}
                                 onChange={handleFilterChange}
-                                className="px-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
+                                className="w-full md:w-auto px-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
                             >
                                 <option value="createdAt">Latest First</option>
                                 <option value="price">Price: Low to High</option>
