@@ -16,7 +16,7 @@ const AllPropertiesContent = () => {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
     const [showFilters, setShowFilters] = useState(false);
-    const [searchInput, setSearchInput] = useState('');
+    const [tempSearch, setTempSearch] = useState('');
 
     // Pagination State
     const [pagination, setPagination] = useState({
@@ -40,18 +40,27 @@ const AllPropertiesContent = () => {
         page: parseInt(searchParams.get('page')) || 1,
     });
 
+    // Temporary filter state for Apply Filters button
+    const [tempFilters, setTempFilters] = useState({
+        propertyType: filters.propertyType || '',
+        minPrice: filters.minPrice || '',
+        maxPrice: filters.maxPrice || '',
+        bedrooms: filters.bedrooms || '',
+        bathrooms: filters.bathrooms || '',
+        location: filters.location || '',
+    });
+
     const propertyTypes = ['Apartment', 'House', 'Villa', 'Commercial Space'];
 
-    // Fetch properties with pagination
+    // ✅ Main fetch function - uses current filters
     const fetchProperties = useCallback(async (page = 1) => {
         try {
             setLoading(true);
             setError(null);
 
-            setFilters(prev => ({ ...prev, page }));
-
             const queryParams = new URLSearchParams();
 
+            // Add all filters
             Object.entries({ ...filters, page }).forEach(([key, value]) => {
                 if (value && value.toString().trim() !== '') {
                     if (key === 'sortBy' && value === 'createdAt') return;
@@ -106,6 +115,68 @@ const AllPropertiesContent = () => {
         }
     }, [filters, router, pagination.itemsPerPage]);
 
+    // ✅ Fetch with custom filters (for search, sort, filter)
+    const fetchPropertiesWithFilters = useCallback(async (customFilters, page = 1) => {
+        try {
+            setLoading(true);
+            setError(null);
+
+            const queryParams = new URLSearchParams();
+
+            Object.entries({ ...customFilters, page }).forEach(([key, value]) => {
+                if (value && value.toString().trim() !== '') {
+                    if (key === 'sortBy' && value === 'createdAt') return;
+                    if (key === 'sortOrder' && value === 'desc') return;
+                    queryParams.append(key, value);
+                }
+            });
+
+            queryParams.append('limit', pagination.itemsPerPage);
+
+            const url = `${process.env.NEXT_PUBLIC_BASE_URL}/api/properties?${queryParams.toString()}`;
+            console.log('📤 Fetching with custom filters:', url);
+
+            const res = await fetch(url, { cache: 'no-store' });
+
+            if (!res.ok) {
+                const errorData = await res.json();
+                throw new Error(errorData.message || 'Failed to fetch properties');
+            }
+
+            const data = await res.json();
+
+            let props = Array.isArray(data) ? data : data?.properties || [];
+            const approvedProps = props.filter(p => p.status?.toLowerCase() === 'approved');
+
+            setProperties(approvedProps);
+
+            if (data.pagination) {
+                setPagination({
+                    currentPage: data.pagination.currentPage || page,
+                    totalPages: data.pagination.totalPages || 1,
+                    totalItems: data.pagination.totalItems || 0,
+                    itemsPerPage: data.pagination.itemsPerPage || 20
+                });
+            }
+
+            const newQueryString = queryParams.toString();
+            const newUrl = newQueryString
+                ? `/all-properties?${newQueryString}`
+                : '/all-properties';
+
+            if (window.location.pathname + window.location.search !== newUrl) {
+                router.replace(newUrl, { scroll: false });
+            }
+
+        } catch (err) {
+            console.error('❌ Error fetching properties:', err);
+            setError(err.message);
+            setProperties([]);
+        } finally {
+            setLoading(false);
+        }
+    }, [router, pagination.itemsPerPage]);
+
     // Handle page change
     const handlePageChange = (newPage) => {
         if (newPage >= 1 && newPage <= pagination.totalPages) {
@@ -114,21 +185,79 @@ const AllPropertiesContent = () => {
         }
     };
 
-    // Handle filter change
-    const handleFilterChange = (e) => {
+    // Handle filter change in temp state
+    const handleTempFilterChange = (e) => {
         const { name, value } = e.target;
-        setFilters(prev => ({ ...prev, [name]: value, page: 1 }));
+        setTempFilters(prev => ({ ...prev, [name]: value }));
     };
 
-    // Apply filters
+    // ✅ Handle sort change - INSTANT (no page reload)
+    const handleSortChange = (e) => {
+        const { name, value } = e.target;
+        const newFilters = {
+            ...filters,
+            [name]: value,
+            page: 1
+        };
+        setFilters(newFilters);
+        // ✅ Direct fetch with new sort
+        fetchPropertiesWithFilters(newFilters, 1);
+    };
+
+    // ✅ Apply filters - INSTANT (no double click)
     const applyFilters = () => {
-        fetchProperties(1);
+        const newFilters = {
+            ...filters,
+            propertyType: tempFilters.propertyType,
+            minPrice: tempFilters.minPrice,
+            maxPrice: tempFilters.maxPrice,
+            bedrooms: tempFilters.bedrooms,
+            bathrooms: tempFilters.bathrooms,
+            location: tempFilters.location,
+            page: 1
+        };
+        setFilters(newFilters);
         setShowFilters(false);
+        // ✅ Direct fetch with new filters
+        fetchPropertiesWithFilters(newFilters, 1);
     };
 
-    // Reset filters
+    // ✅ Apply search - INSTANT (no double click)
+    const applySearch = () => {
+        const newFilters = {
+            ...filters,
+            search: tempSearch,
+            page: 1
+        };
+        setFilters(newFilters);
+        // ✅ Direct fetch with new search
+        fetchPropertiesWithFilters(newFilters, 1);
+    };
+
+    // Handle search input change (temp)
+    const handleSearchChange = (e) => {
+        setTempSearch(e.target.value);
+    };
+
+    // Handle search on Enter key - INSTANT
+    const handleSearchKeyDown = (e) => {
+        if (e.key === 'Enter') {
+            e.preventDefault();
+            applySearch();
+        }
+    };
+
+    // ✅ Clear search - INSTANT
+    const clearSearch = () => {
+        setTempSearch('');
+        const newFilters = { ...filters, search: '', page: 1 };
+        setFilters(newFilters);
+        fetchPropertiesWithFilters(newFilters, 1);
+    };
+
+    // ✅ Reset filters - INSTANT
     const resetFilters = () => {
-        setFilters({
+        const newFilters = {
             search: '',
             propertyType: '',
             minPrice: '',
@@ -139,42 +268,25 @@ const AllPropertiesContent = () => {
             sortOrder: 'desc',
             location: '',
             page: 1
+        };
+        setFilters(newFilters);
+        setTempFilters({
+            propertyType: '',
+            minPrice: '',
+            maxPrice: '',
+            bedrooms: '',
+            bathrooms: '',
+            location: '',
         });
-        setSearchInput('');
+        setTempSearch('');
         setShowFilters(false);
-        fetchProperties(1);
+        fetchPropertiesWithFilters(newFilters, 1);
     };
 
-    // ✅ Search handler with Enter key
-    const handleSearchSubmit = (e) => {
-        e.preventDefault();
-        setFilters(prev => ({ ...prev, search: searchInput, page: 1 }));
-        fetchProperties(1);
-    };
-
-    // ✅ Clear search
-    const clearSearch = () => {
-        setSearchInput('');
-        setFilters(prev => ({ ...prev, search: '', page: 1 }));
-        fetchProperties(1);
-    };
-
-    // ✅ Auto fetch when filter changes (except search)
+    // Initial load
     useEffect(() => {
-        if (filters.search !== searchInput) {
-            return;
-        }
         fetchProperties(filters.page || 1);
-    }, [
-        filters.propertyType,
-        filters.minPrice,
-        filters.maxPrice,
-        filters.bedrooms,
-        filters.bathrooms,
-        filters.sortBy,
-        filters.sortOrder,
-        filters.location
-    ]);
+    }, []);
 
     // Format price
     const formatPrice = (price) => {
@@ -290,21 +402,22 @@ const AllPropertiesContent = () => {
                     )}
                 </div>
 
-                {/* ✅ Search and Filter Bar - New Layout */}
+                {/* Search and Filter Bar */}
                 <div className="mb-8">
                     <div className="flex flex-col md:flex-row gap-3">
-                        {/* Search Input + Filter Button + Search Button - Inline */}
-                        <form onSubmit={handleSearchSubmit} className="flex-1 flex gap-2">
+                        {/* Search Input with Apply button */}
+                        <div className="flex-1 flex gap-2">
                             <div className="relative flex-1">
                                 <FaSearch className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                                 <input
                                     type="text"
                                     placeholder="Search by location, title, or description..."
-                                    value={searchInput}
-                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    value={tempSearch}
+                                    onChange={handleSearchChange}
+                                    onKeyDown={handleSearchKeyDown}
                                     className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-700 rounded-xl bg-white dark:bg-gray-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                 />
-                                {searchInput && (
+                                {tempSearch && (
                                     <button
                                         type="button"
                                         onClick={clearSearch}
@@ -315,7 +428,17 @@ const AllPropertiesContent = () => {
                                 )}
                             </div>
 
-                            {/* ✅ Filter Button - Immediately right of search input */}
+                            {/* Apply Search Button - Instant */}
+                            <button
+                                type="button"
+                                onClick={applySearch}
+                                className="px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition font-medium flex-shrink-0 whitespace-nowrap"
+                            >
+                                <FaSearch className="inline mr-2" />
+                                Search
+                            </button>
+
+                            {/* Filter Button */}
                             <button
                                 type="button"
                                 onClick={() => setShowFilters(!showFilters)}
@@ -329,23 +452,14 @@ const AllPropertiesContent = () => {
                                     </span>
                                 )}
                             </button>
+                        </div>
 
-                            {/* ✅ Search Button */}
-                            <button
-                                type="submit"
-                                className="px-6 py-3 bg-emerald-600 text-white rounded-xl hover:bg-emerald-700 transition font-medium flex-shrink-0"
-                            >
-                                <FaSearch className="inline mr-2" />
-                                Search
-                            </button>
-                        </form>
-
-                        {/* Sort By Dropdown - Moved to right side */}
+                        {/* ✅ Sort By Dropdown - Instant */}
                         <div className="flex-shrink-0">
                             <select
                                 name="sortBy"
                                 value={filters.sortBy}
-                                onChange={handleFilterChange}
+                                onChange={handleSortChange}
                                 className="w-full md:w-auto px-5 py-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 appearance-none cursor-pointer"
                             >
                                 <option value="createdAt">Latest First</option>
@@ -360,11 +474,27 @@ const AllPropertiesContent = () => {
                     {/* Active Filters Tags */}
                     {getActiveFilterCount() > 0 && (
                         <div className="flex flex-wrap gap-2 mt-3">
+                            {filters.search && (
+                                <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-sm">
+                                    🔍 {filters.search}
+                                    <button
+                                        onClick={clearSearch}
+                                        className="hover:text-emerald-900"
+                                    >
+                                        <FaTimes className="w-3 h-3" />
+                                    </button>
+                                </span>
+                            )}
                             {filters.propertyType && (
                                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-sm">
                                     {capitalizeFirst(filters.propertyType)}
                                     <button
-                                        onClick={() => setFilters(prev => ({ ...prev, propertyType: '' }))}
+                                        onClick={() => {
+                                            const newFilters = { ...filters, propertyType: '', page: 1 };
+                                            setFilters(newFilters);
+                                            setTempFilters(prev => ({ ...prev, propertyType: '' }));
+                                            fetchPropertiesWithFilters(newFilters, 1);
+                                        }}
                                         className="hover:text-emerald-900"
                                     >
                                         <FaTimes className="w-3 h-3" />
@@ -375,7 +505,12 @@ const AllPropertiesContent = () => {
                                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm">
                                     📍 {filters.location}
                                     <button
-                                        onClick={() => setFilters(prev => ({ ...prev, location: '' }))}
+                                        onClick={() => {
+                                            const newFilters = { ...filters, location: '', page: 1 };
+                                            setFilters(newFilters);
+                                            setTempFilters(prev => ({ ...prev, location: '' }));
+                                            fetchPropertiesWithFilters(newFilters, 1);
+                                        }}
                                         className="hover:text-blue-900"
                                     >
                                         <FaTimes className="w-3 h-3" />
@@ -387,7 +522,10 @@ const AllPropertiesContent = () => {
                                     ${filters.minPrice || '0'} - ${filters.maxPrice || '∞'}
                                     <button
                                         onClick={() => {
-                                            setFilters(prev => ({ ...prev, minPrice: '', maxPrice: '' }));
+                                            const newFilters = { ...filters, minPrice: '', maxPrice: '', page: 1 };
+                                            setFilters(newFilters);
+                                            setTempFilters(prev => ({ ...prev, minPrice: '', maxPrice: '' }));
+                                            fetchPropertiesWithFilters(newFilters, 1);
                                         }}
                                         className="hover:text-purple-900"
                                     >
@@ -399,7 +537,12 @@ const AllPropertiesContent = () => {
                                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 rounded-full text-sm">
                                     🛏 {filters.bedrooms} Beds
                                     <button
-                                        onClick={() => setFilters(prev => ({ ...prev, bedrooms: '' }))}
+                                        onClick={() => {
+                                            const newFilters = { ...filters, bedrooms: '', page: 1 };
+                                            setFilters(newFilters);
+                                            setTempFilters(prev => ({ ...prev, bedrooms: '' }));
+                                            fetchPropertiesWithFilters(newFilters, 1);
+                                        }}
                                         className="hover:text-orange-900"
                                     >
                                         <FaTimes className="w-3 h-3" />
@@ -410,7 +553,12 @@ const AllPropertiesContent = () => {
                                 <span className="inline-flex items-center gap-1 px-3 py-1 bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-300 rounded-full text-sm">
                                     🛁 {filters.bathrooms} Baths
                                     <button
-                                        onClick={() => setFilters(prev => ({ ...prev, bathrooms: '' }))}
+                                        onClick={() => {
+                                            const newFilters = { ...filters, bathrooms: '', page: 1 };
+                                            setFilters(newFilters);
+                                            setTempFilters(prev => ({ ...prev, bathrooms: '' }));
+                                            fetchPropertiesWithFilters(newFilters, 1);
+                                        }}
                                         className="hover:text-pink-900"
                                     >
                                         <FaTimes className="w-3 h-3" />
@@ -440,8 +588,8 @@ const AllPropertiesContent = () => {
                                     </label>
                                     <select
                                         name="propertyType"
-                                        value={filters.propertyType}
-                                        onChange={handleFilterChange}
+                                        value={tempFilters.propertyType}
+                                        onChange={handleTempFilterChange}
                                         className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     >
                                         <option value="">All Types</option>
@@ -460,8 +608,8 @@ const AllPropertiesContent = () => {
                                     <input
                                         type="text"
                                         name="location"
-                                        value={filters.location}
-                                        onChange={handleFilterChange}
+                                        value={tempFilters.location}
+                                        onChange={handleTempFilterChange}
                                         placeholder="City, State, or ZIP"
                                         className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     />
@@ -474,8 +622,8 @@ const AllPropertiesContent = () => {
                                     <input
                                         type="number"
                                         name="minPrice"
-                                        value={filters.minPrice}
-                                        onChange={handleFilterChange}
+                                        value={tempFilters.minPrice}
+                                        onChange={handleTempFilterChange}
                                         placeholder="$0"
                                         className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     />
@@ -488,8 +636,8 @@ const AllPropertiesContent = () => {
                                     <input
                                         type="number"
                                         name="maxPrice"
-                                        value={filters.maxPrice}
-                                        onChange={handleFilterChange}
+                                        value={tempFilters.maxPrice}
+                                        onChange={handleTempFilterChange}
                                         placeholder="$1,000,000+"
                                         className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     />
@@ -501,8 +649,8 @@ const AllPropertiesContent = () => {
                                     </label>
                                     <select
                                         name="bedrooms"
-                                        value={filters.bedrooms}
-                                        onChange={handleFilterChange}
+                                        value={tempFilters.bedrooms}
+                                        onChange={handleTempFilterChange}
                                         className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     >
                                         <option value="">Any</option>
@@ -518,8 +666,8 @@ const AllPropertiesContent = () => {
                                     </label>
                                     <select
                                         name="bathrooms"
-                                        value={filters.bathrooms}
-                                        onChange={handleFilterChange}
+                                        value={tempFilters.bathrooms}
+                                        onChange={handleTempFilterChange}
                                         className="w-full px-3 py-2 border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                                     >
                                         <option value="">Any</option>
@@ -537,10 +685,19 @@ const AllPropertiesContent = () => {
                                         Apply Filters
                                     </button>
                                     <button
-                                        onClick={resetFilters}
+                                        onClick={() => {
+                                            setTempFilters({
+                                                propertyType: '',
+                                                minPrice: '',
+                                                maxPrice: '',
+                                                bedrooms: '',
+                                                bathrooms: '',
+                                                location: '',
+                                            });
+                                        }}
                                         className="px-6 py-2 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition"
                                     >
-                                        Reset
+                                        Clear
                                     </button>
                                 </div>
                             </div>
