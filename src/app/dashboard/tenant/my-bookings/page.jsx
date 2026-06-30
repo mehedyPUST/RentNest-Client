@@ -32,6 +32,13 @@ const MyBookings = () => {
     const [searchTerm, setSearchTerm] = useState('');
     const [showFilters, setShowFilters] = useState(false);
 
+    // ✅ Delete Modal State
+    const [deleteModal, setDeleteModal] = useState({
+        isOpen: false,
+        bookingId: null,
+        title: ''
+    });
+
     const API_URL = process.env.NEXT_PUBLIC_BASE_URL;
 
     const fetchBookings = async (page = 1, status = 'all', search = '') => {
@@ -82,10 +89,28 @@ const MyBookings = () => {
         }
     };
 
-    const cancelBooking = async (bookingId) => {
-        if (!confirm('Are you sure you want to cancel this booking?')) {
-            return;
-        }
+    // ✅ Open delete confirmation modal
+    const openDeleteModal = (bookingId, title) => {
+        setDeleteModal({
+            isOpen: true,
+            bookingId: bookingId,
+            title: title || 'Booking'
+        });
+    };
+
+    // ✅ Close delete confirmation modal
+    const closeDeleteModal = () => {
+        setDeleteModal({
+            isOpen: false,
+            bookingId: null,
+            title: ''
+        });
+    };
+
+    // ✅ Handle cancel booking with modal
+    const handleCancelBooking = async () => {
+        const { bookingId, title } = deleteModal;
+        if (!bookingId) return;
 
         try {
             const tenantId = user.id || user._id;
@@ -99,7 +124,8 @@ const MyBookings = () => {
                 throw new Error(data.message || 'Failed to cancel booking');
             }
 
-            toast.success('Booking cancelled successfully');
+            toast.success(`Booking "${title}" cancelled successfully`);
+            closeDeleteModal();
             fetchBookings(pagination.currentPage, filterStatus, searchTerm);
         } catch (error) {
             console.error('Error cancelling booking:', error);
@@ -137,6 +163,13 @@ const MyBookings = () => {
             fetchBookings(1, filterStatus, searchTerm);
         }
     }, [user]);
+
+    // ✅ Auto fetch when filter or search changes
+    useEffect(() => {
+        if (user) {
+            fetchBookings(1, filterStatus, searchTerm);
+        }
+    }, [filterStatus, searchTerm]);
 
     const getStatusBadge = (status) => {
         const statusMap = {
@@ -546,7 +579,7 @@ const MyBookings = () => {
 
                                             {(booking.bookingStatus === 'pending') && (
                                                 <button
-                                                    onClick={() => cancelBooking(booking._id)}
+                                                    onClick={() => openDeleteModal(booking._id, booking.propertyInfo?.title)}
                                                     className="p-2 text-red-600 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition"
                                                     title="Cancel Booking"
                                                 >
@@ -702,6 +735,56 @@ const MyBookings = () => {
                             </div>
                         </div>
                     )}
+                </div>
+            )}
+
+            {/* Delete Confirmation Modal */}
+            {deleteModal.isOpen && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                    <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl max-w-md w-full p-6 animate-in fade-in zoom-in duration-200">
+                        <div className="flex items-start gap-4">
+                            <div className="flex-shrink-0">
+                                <div className="w-12 h-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
+                                    <FaTimesCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                                </div>
+                            </div>
+                            <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                    <h2 className="text-xl font-bold text-gray-900 dark:text-white">
+                                        Cancel Booking
+                                    </h2>
+                                    <button
+                                        onClick={closeDeleteModal}
+                                        className="text-gray-400 hover:text-gray-600 dark:text-gray-500 dark:hover:text-gray-300 transition-colors"
+                                    >
+                                        <FaTimes className="w-5 h-5" />
+                                    </button>
+                                </div>
+                                <p className="mt-2 text-gray-600 dark:text-gray-400">
+                                    Are you sure you want to cancel <strong className="text-gray-900 dark:text-white">"{deleteModal.title}"</strong>?
+                                </p>
+                                <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                                    ⚠️ This action cannot be undone. Your booking will be cancelled permanently.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3 mt-6">
+                            <button
+                                onClick={closeDeleteModal}
+                                className="flex-1 px-4 py-2.5 bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition font-medium text-sm"
+                            >
+                                Cancel
+                            </button>
+                            <button
+                                onClick={handleCancelBooking}
+                                className="flex-1 px-4 py-2.5 bg-red-600 text-white rounded-lg hover:bg-red-700 transition font-medium text-sm flex items-center justify-center gap-2"
+                            >
+                                <FaTrash className="w-4 h-4" />
+                                Cancel Booking
+                            </button>
+                        </div>
+                    </div>
                 </div>
             )}
         </div>
