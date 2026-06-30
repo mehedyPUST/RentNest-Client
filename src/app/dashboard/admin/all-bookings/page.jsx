@@ -86,11 +86,12 @@ const AllBookingsPageAdmin = () => {
         }
     };
 
+    // ✅ Auto fetch when filter or search changes
     useEffect(() => {
         if (user) {
             fetchBookings(currentPage, filterStatus, searchTerm);
         }
-    }, [user]);
+    }, [filterStatus, searchTerm]);
 
     const handleSearch = (e) => {
         e.preventDefault();
@@ -100,8 +101,7 @@ const AllBookingsPageAdmin = () => {
 
     const clearSearch = () => {
         setSearchTerm('');
-        setCurrentPage(1);
-        fetchBookings(1, filterStatus, '');
+        // setCurrentPage(1); // ✅ useEffect auto handle করবে
     };
 
     const handlePageChange = (newPage) => {
@@ -113,8 +113,7 @@ const AllBookingsPageAdmin = () => {
 
     const handleFilterChange = (newStatus) => {
         setFilterStatus(newStatus);
-        setCurrentPage(1);
-        fetchBookings(1, newStatus, searchTerm);
+        // setCurrentPage(1); // ✅ useEffect auto handle করবে
     };
 
     const viewBookingDetails = (booking) => {
@@ -237,9 +236,9 @@ const AllBookingsPageAdmin = () => {
                     </p>
                 </div>
                 <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4">
-                    <p className="text-sm text-gray-500 dark:text-gray-400">Confirmed</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">Approved</p>
                     <p className="text-2xl font-bold text-green-600 dark:text-green-400">
-                        {bookings.filter(b => b.bookingStatus === 'confirmed' || b.bookingStatus === 'approved').length}
+                        {bookings.filter(b => b.bookingStatus === 'approved' || b.bookingStatus === 'confirmed').length}
                     </p>
                 </div>
                 <div className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-100 dark:border-gray-800 p-4">
@@ -289,7 +288,6 @@ const AllBookingsPageAdmin = () => {
                         <option value="all">All Status</option>
                         <option value="pending">Pending</option>
                         <option value="approved">Approved</option>
-                        <option value="confirmed">Confirmed</option>
                         <option value="rejected">Rejected</option>
                         <option value="cancelled">Cancelled</option>
                     </select>
